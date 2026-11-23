@@ -11,7 +11,20 @@ echo "==> Installing live-build tooling"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq live-build debootstrap xorriso squashfs-tools syslinux-efi \
-    isolinux syslinux-common librsvg2-bin python3 fonts-noto-core fonts-hosny-amiri > /dev/null
+    isolinux syslinux-common librsvg2-bin python3 fonts-noto-core fonts-hosny-amiri \
+    curl ca-certificates > /dev/null
+# Ubuntu's live-build package is too old for our config (no --bootloaders/--image-name).
+# Overlay the current Debian live-build (arch-all, same deps just installed).
+LB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/l/live-build/ | grep -o 'live-build_[^"]*_all.deb' | sort -V | tail -1)
+echo "==> Using Debian $LB_DEB"
+curl -fsS -o /tmp/live-build.deb "https://deb.debian.org/debian/pool/main/l/live-build/$LB_DEB"
+dpkg -i /tmp/live-build.deb > /dev/null || apt-get install -f -y -qq > /dev/null
+# debootstrap must know the target suite
+if [ ! -e "/usr/share/debootstrap/scripts/$DEBIAN_SUITE" ]; then
+  DB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/d/debootstrap/ | grep -o 'debootstrap_[^"]*_all.deb' | sort -V | tail -1)
+  curl -fsS -o /tmp/debootstrap.deb "https://deb.debian.org/debian/pool/main/d/debootstrap/$DB_DEB"
+  dpkg -i /tmp/debootstrap.deb > /dev/null
+fi
 
 BOOTAPPEND="boot=live components quiet splash locales=en_US.UTF-8 keyboard-layouts=us,ara keyboard-options=grp:win_space_toggle,grp:alt_shift_toggle"
 if [ "$VARIANT" = "live" ]; then
