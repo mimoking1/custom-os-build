@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Simple GUI language switcher: lists every locale, applies system-wide after password.
+CHOICE=$(zenity --list --title="Language / اللغة" --width=520 --height=560 \
+  --text="اختر لغة النظام / Choose the system language" \
+  --column="Code" --column="Language" \
+  en_US.UTF-8 "English (default)" ar_EG.UTF-8 "العربية (مصر)" ar_SA.UTF-8 "العربية" \
+  $(locale -a | grep utf8 | sort) 2>/dev/null) || exit 0
+[ -z "$CHOICE" ] && exit 0
+pkexec sh -c "echo 'LANG=$CHOICE' > /etc/default/locale && update-locale LANG=$CHOICE"
+zenity --info --text="سيُطبَّق التغيير بعد إعادة تشغيل الجهاز.\nThe change applies after a restart."

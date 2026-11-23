@@ -1,0 +1,68 @@
+name: Build and boot-test ISOs
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'Which version to build'
+        required: true
+        default: 'both'
+        type: choice
+        options: [full, live, both]
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.variant != 'both' && fromJSON(format('["{0}"]', github.event.inputs.variant)) || fromJSON('["full","live"]') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+          df -h /
+
+      - name: Install KVM
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil
+          sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
+          ls -la /dev/kvm
+
+      - name: Build ISO (${{ matrix.variant }})
+        run: sudo ./build/build-iso.sh variants/${{ matrix.variant }}.conf
+
+      - name: Boot test in QEMU
+        run: ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
+
+      - name: Upload ISO + evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.variant }}-iso
+          path: |
+            out/*.iso
+            out/SHA256SUMS.txt
+            out/boot-test/*.png
+            out/boot-test/serial.log
+          retention-days: 30
+
+      - name: Publish public release (assets < 2GiB)
+        run: |
+          ISO=$(ls out/*.iso | head -1)
+          SIZE=$(stat -c%s "$ISO")
+          if [ "$SIZE" -lt 2147483648 ]; then
+            gh release view latest-build >/dev/null 2>&1 || \
+              gh release create latest-build --title "Latest build" --notes "Automated build - newest ISOs"
+            gh release upload latest-build "$ISO" out/SHA256SUMS.txt --clobber
+          else
+            echo "ISO is $(( SIZE / 1048576 )) MiB > 2048 MiB GitHub cap - grab it from Artifacts instead" | tee out/HOSTING-NOTE.txt
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

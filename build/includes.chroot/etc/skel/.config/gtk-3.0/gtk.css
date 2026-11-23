@@ -1,0 +1,6 @@
+/* @OS_NAME@ accent color: cyan/teal to match the identity */
+@define-color accent_color #0ea5e9;
+@define-color accent_bg_color #0ea5e9;
+@define-color accent_fg_color #ffffff;
+selection { background-color: rgba(14,165,233,.35); }
+*:selected { background-color: rgba(14,165,233,.35); }

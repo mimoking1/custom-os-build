@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Language / اللغة
+Comment=Switch the system language - تغيير لغة النظام
+Exec=language-picker
+Icon=preferences-desktop-locale
+Categories=Settings;

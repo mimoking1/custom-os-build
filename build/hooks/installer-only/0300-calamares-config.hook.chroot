@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+chmod +x /etc/skel/Desktop/install-on-desktop.desktop || true
+update-desktop-database /usr/share/applications || true

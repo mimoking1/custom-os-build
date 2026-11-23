@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install @OS_NAME@
+Name[ar]=تثبيت @OS_NAME_AR@
+Comment=Install this system on the computer - تثبيت النظام على الجهاز
+Exec=pkexec calamares
+Icon=/usr/share/pixmaps/customos/logo.svg
+Categories=System;

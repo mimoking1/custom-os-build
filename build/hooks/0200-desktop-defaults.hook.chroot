@@ -1,0 +1,8 @@
+#!/bin/sh
+# Desktop defaults: dark theme, English UI default with Arabic ready, lightdm as DM.
+set -e
+systemctl enable lightdm || true
+# Make XFCE the default session
+update-alternatives --set x-session-manager /usr/bin/startxfce4 || true
+# No automatic screen lock on live session
+rm -f /etc/xdg/autostart/light-locker.desktop || true
