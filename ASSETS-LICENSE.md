@@ -18,3 +18,16 @@ incompatible with shipping files in this public repo and the ISO.
 - wallpaper-night-sea.svg: original waves + the public-domain NASA moon photo
   (see Crescent moon above) + stars.
 License for all of the above: released with this repo (MIT, same as build scripts).
+
+## Fonts used for calligraphy
+- Amiri (الله أكبر wallpaper rendering): SIL Open Font License 1.1,
+  (c) The Amiri Project Authors, https://github.com/aliftype/amiri
+  Shipped on the ISO via Debian package fonts-hosny-amiri.
+- Aref Ruqaa, Reem Kufi (alternative renderings, previews only): SIL OFL 1.1.
+
+## pngtree
+The Islamic-wallpaper reference page the user sent (ar.pngtree.com) was NOT used:
+pngtree's free license is personal/non-profit only, requires an account and
+attribution, and forbids redistribution. wallpaper-islamic-skyline.svg is an
+ORIGINAL design (mosque skyline silhouette + gold crescent over the aqua waves)
+made in the same spirit.

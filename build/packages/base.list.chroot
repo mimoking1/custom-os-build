@@ -27,7 +27,6 @@ fonts-noto-color-emoji
 fonts-hosny-amiri
 locales-all
 ibus
-ibus-qt4
 im-config
 plymouth
 plymouth-themes
@@ -62,6 +61,5 @@ fonts-noto-extra
 zram-tools
 earlyoom
 unattended-upgrades
-bottles
 flatpak
 xdg-desktop-portal-gtk

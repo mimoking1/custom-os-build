@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bottles
+Name[ar]=بوتلز
+Comment=Run Windows applications in managed bottles
+Comment[ar]=تشغيل تطبيقات ويندوز في بيئات مُدارة
+Exec=bottles-install
+Icon=wine
+Categories=Utility;
+Keywords=windows;wine;bottles;
