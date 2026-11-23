@@ -1,6 +1,6 @@
 /* @OS_NAME@ accent color: emerald + gold, light Islamic identity */
-@define-color accent_color #2fbfa9;
-@define-color accent_bg_color #2fbfa9;
+@define-color accent_color #08e8de;
+@define-color accent_bg_color #08e8de;
 @define-color accent_fg_color #ffffff;
 selection { background-color: rgba(47,191,169,.35); }
 *:selected { background-color: rgba(47,191,169,.35); }
