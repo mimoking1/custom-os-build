@@ -4,7 +4,7 @@
   <property name="panels" type="array">
     <value value="1" type="int"/>
     <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=10;x=0;y=0"/>
+      <property name="position" type="string" value="p=9;x=0;y=0"/>
       <property name="length" type="uint" value="100"/>
       <property name="position-locked" type="bool" value="true"/>
       <property name="icon-size" type="uint" value="24"/>
@@ -21,7 +21,8 @@
       </property>
       <property name="plugin-1" type="string" value="whiskermenu">
         <property name="button-icon" type="string" value="/usr/share/pixmaps/customos/crescent-moon.png"/>
-        <property name="button-title" type="string" value="@OS_NAME@"/>
+        <property name="button-title" type="string" value="Start"/>
+        <property name="show-button-title" type="bool" value="false"/>
       </property>
       <property name="plugin-2" type="string" value="separator">
         <property name="expand" type="bool" value="true"/>
