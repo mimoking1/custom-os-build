@@ -62,7 +62,7 @@ grep -rl '@OS_NAME@' config/includes.chroot | while read -r f; do
 done || true
 grep -rl '@OS_NAME_AR@' config/includes.chroot | while read -r f; do
   sed -i "s/@OS_NAME_AR@/$OS_NAME_AR/g" "$f"
-done
+done || true
 
 echo "==> Wallpaper render"
 mkdir -p config/includes.chroot/usr/share/backgrounds/customos
