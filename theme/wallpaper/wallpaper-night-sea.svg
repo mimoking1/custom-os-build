@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+ <stop offset="0" stop-color="#0b1e3a"/><stop offset="1" stop-color="#123a5c"/>
+</linearGradient>
+<linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+ <stop offset="0" stop-color="#12405f"/><stop offset="1" stop-color="#0a2338"/>
+</linearGradient>
+<mask id="cres"><rect width="1920" height="1080" fill="black"/><circle cx="1520" cy="230" r="90" fill="white"/><circle cx="1552" cy="205" r="80" fill="black"/></mask>
+<radialGradient id="glow"><stop offset="0" stop-color="#ffe9a8" stop-opacity="0.5"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1920" height="720" fill="url(#sky)"/>
+<circle cx="1520" cy="230" r="160" fill="url(#glow)"/>
+<rect width="1920" height="1080" fill="#ffe9a8" mask="url(#cres)"/>
+<circle cx="300" cy="150" r="2.5" fill="#fff" opacity="0.8"/><circle cx="620" cy="100" r="2" fill="#fff" opacity="0.6"/>
+<circle cx="900" cy="220" r="2.5" fill="#fff" opacity="0.7"/><circle cx="1200" cy="90" r="2" fill="#fff" opacity="0.6"/>
+<circle cx="150" cy="350" r="2" fill="#fff" opacity="0.5"/><circle cx="1100" cy="320" r="2.5" fill="#fff" opacity="0.6"/>
+<rect y="720" width="1920" height="360" fill="url(#sea)"/>
+<path d="M0 760 Q 240 745 480 760 T 960 760 T 1440 760 T 1920 760" stroke="#7fb8d8" stroke-width="3" fill="none" opacity="0.35"/>
+<path d="M0 830 Q 240 812 480 830 T 960 830 T 1440 830 T 1920 830" stroke="#7fb8d8" stroke-width="3" fill="none" opacity="0.25"/>
+<path d="M1360 780 L 1680 780" stroke="#ffe9a8" stroke-width="6" opacity="0.5"/>
+<path d="M1390 830 L 1650 830" stroke="#ffe9a8" stroke-width="4" opacity="0.35"/>
+<path d="M1420 880 L 1620 880" stroke="#ffe9a8" stroke-width="3" opacity="0.25"/>
+<text x="960" y="1052" text-anchor="middle" font-family="Noto Sans, Amiri, sans-serif" font-size="20" fill="#cfe0f0" opacity="0.8">Directed by Mohamed Sayed · محمد سيد</text>
+</svg>

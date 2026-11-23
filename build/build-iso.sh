@@ -59,17 +59,17 @@ cp -a ../build/includes.chroot config/
 # OS name substitution across shipped files
 grep -rl '@OS_NAME@' config/includes.chroot | while read -r f; do
   sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"
-done
+done || true
 grep -rl '@OS_NAME_AR@' config/includes.chroot | while read -r f; do
   sed -i "s/@OS_NAME_AR@/$OS_NAME_AR/g" "$f"
 done
 
 echo "==> Wallpaper render"
 mkdir -p config/includes.chroot/usr/share/backgrounds/customos
-rsvg-convert -w 1920 -h 1080 ../theme/wallpaper/wallpaper-dark.svg \
-  -o config/includes.chroot/usr/share/backgrounds/customos/wallpaper-dark.png
-rsvg-convert -w 1920 -h 1080 ../theme/wallpaper/wallpaper-light.svg \
-  -o config/includes.chroot/usr/share/backgrounds/customos/wallpaper-light.png
+for WP in ../theme/wallpaper/*.svg; do
+  rsvg-convert -w 1920 -h 1080 "$WP" \
+    -o "config/includes.chroot/usr/share/backgrounds/customos/$(basename "$WP" .svg).png"
+done
 
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux
@@ -82,7 +82,7 @@ if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   cp ../installer/calamares/settings.conf config/includes.chroot/etc/calamares/
   cp -a ../installer/calamares/branding/customos config/includes.chroot/usr/share/calamares/branding/
   cp ../installer/install-on-desktop.desktop config/includes.chroot/etc/skel/Desktop/
-  grep -rl '@OS_NAME@' config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares | while read -r f; do sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"; done
+  grep -rl '@OS_NAME@' config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares | while read -r f; do sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"; done || true
 else
   echo "==> Live-only label"
   mkdir -p config/includes.chroot/etc/skel/Desktop

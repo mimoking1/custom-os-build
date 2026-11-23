@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+<radialGradient id="bg" cx="0.5" cy="0.42" r="0.95">
+ <stop offset="0" stop-color="#147a5c"/><stop offset="0.55" stop-color="#0d5238"/><stop offset="1" stop-color="#07301f"/>
+</radialGradient>
+<pattern id="khatam" width="120" height="120" patternUnits="userSpaceOnUse">
+ <g fill="none" stroke="#d4af37" stroke-width="1.5" opacity="0.07">
+  <rect x="35" y="35" width="50" height="50"/>
+  <rect x="35" y="35" width="50" height="50" transform="rotate(45 60 60)"/>
+ </g>
+</pattern>
+</defs>
+<rect width="1920" height="1080" fill="url(#bg)"/>
+<rect width="1920" height="1080" fill="url(#khatam)"/>
+<text x="960" y="580" text-anchor="middle" font-family="Amiri, Noto Naskh Arabic, serif" font-size="150" fill="#f3e3b3">الله أكبر</text>
+<text x="960" y="1052" text-anchor="middle" font-family="Noto Sans, Amiri, sans-serif" font-size="20" fill="#d8c98a" opacity="0.8">Directed by Mohamed Sayed · محمد سيد</text>
+</svg>

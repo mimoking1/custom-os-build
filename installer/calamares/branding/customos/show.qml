@@ -1,6 +1,6 @@
 import QtQuick 2.0
 Rectangle {
-    color: "#16303c"
+    color: "#0d3b2e"
     Text {
         anchors.centerIn: parent
         text: "أهلاً بك في @OS_NAME@\nWelcome to @OS_NAME@"
@@ -13,7 +13,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 14
         text: "Directed by Mohamed Sayed · محمد سيد"
-        color: "#9fb3c8"
+        color: "#d8c98a"
         font.pixelSize: 14
     }
 }

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
-<defs>
-<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
- <stop offset="0" stop-color="#c7e5f5"/><stop offset="0.5" stop-color="#9fd0ee"/><stop offset="1" stop-color="#7fbde8"/>
-</linearGradient>
-</defs>
-<rect width="1920" height="1080" fill="url(#bg)"/>
-<text x="960" y="1052" text-anchor="middle" font-family="Noto Sans, Amiri, sans-serif" font-size="20" fill="#16303c" opacity="0.75">Directed by Mohamed Sayed · محمد سيد</text>
-</svg>
