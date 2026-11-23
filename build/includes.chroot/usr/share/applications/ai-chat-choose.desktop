@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=AI Assistant - choose service / اختيار خدمة الذكاء الاصطناعي
+Comment=Pick which free AI service to open - اختر خدمة الذكاء الاصطناعي
+Exec=ai-chat --choose
+Icon=face-smile
+Categories=Settings;

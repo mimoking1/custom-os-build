@@ -56,3 +56,6 @@ locale; UI packs download on demand (same model as Ubuntu), keeping the ISO lean
 - Wine runs many Windows apps, not all. Adobe apps are experimental (see guide).
 - DaVinci Resolve can't be preinstalled (vendor download needs registration);
   Kdenlive is preinstalled and the guide shows how to add Resolve manually.
+
+---
+Directed by Mohamed Sayed · محمد سيد

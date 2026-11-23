@@ -1,0 +1,10 @@
+#!/bin/sh
+D="$HOME/.config/customos"; S="$D/ai-enabled"; mkdir -p "$D"
+if [ -f "$S" ] && [ "$(cat "$S")" = "off" ]; then
+  echo on > "$S"
+  zenity --info --width=420 --title="AI Assistant · المساعد الذكي" --text="AI assistant is now ON.\nUse the robot/face button on the panel or press Super+A.\n\nتم تفعيل المساعد الذكي. زر اللوحة أو Super+A."
+else
+  echo off > "$S"
+  zenity --info --width=420 --title="AI Assistant · المساعد الذكي" --text="AI assistant is now OFF.\n\nتم إيقاف المساعد الذكي."
+fi
+exit 0

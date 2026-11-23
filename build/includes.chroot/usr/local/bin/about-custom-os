@@ -1,0 +1,4 @@
+#!/bin/sh
+zenity --info --width=480 --title="About · حول" \
+  --text="<big><b>@OS_NAME@ 1.0</b></big>\nWorking title - the owner picks the final name · اسم مؤقت\n\nA lightweight, ready-to-use system for everyday computers.\nنظام خفيف وجاهز للاستخدام اليومي.\n\nDirected by Mohamed Sayed · محمد سيد"
+exit 0

@@ -11,19 +11,24 @@ echo "==> Installing live-build tooling"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq live-build debootstrap xorriso squashfs-tools syslinux-efi \
-    isolinux syslinux-common rsvg-convert python3 > /dev/null
+    isolinux syslinux-common librsvg2-bin python3 fonts-noto-core fonts-hosny-amiri > /dev/null
 
+BOOTAPPEND="boot=live components quiet splash locales=en_US.UTF-8 keyboard-layouts=us,ara keyboard-options=grp:win_space_toggle,grp:alt_shift_toggle"
+if [ "$VARIANT" = "live" ]; then
+  BOOTAPPEND="$BOOTAPPEND persistence persistence-label=persistence"
+fi
 echo "==> lb config ($VARIANT, $DEBIAN_SUITE/$ARCH)"
 lb config \
   --distribution "$DEBIAN_SUITE" \
   --architectures "$ARCH" \
   --binary-images iso-hybrid \
   --debian-installer none \
-  --bootappend-live "boot=live components quiet splash locales=en_US.UTF-8 keyboard-layouts=us,ara keyboard-options=grp:win_space_toggle" \
+  --bootappend-live "$BOOTAPPEND" \
   --archive-areas "main contrib non-free non-free-firmware" \
   --firmware-chroot true \
   --linux-flavours amd64 \
   --iso-volume "${ISO_PREFIX}-$(date +%Y%m%d)" \
+  --iso-application "$OS_NAME 1.0 - Directed by Mohamed Sayed" \
   --image-name "$ISO_PREFIX" \
   --bootloaders "syslinux,grub-efi" \
   --memtest none \
@@ -53,6 +58,11 @@ rsvg-convert -w 1920 -h 1080 ../theme/wallpaper/wallpaper-dark.svg \
 rsvg-convert -w 1920 -h 1080 ../theme/wallpaper/wallpaper-light.svg \
   -o config/includes.chroot/usr/share/backgrounds/customos/wallpaper-light.png
 
+echo "==> Boot splash + ISO credits"
+mkdir -p config/includes.binary/isolinux
+sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
+printf '%s\n' "$OS_NAME (working title)" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." > config/includes.binary/CREDITS.txt
+
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   echo "==> Calamares installer files (full variant)"
   mkdir -p config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares/branding config/includes.chroot/etc/skel/Desktop
@@ -63,7 +73,7 @@ if [ "$INCLUDE_INSTALLER" = "yes" ]; then
 else
   echo "==> Live-only label"
   mkdir -p config/includes.chroot/etc/skel/Desktop
-  printf '%s\n' "هذه النسخة التجريبية (Live): تعمل من الفلاشة فقط ولا تثبّت شيئاً على الجهاز." "This is the LIVE version: it runs from the USB stick only and installs nothing." > config/includes.chroot/etc/skel/Desktop/README-LIVE.txt
+  printf '%s\n' "هذه النسخة التجريبية (Live): تعمل من الفلاشة فقط ولا تثبّت شيئاً على الجهاز." "This is the LIVE version: it runs from the USB stick only and installs nothing." "الحفظ الدائم (Persistence): عند حرق الفلاشة ببرنامج Rufus حرّك شريط Persistent partition size لحفظ ملفاتك وإعداداتك." "Persistence is supported: when burning with Rufus, set the Persistent partition size slider to keep your files and settings." > config/includes.chroot/etc/skel/Desktop/README-LIVE.txt
 fi
 
 echo "==> Hooks"

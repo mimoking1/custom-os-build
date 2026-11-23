@@ -1,0 +1,33 @@
+#!/bin/bash
+# AI Assistant launcher: opens the first reachable free AI chat service
+# in a dedicated browser window. No API keys, no bundled AI, no data sent anywhere by us.
+STATE="$HOME/.config/customos/ai-enabled"
+if [ -f "$STATE" ] && [ "$(cat "$STATE" 2>/dev/null)" = "off" ]; then
+  zenity --info --width=420 --title="AI Assistant · المساعد الذكي" \
+    --text="The AI assistant is turned OFF.\nTurn it back on from Settings > AI Assistant On/Off.\n\nالمساعد الذكي متوقف. فعّله من الإعدادات > تفعيل المساعد الذكي."
+  exit 0
+fi
+# name|url - free web services, first = no account needed
+SERVICES='DuckDuckGo AI (no account)|https://duck.ai/
+Microsoft Copilot|https://copilot.microsoft.com/
+ChatGPT|https://chatgpt.com/
+Google Gemini|https://gemini.google.com/
+HuggingChat|https://huggingface.co/chat/'
+UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Firefox/128"
+open_url() { setsid firefox --new-window "$1" >/dev/null 2>&1 & }
+if [ "${1:-}" = "--choose" ]; then
+  PICK=$(printf '%s\n' "$SERVICES" | cut -d'|' -f1 | zenity --list --width=420 --height=300 \
+    --title="AI Assistant · المساعد الذكي" --text="Choose a service · اختر الخدمة" --column="Service")
+  [ -z "$PICK" ] && exit 0
+  URL=$(printf '%s\n' "$SERVICES" | grep -F "$PICK|" | cut -d'|' -f2)
+  open_url "$URL"; exit 0
+fi
+while IFS='|' read -r NAME URL; do
+  [ -z "$URL" ] && continue
+  if curl -s -o /dev/null --max-time 6 -A "$UA" "$URL"; then
+    open_url "$URL"; exit 0
+  fi
+done <<< "$SERVICES"
+zenity --error --width=420 --title="AI Assistant · المساعد الذكي" \
+  --text="No AI service is reachable right now.\nCheck your internet connection and try again.\n\nلا توجد خدمة ذكاء اصطناعي متاحة الآن. تأكد من الإنترنت وحاول مرة أخرى."
+exit 1

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Custom OS first-login setup
+Exec=/usr/local/bin/customos-firstlogin
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

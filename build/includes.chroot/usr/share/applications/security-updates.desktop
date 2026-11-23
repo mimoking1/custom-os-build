@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Security Updates / تحديثات الأمان
+Comment=Turn automatic security updates on or off - تفعيل أو إيقاف تحديثات الأمان التلقائية
+Exec=security-updates-toggle
+Icon=security-high
+Categories=Settings;

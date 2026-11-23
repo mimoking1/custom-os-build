@@ -1,0 +1,11 @@
+#!/bin/sh
+if systemctl is-enabled apt-daily-upgrade.timer >/dev/null 2>&1; then
+  if zenity --question --width=460 --title="Security updates · تحديثات الأمان" --text="Automatic security updates are ON.\nTurn them OFF?\n\nتحديثات الأمان التلقائية مفعّلة. هل تريد إيقافها؟"; then
+    pkexec systemctl disable --now apt-daily-upgrade.timer && zenity --info --width=360 --text="Automatic security updates are now OFF.\nتم إيقاف تحديثات الأمان التلقائية."
+  fi
+else
+  if zenity --question --width=460 --title="Security updates · تحديثات الأمان" --text="Automatic security updates are OFF.\nTurn them ON?\n\nتحديثات الأمان التلقائية متوقفة. هل تريد تفعيلها؟"; then
+    pkexec systemctl enable --now apt-daily-upgrade.timer && zenity --info --width=360 --text="Automatic security updates are now ON.\nتم تفعيل تحديثات الأمان التلقائية."
+  fi
+fi
+exit 0

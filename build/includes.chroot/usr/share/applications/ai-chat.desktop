@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=AI Assistant / المساعد الذكي
+Comment=Chat with free AI services - محادثة مع خدمات ذكاء اصطناعي مجانية
+Exec=ai-chat
+Icon=face-smile
+Categories=Utility;Network;

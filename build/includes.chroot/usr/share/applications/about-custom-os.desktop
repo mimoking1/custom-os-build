@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=About / حول النظام
+Comment=About this system - حول هذا النظام
+Exec=about-custom-os
+Icon=help-about
+Categories=Settings;

@@ -14,4 +14,5 @@
 <rect width="1920" height="1080" fill="url(#g1)"/>
 <rect width="1920" height="1080" fill="url(#g2)"/>
 <circle cx="960" cy="500" r="3" fill="#22d3ee" opacity="0.5"/>
+<text x="960" y="1052" text-anchor="middle" font-family="Noto Sans, Amiri, sans-serif" font-size="20" fill="#ffffff" opacity="0.75">Directed by Mohamed Sayed · محمد سيد</text>
 </svg>

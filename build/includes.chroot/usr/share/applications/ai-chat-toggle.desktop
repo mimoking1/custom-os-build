@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=AI Assistant On/Off / تفعيل وإيقاف المساعد الذكي
+Comment=Turn the AI assistant button on or off - تشغيل أو إيقاف زر المساعد الذكي
+Exec=ai-chat-toggle
+Icon=face-smile
+Categories=Settings;

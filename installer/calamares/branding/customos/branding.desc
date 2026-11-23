@@ -16,9 +16,9 @@ strings:
     knownIssuesUrl:      ""
     releaseNotesUrl:     ""
 images:
-    productLogo:         "logo.svg"
+    productLogo:         "logo-credit.svg"
     productIcon:         "logo.svg"
-    productWelcome:      "logo.svg"
+    productWelcome:      "logo-credit.svg"
 slideshow:               "show.qml"
 style:
    sidebarBackground:    "#16303c"
