@@ -12,7 +12,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq live-build debootstrap xorriso squashfs-tools syslinux-efi \
     isolinux syslinux-common librsvg2-bin python3 fonts-noto-core fonts-hosny-amiri \
-    curl ca-certificates > /dev/null
+    curl ca-certificates debian-archive-keyring > /dev/null
 # Ubuntu's live-build package is too old for our config (no --bootloaders/--image-name).
 # Overlay the current Debian live-build (arch-all, same deps just installed).
 LB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/l/live-build/ | grep -o 'live-build_[^"]*_all.deb' | sort -V | tail -1)
