@@ -104,4 +104,5 @@ mkdir -p ../out
 mv "$ISO_PREFIX"*.iso ../out/ 2>/dev/null || mv live-image-*.iso "../out/$ISO_PREFIX-amd64.iso"
 cd ../out
 sha256sum *.iso | tee SHA256SUMS.txt
+chmod -R a+rwX .  # let the runner user write boot-test output next to the ISOs
 ls -la
