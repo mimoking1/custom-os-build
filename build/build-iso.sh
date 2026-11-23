@@ -74,7 +74,7 @@ done
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux
 sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
-printf '%s\n' "$OS_NAME (working title)" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." > config/includes.binary/CREDITS.txt
+printf '%s\n' "$OS_NAME (working title)" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
 
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   echo "==> Calamares installer files (full variant)"

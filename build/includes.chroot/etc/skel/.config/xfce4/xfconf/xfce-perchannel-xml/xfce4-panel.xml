@@ -20,7 +20,7 @@
         <value value="7" type="int"/><value value="8" type="int"/>
       </property>
       <property name="plugin-1" type="string" value="whiskermenu">
-        <property name="button-icon" type="string" value="/usr/share/pixmaps/customos/crescent-moon.svg"/>
+        <property name="button-icon" type="string" value="/usr/share/pixmaps/customos/crescent-moon.png"/>
         <property name="button-title" type="string" value="@OS_NAME@"/>
       </property>
       <property name="plugin-2" type="string" value="separator">
