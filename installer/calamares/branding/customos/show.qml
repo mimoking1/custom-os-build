@@ -1,6 +1,6 @@
 import QtQuick 2.0
 Rectangle {
-    color: "#0d3b2e"
+    color: "#0e6e64"
     Text {
         anchors.centerIn: parent
         text: "أهلاً بك في @OS_NAME@\nWelcome to @OS_NAME@"

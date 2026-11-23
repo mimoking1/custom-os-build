@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
 <defs>
 <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
- <stop offset="0" stop-color="#0b1e3a"/><stop offset="1" stop-color="#123a5c"/>
+ <stop offset="0" stop-color="#0e3b4e"/><stop offset="1" stop-color="#1b6f82"/>
 </linearGradient>
 <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
- <stop offset="0" stop-color="#12405f"/><stop offset="1" stop-color="#0a2338"/>
+ <stop offset="0" stop-color="#136073"/><stop offset="1" stop-color="#0a3a48"/>
 </linearGradient>
 <mask id="cres"><rect width="1920" height="1080" fill="black"/><circle cx="1520" cy="230" r="90" fill="white"/><circle cx="1552" cy="205" r="80" fill="black"/></mask>
 <radialGradient id="glow"><stop offset="0" stop-color="#ffe9a8" stop-opacity="0.5"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient>

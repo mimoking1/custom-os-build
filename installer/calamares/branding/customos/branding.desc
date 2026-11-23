@@ -21,6 +21,6 @@ images:
     productWelcome:      "logo-credit.svg"
 slideshow:               "show.qml"
 style:
-   sidebarBackground:    "#0d3b2e"
+   sidebarBackground:    "#0e6e64"
    sidebarText:          "#ffffff"
    sidebarTextSelect:    "#d4af37"
