@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
 <defs>
 <radialGradient id="bg" cx="0.5" cy="0.42" r="0.95">
- <stop offset="0" stop-color="#5fdcb4"/><stop offset="0.55" stop-color="#2fb39a"/><stop offset="1" stop-color="#16808a"/>
+ <stop offset="0" stop-color="#6fe3bd"/><stop offset="0.55" stop-color="#37bda2"/><stop offset="1" stop-color="#1e9e8e"/>
 </radialGradient>
 <pattern id="khatam" width="120" height="120" patternUnits="userSpaceOnUse">
  <g fill="none" stroke="#d4af37" stroke-width="1.5" opacity="0.12">
