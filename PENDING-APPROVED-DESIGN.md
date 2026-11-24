@@ -74,3 +74,9 @@ explicit approval of the corresponding visual proofs.
 - One ISO: /live = 64-bit Debian 13, /live32 = 32-bit Debian 12 (bookworm) with the same design. Boot menu proof6 is the design reference (not yet commented on by him).
 - Auto-select by CPU: syslinux ifcpu64.c32 (BIOS); GRUB cpuid -l (UEFI, 32-bit UEFI best effort).
 - 32-bit caveats accepted: no supported Firefox on 32-bit Linux (ESR 140 ended 2026-09-29), Debian 12 LTS only, no Bottles (Flathub has no i386).
+
+## Secure Browser icon (approved 2026-11-24 6:04 PM EET, user message "رقم ٣ اعتمده")
+- Concept 3 of proof2: dark glass orb, real-moon crescent with soft glow, orbiting light-network (glowing metal-shaded nodes, thin orbit strands). Sky blue theme proof; recolors with Theme Color.
+- Source: theme/browser/gen-browser-icon.py, master theme/browser/secure-browser-icon-512.png.
+- TODO final: simplified variants for 32px and below (fewer nodes, no thin strands).
+- Browser product name stays the placeholder "Secure Browser". Open: branded Firefox ESR/Chromium build (plan) vs real Brave on 64-bit.
