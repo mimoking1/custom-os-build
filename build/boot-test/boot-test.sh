@@ -20,8 +20,7 @@ qemu-system-x86_64 \
 QPID=$!
 # capture the branded boot menu first, then auto-select the default entry
 sleep 4
-echo "screendump $EVIDENCE/shot-04s-menu.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'screendump %s\n' "$EVIDENCE/shot-04s-menu.ppm" | nc -U "$MON"
-convert "$EVIDENCE/shot-04s-menu.ppm" "$EVIDENCE/shot-04s-menu.png" 2>/dev/null || true
+echo "screendump $OUT/shot-04s-menu.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'screendump %s\n' "$OUT/shot-04s-menu.ppm" | nc -U "$MON"
 sleep 4
 echo "sendkey ret" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'sendkey ret
 ' | nc -U "$MON" || true
