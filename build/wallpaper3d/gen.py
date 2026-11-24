@@ -23,26 +23,29 @@ for y in range(H):
 
 VX, VY = 960, 560   # vanishing point
 
-# 8-point stars, smaller and dimmer toward the horizon
-def star8(cx, cy, r, rot=0.0):
-    pts = []
-    for k in range(16):
-        rr = r if k % 2 == 0 else r * 0.42
-        a = rot + math.pi * k / 8
-        pts.append((cx + rr * math.cos(a), cy + rr * math.sin(a)))
-    return pts
-
-stars = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-sd = ImageDraw.Draw(stars)
+# realistic starfield: bright cores over a soft glow layer
+glow_l = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+core_l = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+gd2 = ImageDraw.Draw(glow_l)
+cd2 = ImageDraw.Draw(core_l)
 import random
 random.seed(7)
-for i in range(46):
-    x = random.uniform(40, W - 40)
-    y = random.uniform(30, VY - 20)
-    depth = y / VY
-    r = 7 + 26 * depth
-    alpha = int(28 + 60 * depth)
-    sd.polygon(star8(x, y, r, random.uniform(0, math.pi)), fill=(255, 255, 255, alpha))
+for i in range(750):
+    x = random.uniform(20, W - 20)
+    y = random.uniform(15, VY - 10)
+    depth = 0.45 + 0.55 * (y / VY)
+    r = random.uniform(0.6, 2.1) * depth
+    bright = random.uniform(0.4, 1.0) * depth
+    tone = random.choice([(255, 255, 255), (255, 255, 255), (226, 240, 255), (214, 250, 246)])
+    if bright > 0.5:
+        g = r * 3.0
+        gd2.ellipse([x - g, y - g, x + g, y + g], fill=tone + (int(70 * bright),))
+    cd2.ellipse([x - r, y - r, x + r, y + r], fill=tone + (int(255 * bright),))
+    if bright > 0.85 and r > 1.2:
+        L = r * 8
+        cd2.line([(x - L, y), (x + L, y)], fill=tone + (int(110 * bright),), width=1)
+        cd2.line([(x, y - L), (x, y + L)], fill=tone + (int(110 * bright),), width=1)
+stars = Image.alpha_composite(glow_l.filter(ImageFilter.GaussianBlur(2.0)), core_l)
 img = Image.alpha_composite(img.convert("RGBA"), stars)
 
 # (arch corridor removed per user request)
