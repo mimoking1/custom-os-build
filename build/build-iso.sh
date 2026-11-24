@@ -79,6 +79,17 @@ cp ../build/browser-name.conf config/includes.chroot/usr/share/customos/browser.
 mkdir -p config/includes.chroot/usr/share/customos/home
 sed -e "s/@BROWSER_NAME@/$BROWSER_NAME/g" -e "s/@BROWSER_NAME_AR@/$BROWSER_NAME_AR/g" ../build/browser-home.html > config/includes.chroot/usr/share/customos/home/browser-home.html
 grep -rl "@BROWSER_NAME" config/includes.chroot | xargs sed -i -e "s/@BROWSER_NAME_AR@/$BROWSER_NAME_AR/g" -e "s/@BROWSER_NAME@/$BROWSER_NAME/g"
+if [ "${LITE:-no}" = "yes" ]; then
+  # 32-bit editions: smaller gallery (1920x1080) to keep the ISO light
+  python3 - config/includes.chroot/usr/share/backgrounds/customos/gallery <<'PY'
+import sys, glob
+from PIL import Image
+for f in glob.glob(sys.argv[1] + "/*.jpg"):
+    im = Image.open(f)
+    if im.width > 1920:
+        im.convert("RGB").resize((1920, 1080), Image.LANCZOS).save(f, quality=92)
+PY
+fi
 [ "${LITE_RM_FF:-no}" = yes ] && rm -f config/includes.chroot/usr/share/applications/hilal-browser-firefox.desktop
 # Live variant: light-blue default theme (user request); full keeps aqua
 if [ "$VARIANT" = "live" ]; then

@@ -34,3 +34,7 @@ made in the same spirit.
 
 ## Fonts
 - Comfortaa (rounded display font, boot artwork title): SIL Open Font License 1.1, https://github.com/googlefonts/comfortaa
+
+## Wallpaper gallery (build/includes.chroot/usr/share/backgrounds/customos/gallery)
+- 3d-*.jpg: five 3D renders generated for this project.
+- photo-*.jpg: five photos (Nabawi mosque x3, Dome of the Rock, Quran), reported as CC0 by the wallpaper task; source pages are held by the wallpaper task and should be added here before public release.
