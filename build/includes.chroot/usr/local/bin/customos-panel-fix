@@ -21,7 +21,16 @@ while [ $i -lt 40 ]; do
   sleep 1
 done
 if [ $i -ge 40 ]; then
-  LOG "compositor NOT up after 40s; starting panel anyway"
+  LOG "compositor NOT up after 40s; trying xfwm4 compositor re-toggle"
+  xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
+  sleep 2
+  xfconf-query -c xfwm4 -p /general/use_compositing -s true 2>/dev/null
+  sleep 5
+  if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+    LOG "compositor up after re-toggle"
+  else
+    LOG "compositor still absent after re-toggle; starting panel anyway"
+  fi
 fi
 
 sleep 2

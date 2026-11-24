@@ -3,5 +3,6 @@ M="$HOME/.config/customos/.firstlogin-done"
 [ -f "$M" ] && exit 0
 mkdir -p "$HOME/.config/customos"
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>a" -n -t string -s "ai-chat" 2>/dev/null || true
+( wineboot --init >/dev/null 2>&1; wineserver -w 2>/dev/null ) &
 touch "$M"
 exit 0

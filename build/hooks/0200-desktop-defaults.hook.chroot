@@ -6,3 +6,6 @@ systemctl enable lightdm || true
 update-alternatives --set x-session-manager /usr/bin/startxfce4 || true
 # No automatic screen lock on live session
 rm -f /etc/xdg/autostart/light-locker.desktop || true
+# No screensaver/idle blanking on the live session: it ruined unattended use and CI proofs
+rm -f /etc/xdg/autostart/xfce4-screensaver.desktop || true
+apt-get -y purge xfce4-screensaver 2>/dev/null || true
