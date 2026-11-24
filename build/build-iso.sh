@@ -84,10 +84,10 @@ if [ "${LITE:-no}" = "yes" ]; then
   python3 - config/includes.chroot/usr/share/backgrounds/customos/gallery <<'PY'
 import sys, glob
 from PIL import Image
-for f in glob.glob(sys.argv[1] + "/*.jpg"):
+for f in glob.glob(sys.argv[1] + "/*.jpg") + glob.glob(sys.argv[1] + "/*.png"):
     im = Image.open(f)
     if im.width > 1920:
-        im.convert("RGB").resize((1920, 1080), Image.LANCZOS).save(f, quality=92)
+        im.convert("RGB").resize((1920, 1080), Image.LANCZOS).save(f, quality=92) if f.endswith(".jpg") else im.resize((1920, 1080), Image.LANCZOS).save(f)
 PY
 fi
 [ "${LITE_RM_FF:-no}" = yes ] && rm -f config/includes.chroot/usr/share/applications/hilal-browser-firefox.desktop
