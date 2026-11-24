@@ -62,12 +62,18 @@ if [ "${LITE:-no}" = "yes" ]; then
   # 32-bit lite: no heavy creative apps, no flatpak store (Flathub has no i386)
   sed -i -E '/^(kdenlive|krita|inkscape|gimp|flatpak|gnome-software|gnome-software-plugin-flatpak|xdg-desktop-portal-gtk|libreoffice-impress|simplescreenrecorder)$/d' config/package-lists/base.list.chroot
 fi
+if [ "${LITE:-no}" = "yes" ]; then
+  # no supported 32-bit Firefox; Chromium is installed by the secure-browser hook
+  sed -i -E '/^firefox-esr/d' config/package-lists/base.list.chroot
+  LITE_RM_FF=yes
+fi
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   cp ../build/packages/installer.list.chroot config/package-lists/
 fi
 
 echo "==> Includes (theme, skel, branding)"
 cp -a ../build/includes.chroot config/
+[ "${LITE_RM_FF:-no}" = yes ] && rm -f config/includes.chroot/usr/share/applications/secure-browser-firefox.desktop
 # Live variant: light-blue default theme (user request); full keeps aqua
 if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"
@@ -113,6 +119,7 @@ export CUSTOMOS_SRC="$(pwd)/../build/includes.chroot/usr/share/customos/theme"
 export CUSTOMOS_BASE_WALL="$CHR/usr/share/backgrounds/customos/wallpaper-horizon3d.png"
 export CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png"
 python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --hex "$ACC" --target system --root "$CHR" --only all
+CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png" python3 ../build/includes.chroot/usr/local/bin/customos-browser-icon --hex "$ACC" --root "$CHR"
 cat "$CHR/etc/skel/.config/customos/panel.css" >> "$CHR/etc/skel/.config/gtk-3.0/gtk.css"
 if [ "$VARIANT" = "live" ]; then
   python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --default-live-wallpaper "$CHR/usr/share/backgrounds/customos/wallpaper-default.png"

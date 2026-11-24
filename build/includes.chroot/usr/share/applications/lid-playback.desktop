@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Keep playing with lid closed
+Name[ar]=تشغيل مع قفل الغطاء
+Exec=customos-lid
+Icon=preferences-system-power-management
+Categories=Settings;

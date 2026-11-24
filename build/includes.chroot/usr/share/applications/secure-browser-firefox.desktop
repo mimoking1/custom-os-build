@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Secure Browser (YouTube ad-block max)
+Name[ar]=المتصفح الآمن (أقوى حجب لإعلانات يوتيوب)
+Comment=Firefox with full uBlock Origin
+Exec=firefox-esr %U
+Icon=secure-browser
+Terminal=false
+Categories=Network;WebBrowser;
+StartupNotify=true

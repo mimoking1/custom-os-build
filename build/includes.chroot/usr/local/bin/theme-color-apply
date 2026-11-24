@@ -11,6 +11,8 @@ CFG="$HOME/.config/customos"; mkdir -p "$CFG" "$HOME/.local/share/customos" "$HO
 
 # icons + orb + glass css
 /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only all
+[ -x /usr/local/bin/customos-browser-icon ] && /usr/local/bin/customos-browser-icon --hex "$HEX" --user >/dev/null 2>&1 \
+  && gtk-update-icon-cache -f "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
 FG=$(cat "$CFG/panel-fg" 2>/dev/null || echo "#ffffff")
 
 # panel: orb as Start button, css-driven glass background

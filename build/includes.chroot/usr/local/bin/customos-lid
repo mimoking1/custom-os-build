@@ -1,0 +1,8 @@
+#!/bin/sh
+# Keep music/video playing with the lid closed. Default: only on power. This lets the user also allow it on battery.
+if zenity --question --width=420 --title="Lid closed" --text="Keep the computer running when the lid is closed, even on battery?\n(The laptop gets warm in a bag.)\n\nيكمل الجهاز الشغل عند قفل الغطاء حتى على البطارية؟" 2>/dev/null; then
+  V=ignore
+else V=suspend; fi
+sudo mkdir -p /etc/systemd/logind.conf.d
+printf '[Login]\nHandleLidSwitch=%s\nHandleLidSwitchExternalPower=ignore\nHandleLidSwitchDocked=ignore\n' "$V" | sudo tee /etc/systemd/logind.conf.d/60-customos-lid-user.conf >/dev/null
+sudo systemctl kill -s HUP systemd-logind 2>/dev/null || true

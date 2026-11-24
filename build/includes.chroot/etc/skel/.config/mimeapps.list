@@ -2,3 +2,6 @@
 application/x-ms-dos-executable=wine.desktop
 application/x-msi=wine.desktop
 application/vnd.microsoft.portable-executable=wine.desktop
+x-scheme-handler/http=secure-browser.desktop
+x-scheme-handler/https=secure-browser.desktop
+text/html=secure-browser.desktop
