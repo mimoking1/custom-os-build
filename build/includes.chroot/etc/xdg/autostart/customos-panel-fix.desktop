@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Custom OS panel transparency fix
+Exec=/usr/local/bin/customos-panel-fix
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
