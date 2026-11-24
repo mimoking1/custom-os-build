@@ -121,7 +121,7 @@ if __name__=="__main__":
         SIMPLE=sz<=32
         im=icon(512 if not SIMPLE else 512).resize((sz,sz),Image.LANCZOS) if SIMPLE else big.resize((sz,sz),Image.LANCZOS)
         d=os.path.join(os.path.expanduser("~/.local/share/icons/hicolor") if a.user else os.path.join(a.root,"usr/share/icons/hicolor"),"%dx%d/apps"%(sz,sz)); os.makedirs(d,exist_ok=True)
-        im.save(os.path.join(d,"secure-browser.png"))
+        im.save(os.path.join(d,"hilal-browser.png"))
     if not a.user:
         os.makedirs(os.path.join(a.root,"usr/share/pixmaps"),exist_ok=True)
-        big.resize((128,128),Image.LANCZOS).save(os.path.join(a.root,"usr/share/pixmaps/secure-browser.png"))
+        big.resize((128,128),Image.LANCZOS).save(os.path.join(a.root,"usr/share/pixmaps/hilal-browser.png"))

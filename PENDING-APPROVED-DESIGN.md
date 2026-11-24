@@ -75,8 +75,12 @@ explicit approval of the corresponding visual proofs.
 - Auto-select by CPU: syslinux ifcpu64.c32 (BIOS); GRUB cpuid -l (UEFI, 32-bit UEFI best effort).
 - 32-bit caveats accepted: no supported Firefox on 32-bit Linux (ESR 140 ended 2026-09-29), Debian 12 LTS only, no Bottles (Flathub has no i386).
 
-## Secure Browser icon (approved 2026-11-24 6:04 PM EET, user message "رقم ٣ اعتمده")
+## Hilal Browser icon (approved 2026-11-24 6:04 PM EET, user message "رقم ٣ اعتمده")
 - Concept 3 of proof2: dark glass orb, real-moon crescent with soft glow, orbiting light-network (glowing metal-shaded nodes, thin orbit strands). Sky blue theme proof; recolors with Theme Color.
-- Source: theme/browser/gen-browser-icon.py, master theme/browser/secure-browser-icon-512.png.
+- Source: theme/browser/gen-browser-icon.py, master theme/browser/hilal-browser-icon-512.png.
 - TODO final: simplified variants for 32px and below (fewer nodes, no thin strands).
-- Browser product name stays the placeholder "Secure Browser". Open: branded Firefox ESR/Chromium build (plan) vs real Brave on 64-bit.
+- Browser product name stays the placeholder "Hilal Browser". Open: branded Firefox ESR/Chromium build (plan) vs real Brave on 64-bit.
+
+## Browser name (user, 2026-11-24 6:17 PM EET, relayed): "متصفح هلال" / "Hilal Browser", TEMPORARY ("مؤقتا")
+- Single place: build/browser-name.conf (BROWSER_NAME, BROWSER_NAME_AR). build-iso.sh substitutes @BROWSER_NAME@ / @BROWSER_NAME_AR@ everywhere and ships /usr/share/customos/browser.conf. File and icon ids (hilal-browser) are internal ids.
+- Brave's own window/settings keep Brave's name. OS name still undecided.

@@ -63,7 +63,7 @@ if [ "${LITE:-no}" = "yes" ]; then
   sed -i -E '/^(kdenlive|krita|inkscape|gimp|flatpak|gnome-software|gnome-software-plugin-flatpak|xdg-desktop-portal-gtk|libreoffice-impress|simplescreenrecorder)$/d' config/package-lists/base.list.chroot
 fi
 if [ "${LITE:-no}" = "yes" ]; then
-  # no supported 32-bit Firefox; Chromium is installed by the secure-browser hook
+  # no supported 32-bit Firefox; Chromium is installed by the hilal-browser hook
   sed -i -E '/^firefox-esr/d' config/package-lists/base.list.chroot
   LITE_RM_FF=yes
 fi
@@ -73,7 +73,13 @@ fi
 
 echo "==> Includes (theme, skel, branding)"
 cp -a ../build/includes.chroot config/
-[ "${LITE_RM_FF:-no}" = yes ] && rm -f config/includes.chroot/usr/share/applications/secure-browser-firefox.desktop
+. ../build/browser-name.conf
+mkdir -p config/includes.chroot/usr/share/customos
+cp ../build/browser-name.conf config/includes.chroot/usr/share/customos/browser.conf
+mkdir -p config/includes.chroot/usr/share/customos/home
+sed -e "s/@BROWSER_NAME@/$BROWSER_NAME/g" -e "s/@BROWSER_NAME_AR@/$BROWSER_NAME_AR/g" ../build/browser-home.html > config/includes.chroot/usr/share/customos/home/browser-home.html
+grep -rl "@BROWSER_NAME" config/includes.chroot | xargs sed -i -e "s/@BROWSER_NAME_AR@/$BROWSER_NAME_AR/g" -e "s/@BROWSER_NAME@/$BROWSER_NAME/g"
+[ "${LITE_RM_FF:-no}" = yes ] && rm -f config/includes.chroot/usr/share/applications/hilal-browser-firefox.desktop
 # Live variant: light-blue default theme (user request); full keeps aqua
 if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"

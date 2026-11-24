@@ -1,5 +1,5 @@
 #!/bin/sh
-# "Secure Browser": real Brave (amd64) from Brave's official apt repo + managed policy;
+# "Hilal Browser": real Brave (amd64) from Brave's official apt repo + managed policy;
 # Firefox ESR + uBlock Origin (full) as the strongest YouTube ad-block option (amd64);
 # Chromium + policy on i386 (Brave has no 32-bit build).
 set -e
@@ -15,7 +15,7 @@ if [ "$ARCH" = "amd64" ]; then
   apt-get update
   apt-get install -y brave-browser
   mkdir -p /etc/brave/policies/managed
-  cat > /etc/brave/policies/managed/securebrowser.json <<'JSON'
+  cat > /etc/brave/policies/managed/hilalbrowser.json <<'JSON'
 {
   "BraveRewardsDisabled": true,
   "BraveWalletDisabled": true,
@@ -26,7 +26,11 @@ if [ "$ARCH" = "amd64" ]; then
   "TorDisabled": false,
   "HttpsUpgradesEnabled": true,
   "MetricsReportingEnabled": false,
-  "DefaultBrowserSettingEnabled": false
+  "DefaultBrowserSettingEnabled": false,
+  "HomepageLocation": "file:///usr/share/customos/home/browser-home.html",
+  "HomepageIsNewTabPage": false,
+  "RestoreOnStartup": 4,
+  "RestoreOnStartupURLs": ["file:///usr/share/customos/home/browser-home.html"]
 }
 JSON
   # Brave updates through apt; let unattended-upgrades take them too
@@ -50,6 +54,7 @@ CONF
     "DisableTelemetry": true,
     "DisablePocket": true,
     "DontCheckDefaultBrowser": true,
+    "Homepage": {"URL": "file:///usr/share/customos/home/browser-home.html", "StartPage": "homepage"},
     "OverrideFirstRunPage": "",
     "Preferences": {"privacy.fingerprintingProtection": {"Value": true, "Status": "default"}}
   }
@@ -60,17 +65,21 @@ else
   apt-get update
   apt-get install -y chromium chromium-l10n
   mkdir -p /etc/chromium/policies/managed
-  cat > /etc/chromium/policies/managed/securebrowser.json <<'JSON'
+  cat > /etc/chromium/policies/managed/hilalbrowser.json <<'JSON'
 {
   "HttpsOnlyMode": "force_enabled",
   "BlockThirdPartyCookies": true,
+  "HomepageLocation": "file:///usr/share/customos/home/browser-home.html",
+  "HomepageIsNewTabPage": false,
+  "RestoreOnStartup": 4,
+  "RestoreOnStartupURLs": ["file:///usr/share/customos/home/browser-home.html"],
   "MetricsReportingEnabled": false,
   "DefaultBrowserSettingEnabled": false,
   "ExtensionInstallForcelist": ["ddkjiahejlhfcafbddmgiahcphecmpfh;https://clients2.google.com/service/update2/crx"]
 }
 JSON
 fi
-# make "Secure Browser" the default web browser for links
-update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/secure-browser 200 || true
-update-alternatives --set x-www-browser /usr/local/bin/secure-browser || true
-update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/local/bin/secure-browser 200 || true
+# make "Hilal Browser" the default web browser for links
+update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/hilal-browser 200 || true
+update-alternatives --set x-www-browser /usr/local/bin/hilal-browser || true
+update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/local/bin/hilal-browser 200 || true

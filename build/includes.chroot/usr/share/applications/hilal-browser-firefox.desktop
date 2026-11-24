@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Secure Browser (YouTube ad-block max)
-Name[ar]=المتصفح الآمن (أقوى حجب لإعلانات يوتيوب)
+Name=@BROWSER_NAME@ (YouTube ad-block max)
+Name[ar]=@BROWSER_NAME_AR@ (أقوى حجب لإعلانات يوتيوب)
 Comment=Firefox with full uBlock Origin
 Exec=firefox-esr %U
-Icon=secure-browser
+Icon=hilal-browser
 Terminal=false
 Categories=Network;WebBrowser;
 StartupNotify=true

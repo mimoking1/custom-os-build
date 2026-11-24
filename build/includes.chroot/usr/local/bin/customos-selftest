@@ -56,19 +56,19 @@ sleep 6; SHOT 11-theme-color-window
 pkill -f "/usr/local/bin/theme-color$"; pkill -f "python3 /usr/local/bin/theme-color"; sleep 1
 /usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/null 2>&1
 sleep 8
-# Secure Browser + lid playback
-[ -f /usr/share/icons/hicolor/48x48/apps/secure-browser.png ] && R browser-icon PASS || R browser-icon FAIL
+# @BROWSER_NAME@ + lid playback
+[ -f /usr/share/icons/hicolor/48x48/apps/hilal-browser.png ] && R browser-icon PASS || R browser-icon FAIL
 if command -v brave-browser >/dev/null; then BR=brave; elif command -v chromium >/dev/null; then BR=chromium; else BR=none; fi
 [ "$BR" != none ] && R browser-installed "PASS($BR)" || R browser-installed FAIL
-for J in /etc/brave/policies/managed/securebrowser.json /etc/chromium/policies/managed/securebrowser.json /usr/lib/firefox-esr/distribution/policies.json; do
+for J in /etc/brave/policies/managed/hilalbrowser.json /etc/chromium/policies/managed/hilalbrowser.json /usr/lib/firefox-esr/distribution/policies.json; do
   [ -f "$J" ] && { python3 -c "import json,sys;json.load(open(sys.argv[1]))" "$J" && R "policy-$(basename $(dirname $J))" PASS || R "policy-$(basename $(dirname $J))" FAIL; }
 done
 [ -f /etc/systemd/logind.conf.d/50-customos-lid.conf ] && R lid-conf PASS || R lid-conf FAIL
-grep -q "secure-browser" /etc/skel/.config/mimeapps.list && R default-browser PASS || R default-browser FAIL
+grep -q "hilal-browser" /etc/skel/.config/mimeapps.list && R default-browser PASS || R default-browser FAIL
 rm -f "$HOME/.config/customos/browser32-warned"
-secure-browser --no-first-run --disable-gpu about:blank >/dev/null 2>&1 &
-sleep 6; SHOT 13a-secure-browser-start
-pkill zenity; sleep 12; SHOT 13b-secure-browser-window
+hilal-browser --no-first-run --disable-gpu about:blank >/dev/null 2>&1 &
+sleep 6; SHOT 13a-hilal-browser-start
+pkill zenity; sleep 12; SHOT 13b-hilal-browser-window
 pgrep -f "brave|chromium" >/dev/null && R browser-running PASS || R browser-running FAIL
 pkill -f "brave|chromium"; sleep 2
 # Wine
