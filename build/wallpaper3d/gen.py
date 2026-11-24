@@ -59,15 +59,6 @@ for y in range(H):
 haze = haze.filter(ImageFilter.GaussianBlur(30))
 img = Image.alpha_composite(img, haze)
 
-# floor perspective lines
-floor = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-fd = ImageDraw.Draw(floor)
-for k in range(-8, 9):
-    fd.line([(VX, VY), (VX + k * 260, H)], fill=(4, 60, 56, 110), width=2)
-for j in range(1, 9):
-    y = VY + (H - VY) * (j / 9) ** 1.9
-    fd.line([(0, y), (W, y)], fill=(4, 60, 56, 90), width=2)
-img = Image.alpha_composite(img, floor)
 
 # glowing crescent above the vanishing point
 glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -82,6 +73,45 @@ moon_sq = Image.new("RGBA", (max(moon.size),) * 2, (0, 0, 0, 0))
 moon_sq.paste(moon, ((moon_sq.width - moon.width) // 2, (moon_sq.height - moon.height) // 2), moon)
 moon_sq = moon_sq.resize((side, side), Image.LANCZOS)
 img.alpha_composite(moon_sq, (cx - side // 2, cy - side // 2))
+
+# real water floor: mirror the sky, smear vertically, darken, add ripples
+from PIL import ImageEnhance
+sky = img.crop((0, 0, W, VY)).transpose(Image.FLIP_TOP_BOTTOM)
+refl_img = sky.resize((W, (H - VY) // 7), Image.BILINEAR).resize((W, H - VY), Image.BILINEAR)
+refl_img = refl_img.filter(ImageFilter.GaussianBlur(4))
+refl_img = ImageEnhance.Brightness(refl_img.convert("RGB")).enhance(0.5)
+refl_img = ImageEnhance.Color(refl_img).enhance(0.75).convert("RGBA")
+# water darkens toward the viewer
+ramp = Image.new("L", (1, H - VY))
+rp = ramp.load()
+for y in range(H - VY):
+    rp[0, y] = int(255 * (1.0 - 0.62 * (y / (H - VY))))
+ramp = ramp.resize((W, H - VY))
+dark = Image.new("RGBA", (W, H - VY), (2, 40, 38, 255))
+refl_img = Image.composite(refl_img, dark, ramp)
+# fade the reflection with depth: strong near horizon, darker near the bottom
+mask = Image.new("L", (W, H - VY), 0)
+md = ImageDraw.Draw(mask)
+for y in range(H - VY):
+    t = y / (H - VY)
+    md.line([(0, y), (W, y)], fill=int(215 * (1 - 0.55 * t)))
+img.paste(refl_img, (0, VY), Image.merge("RGBA", (*refl_img.split()[:3], mask.split()[0])) if False else refl_img.putalpha(mask) or refl_img)
+# subtle ripple lines across the water
+rip = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+rd = ImageDraw.Draw(rip)
+random.seed(11)
+for i in range(90):
+    y = VY + (H - VY) * (random.random() ** 1.6)
+    t = (y - VY) / (H - VY)
+    wseg = random.uniform(40, 220) * (0.3 + t)
+    x = random.uniform(0, W - wseg)
+    a = int(random.uniform(18, 60) * (0.4 + t))
+    rd.line([(x, y), (x + wseg, y)], fill=(220, 255, 250, a), width=1)
+img = Image.alpha_composite(img, rip.filter(ImageFilter.GaussianBlur(0.6)))
+# soft luminous horizon line where sky meets water
+hz = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+ImageDraw.Draw(hz).line([(0, VY), (W, VY)], fill=(190, 255, 246, 120), width=2)
+img = Image.alpha_composite(img, hz.filter(ImageFilter.GaussianBlur(2)))
 
 png_path = os.path.join(OUTDIR, "horizon3d-base.png")
 img.convert("RGB").save(png_path, "PNG")
