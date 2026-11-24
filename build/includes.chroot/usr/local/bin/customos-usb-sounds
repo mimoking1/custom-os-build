@@ -1,0 +1,8 @@
+#!/bin/sh
+# Plays a sound when a USB disk is plugged in or removed (session autostart).
+udevadm monitor --udev --property --subsystem-match=block 2>/dev/null | awk '
+  /^ACTION=/ {a=substr($0,8)} /^DEVTYPE=/ {t=substr($0,9)} /^ID_BUS=/ {b=substr($0,8)}
+  /^$/ { if (t=="disk" && (a=="add"||a=="remove") && (b=="usb"||a=="remove")) print a; fflush(); a="";t="";b="" }' |
+while read -r ev; do
+  case "$ev" in add) customos-sound usb-plug & ;; remove) customos-sound usb-unplug & ;; esac
+done

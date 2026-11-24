@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Custom OS startup sound
+Exec=/usr/local/bin/customos-sound startup
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
