@@ -63,3 +63,6 @@ earlyoom
 unattended-upgrades
 flatpak
 xdg-desktop-portal-gtk
+# graphical app store (Flathub is preconfigured)
+gnome-software
+gnome-software-plugin-flatpak

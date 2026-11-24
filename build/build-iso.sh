@@ -75,6 +75,10 @@ for WP in ../theme/wallpaper/*.svg; do
   rsvg-convert -w 1920 -h 1080 "$WP" \
     -o "config/includes.chroot/usr/share/backgrounds/customos/$(basename "$WP" .svg).png"
 done
+# 3D perspective wallpaper (generated, not hand-drawn SVG)
+python3 ../build/wallpaper3d/gen.py /tmp/horizon3d ../theme/crescent-moon.png
+rsvg-convert -w 1920 -h 1080 /tmp/horizon3d/wallpaper-horizon3d.svg \
+  -o config/includes.chroot/usr/share/backgrounds/customos/wallpaper-horizon3d.png
 
 echo "==> Plymouth boot animation (3D crescent flip)"
 PLY=config/includes.chroot/usr/share/plymouth/themes/customos
