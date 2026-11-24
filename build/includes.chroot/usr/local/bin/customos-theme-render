@@ -228,8 +228,8 @@ window#XfcePanelWindow {{
   background-color: {rgb(mid2)};
   border-image: none; border-width: 0; border-radius: 0; box-shadow: none; text-shadow: none;
 }}
-/* external plugin processes (whiskermenu, systray, xkb): their top widget carries .xfce4-panel */
-.xfce4-panel {{
+/* external plugin processes (whiskermenu, systray, xkb): try every known top-widget selector */
+.xfce4-panel, #xfce4-panel-plugin, .xfce4-panel-plugin, #whiskermenu-window {{
   background-image: {grad};
   background-color: {rgb(mid2)};
   box-shadow: none; border-image: none;
