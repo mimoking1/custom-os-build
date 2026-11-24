@@ -9,9 +9,16 @@ R() { S "SELFTEST-RESULT $1=$2"; }
 xset s off; xset -dpms; xset s noblank
 sleep 25
 # compositor / panel diagnostics for the black-plugin-box investigation
-xprop -root _NET_WM_CM_S0 2>&1 | while read l; do S "diag-compositor $l"; done
-xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 | while read l; do S "diag-compositing-conf $l"; done
-pgrep -af wrapper 2>/dev/null | head -6 | while read l; do S "diag-wrapper $l"; done
+R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1)"
+R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1)"
+# if the compositor never claimed the screen, try a runtime re-toggle and re-probe
+if ! xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+  xfconf-query -c xfwm4 -p /general/use_compositing -s false; sleep 2
+  xfconf-query -c xfwm4 -p /general/use_compositing -s true; sleep 5
+  R diag-compositor-after-retoggle "$(xprop -root _NET_WM_CM_S0 2>&1)"
+  xfce4-panel -r 2>/dev/null
+  sleep 4
+fi
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
 # which wallpaper / icons / panel files exist
@@ -71,15 +78,16 @@ done
 [ -f /etc/systemd/logind.conf.d/50-customos-lid.conf ] && R lid-conf PASS || R lid-conf FAIL
 grep -q "hilal-browser" /etc/skel/.config/mimeapps.list && R default-browser PASS || R default-browser FAIL
 rm -f "$HOME/.config/customos/browser32-warned"
-hilal-browser --no-first-run --disable-gpu about:blank >/dev/null 2>&1 &
+hilal-browser --no-first-run --disable-gpu about:blank >/tmp/browser.log 2>&1 &
 sleep 6; SHOT 13a-hilal-browser-start
 pkill zenity; sleep 12; SHOT 13b-hilal-browser-window
-pgrep -f "brave|chromium" >/dev/null && R browser-running PASS || R browser-running FAIL
+pgrep -f "brave|chromium" >/dev/null && R browser-running PASS || { R browser-running FAIL; tail -6 /tmp/browser.log | while read l; do R "browser-log" "$(echo "$l" | cut -c1-140)"; done; }
 pkill -f "brave|chromium"; sleep 2
 # Wine
 if command -v wine >/dev/null; then
   OUT=$(timeout 150 wine cmd /c "echo wine-ok" 2>&1 | tail -3)
   echo "$OUT" | grep -q wine-ok && R wine-cmd PASS || R wine-cmd "FAIL($OUT)"
+  wineserver -w 2>/dev/null; R wine-prefix-settled after-wineserver-w
   printf '@echo off\r\necho bat-ok > %%TEMP%%\\bat.txt\r\n' > /tmp/t.bat
   timeout 120 /usr/local/bin/customos-wine-open /tmp/t.bat >/dev/null 2>&1
   B=$(cat "$HOME/.wine/drive_c/users/$USER/Temp/bat.txt" 2>/dev/null | tr -d '\r\n ')
@@ -96,10 +104,19 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   wine notepad >/dev/null 2>&1 &
   sleep 12; SHOT 12-wine-notepad
   pkill -f notepad
-  ( /usr/local/bin/customos-tahmeel >/tmp/tahmeel.log 2>&1 & ); sleep 240; SHOT 13-tahmeel-wine
+  ( /usr/local/bin/customos-tahmeel >/tmp/tahmeel.log 2>&1 & )
+  for i in 1 2 3 4 5 6; do sleep 40; R "tahmeel-poll$((i*40))s" "$(pgrep -cfi tahmeel 2>/dev/null || echo 0) procs"; done
+  SHOT 13-tahmeel-wine
   ls "$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel/Tahmeel.exe" >/dev/null 2>&1 && R tahmeel-installed PASS || R tahmeel-installed FAIL
   ps aux | grep -i '[t]ahmeel' | head -3 | cut -c1-150 | while read l; do S "tahmeel-ps $l"; done; tail -5 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done
-  pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || R tahmeel-running FAIL
+  pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || {
+    R tahmeel-running FAIL
+    TD="$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel"
+    ls -la "$TD" 2>&1 | head -8 | while read l; do R "tahmeel-dir" "$(echo "$l" | cut -c1-140)"; done
+    ( cd "$TD" 2>/dev/null && timeout 45 wine Tahmeel.exe ) >/tmp/tahmeel-fg.log 2>&1
+    R tahmeel-fg-exit "$?"
+    tail -10 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
+  }
   sleep 20; SHOT 14-tahmeel-wine-later
   pkill -f Tahmeel.exe
 else R wine-cmd "FAIL(no wine)"; fi
