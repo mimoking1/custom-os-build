@@ -69,3 +69,8 @@ explicit approval of the corresponding visual proofs.
 
 ## Boot menu proof5 APPROVED (2026-11-24 5:50pm, "تمام")
 - Apply to the real boot menu (both versions): smaller bottom text, medium blue #1a4e74.
+
+## Combined 64+32-bit ISO (approved by Mohamed 2026-11-24 5:54pm, 'تمام', incl. 32-bit browser caveat)
+- One ISO: /live = 64-bit Debian 13, /live32 = 32-bit Debian 12 (bookworm) with the same design. Boot menu proof6 is the design reference (not yet commented on by him).
+- Auto-select by CPU: syslinux ifcpu64.c32 (BIOS); GRUB cpuid -l (UEFI, 32-bit UEFI best effort).
+- 32-bit caveats accepted: no supported Firefox on 32-bit Linux (ESR 140 ended 2026-09-29), Debian 12 LTS only, no Bottles (Flathub has no i386).

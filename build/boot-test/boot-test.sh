@@ -10,7 +10,7 @@ else
   echo "KVM unavailable, falling back to TCG (slower)"
   ACCEL="-accel tcg,thread=multi"; TIMES="20 90 240 420"
 fi
-qemu-system-x86_64 \
+${QEMU_BIN:-qemu-system-x86_64} ${QEMU_CPU:+-cpu $QEMU_CPU} \
   $ACCEL -m 3072 -smp 2 \
   -cdrom "$ISO" -boot d \
   -display none -vga virtio \

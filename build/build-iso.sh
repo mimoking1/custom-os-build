@@ -36,6 +36,7 @@ BOOTAPPEND="boot=live components quiet splash console=ttyS0 locales=en_US.UTF-8 
 if [ "$VARIANT" = "live" ]; then
   BOOTAPPEND="$BOOTAPPEND persistence persistence-label=persistence"
 fi
+if [ "$ARCH" = "i386" ]; then KFLAVOUR="686-pae"; BOOTLOADERS="syslinux"; else KFLAVOUR="amd64"; BOOTLOADERS="syslinux,grub-efi"; fi
 echo "==> lb config ($VARIANT, $DEBIAN_SUITE/$ARCH)"
 lb config \
   --distribution "$DEBIAN_SUITE" \
@@ -45,11 +46,11 @@ lb config \
   --bootappend-live "$BOOTAPPEND" \
   --archive-areas "main contrib non-free non-free-firmware" \
   --firmware-chroot true \
-  --linux-flavours amd64 \
+  --linux-flavours "$KFLAVOUR" \
   --iso-volume "${ISO_PREFIX}-$(date +%Y%m%d)" \
   --iso-application "$OS_NAME 1.0 - Directed by Mohamed Sayed" \
   --image-name "$ISO_PREFIX" \
-  --bootloaders "syslinux,grub-efi" \
+  --bootloaders "$BOOTLOADERS" \
   --memtest none \
   --zsync false \
   --chroot-squashfs-compression-type zstd
@@ -57,6 +58,10 @@ lb config \
 echo "==> Package lists"
 mkdir -p config/package-lists
 cp ../build/packages/*.list.chroot config/package-lists/
+if [ "${LITE:-no}" = "yes" ]; then
+  # 32-bit lite: no heavy creative apps, no flatpak store (Flathub has no i386)
+  sed -i -E '/^(kdenlive|krita|inkscape|gimp|flatpak|gnome-software|gnome-software-plugin-flatpak|xdg-desktop-portal-gtk|libreoffice-impress|simplescreenrecorder)$/d' config/package-lists/base.list.chroot
+fi
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   cp ../build/packages/installer.list.chroot config/package-lists/
 fi

@@ -1,5 +1,9 @@
 #!/bin/sh
 # Bottles: install from Flathub on first click, then launch.
+if [ "$(dpkg --print-architecture)" = "i386" ]; then
+    command -v zenity >/dev/null 2>&1 && zenity --info --title="Bottles" --text="Bottles is not available on the 32-bit version (Flathub has no 32-bit builds).\nUse Wine directly: right-click a .exe > Open with Wine."
+    exit 0
+fi
 if flatpak info com.usebottles.bottles >/dev/null 2>&1; then
     exec flatpak run com.usebottles.bottles "$@"
 fi

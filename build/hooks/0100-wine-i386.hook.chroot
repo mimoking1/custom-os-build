@@ -1,8 +1,13 @@
 #!/bin/sh
-# Wine layer: enable 32-bit multiarch and install Wine + helpers.
+# Wine layer. amd64: enable 32-bit multiarch and install 64+32-bit Wine. i386 (32-bit build): native Wine.
 set -e
-dpkg --add-architecture i386
-apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y wine wine64 wine32:i386 winetricks
+if [ "$(dpkg --print-architecture)" = "i386" ]; then
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y wine winetricks
+else
+  dpkg --add-architecture i386
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y wine wine64 wine32:i386 winetricks
+fi
 update-desktop-database /usr/share/applications || true
 update-mime-database /usr/share/mime || true

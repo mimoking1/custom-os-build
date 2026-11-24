@@ -7,7 +7,7 @@ on:
         required: true
         default: 'both'
         type: choice
-        options: [full, live, both]
+        options: [full, live, both, full32, live32, both32, all]
   push:
     tags: ['v*']
 
@@ -15,12 +15,27 @@ permissions:
   contents: write
 
 jobs:
+  prep:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        run: |
+          V="${{ github.event.inputs.variant }}"
+          case "$V" in
+            full) M='["full"]';; live) M='["live"]';; both|"") M='["full","live"]';;
+            full32) M='["full32"]';; live32) M='["live32"]';; both32) M='["full32","live32"]';;
+            all) M='["full","live","full32","live32"]';;
+          esac
+          echo "matrix=$M" >> "$GITHUB_OUTPUT"
   build:
+    needs: prep
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.variant != 'both' && fromJSON(format('["{0}"]', github.event.inputs.variant)) || fromJSON('["full","live"]') }}
+        variant: ${{ fromJSON(needs.prep.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,7 +47,7 @@ jobs:
       - name: Install KVM
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil
+          sudo apt-get install -y -qq qemu-system-x86 qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil
           sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
           sudo chmod 666 /dev/kvm || true
           ls -la /dev/kvm
@@ -41,7 +56,9 @@ jobs:
         run: sudo ./build/build-iso.sh variants/${{ matrix.variant }}.conf
 
       - name: Boot test in QEMU
-        run: ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
+        run: |
+          if [[ "${{ matrix.variant }}" == *32 ]]; then export QEMU_BIN=qemu-system-i386 QEMU_CPU=qemu32,+pae; fi
+          ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
 
       - name: Upload ISO + evidence
         uses: actions/upload-artifact@v4
