@@ -74,3 +74,4 @@ fonts-dejavu-core
 fonts-liberation
 fonts-noto-ui-core
 alsa-utils
+curl

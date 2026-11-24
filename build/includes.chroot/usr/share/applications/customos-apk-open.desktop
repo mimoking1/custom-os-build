@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install APK (Android)
+Name[ar]=تثبيت APK (أندرويد)
+Exec=/usr/local/bin/customos-android apk %f
+Icon=phone
+NoDisplay=true
+MimeType=application/vnd.android.package-archive;

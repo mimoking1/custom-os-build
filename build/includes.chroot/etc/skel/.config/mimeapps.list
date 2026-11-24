@@ -1,4 +1,5 @@
 [Default Applications]
+application/vnd.android.package-archive=customos-apk-open.desktop
 application/x-ms-dos-executable=customos-wine-open.desktop
 application/x-msdownload=customos-wine-open.desktop
 application/x-msi=customos-wine-open.desktop

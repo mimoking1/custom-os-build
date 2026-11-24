@@ -1,0 +1,23 @@
+#!/bin/bash
+# Experimental Android (APK) support through Waydroid. Downloads on first use, needs internet.
+# Usage: customos-android install | customos-android apk FILE.apk | customos-android check
+say() { if command -v zenity >/dev/null 2>&1; then zenity --info --no-wrap --text="$1" 2>/dev/null; else echo "$1"; fi; }
+check() {
+  [ "$(uname -m)" = x86_64 ] || { echo "ARCH-NOT-64"; return 1; }
+  sudo modprobe binder_linux devices="binder,hwbinder,vndbinder" 2>/dev/null
+  if grep -qw binder /proc/filesystems || [ -e /dev/binder ] || [ -e /dev/binderfs ] || lsmod | grep -q binder; then echo "BINDER-OK"; else echo "BINDER-MISSING"; return 1; fi
+}
+installed() { command -v waydroid >/dev/null 2>&1; }
+case "$1" in
+  check) check ;;
+  install)
+    r=$(check) || { say "هذا الجهاز لا يدعم تشغيل تطبيقات أندرويد (الكرنل لا يحتوي binder أو الجهاز ليس 64 بت).\nThis PC cannot run Android apps ($r)."; exit 1; }
+    ping -c1 -W3 1.1.1.1 >/dev/null 2>&1 || { say "يلزم اتصال بالإنترنت (حوالي 1 جيجابايت تنزيل و3 جيجابايت مساحة).\nInternet needed (about 1 GB download, 3 GB free space)."; exit 1; }
+    sudo bash -c 'set -e; curl -fsSL https://repo.waydro.id | bash; apt-get install -y waydroid; waydroid init -s GAPPS -f || waydroid init -f; systemctl enable --now waydroid-container' || { say "فشل التثبيت / Install failed"; exit 1; }
+    say "تم تثبيت أندرويد (تجريبي). افتح Android من القائمة.\nAndroid installed (experimental)." ;;
+  apk)
+    installed || "$0" install || exit 1
+    waydroid show-full-ui >/dev/null 2>&1 &
+    sleep 5; waydroid app install "$2" ;;
+  *) installed && waydroid show-full-ui || "$0" install ;;
+esac
