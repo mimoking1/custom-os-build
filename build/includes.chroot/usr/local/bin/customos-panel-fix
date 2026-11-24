@@ -1,9 +1,33 @@
 #!/bin/sh
-# External panel plugins draw opaque (black) boxes when they start before the compositor is up.
-# Wait for the compositor, then restart the panel once so every plugin gets an alpha visual.
-for i in $(seq 1 10); do
-  xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" && break
+# External panel plugins (whiskermenu orb, systray, xkb) draw opaque black boxes
+# when their GtkPlug windows are created before the xfwm4 compositor owns the
+# screen. Restarting the panel after login proved not enough, so:
+#   1. kill the too-early panel,
+#   2. wait until the compositor really owns _NET_WM_CM_S0,
+#   3. start the panel fresh so every plug gets an RGBA visual from birth,
+#   4. restart once more a bit later as belt and braces.
+# Diagnostics go to the serial console for the CI boot test.
+LOG() { echo "panel-fix: $*" | sudo tee /dev/ttyS0 >/dev/null 2>&1 || true; }
+
+xfce4-panel -q 2>/dev/null
+
+i=0
+while [ $i -lt 40 ]; do
+  if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+    LOG "compositor up after ${i}s"
+    break
+  fi
+  i=$((i+1))
   sleep 1
 done
+if [ $i -ge 40 ]; then
+  LOG "compositor NOT up after 40s; starting panel anyway"
+fi
+
 sleep 2
-xfce4-panel --restart
+setsid xfce4-panel >/dev/null 2>&1 &
+LOG "panel started (compositor wait=$i)"
+
+sleep 12
+xfce4-panel -r 2>/dev/null
+LOG "panel restarted once more"
