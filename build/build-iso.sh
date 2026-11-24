@@ -60,7 +60,7 @@ mkdir -p config/package-lists
 cp ../build/packages/*.list.chroot config/package-lists/
 if [ "${LITE:-no}" = "yes" ]; then
   # 32-bit lite: no heavy creative apps, no flatpak store (Flathub has no i386)
-  sed -i -E '/^(kdenlive|krita|inkscape|gimp|flatpak|gnome-software|gnome-software-plugin-flatpak|xdg-desktop-portal-gtk|libreoffice-impress|simplescreenrecorder)$/d' config/package-lists/base.list.chroot
+  sed -i -E '/^(kdenlive|krita|inkscape|gimp|flatpak|gnome-software|gnome-software-plugin-flatpak|xdg-desktop-portal-gtk|libreoffice-impress|simplescreenrecorder|xfce4-notes-plugin)$/d' config/package-lists/base.list.chroot
 fi
 if [ "${LITE:-no}" = "yes" ]; then
   # no supported 32-bit Firefox; Chromium is installed by the hilal-browser hook
