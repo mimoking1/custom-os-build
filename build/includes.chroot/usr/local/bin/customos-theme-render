@@ -108,7 +108,7 @@ def trim(im, t=10):
     bbox = im.split()[-1].point(lambda a: 255 if a > t else 0).getbbox()
     return im.crop(bbox) if bbox else im
 
-def make_orb(acc, diam=52, pressed=False):
+def make_orb(acc, diam=60, pressed=False):
     S = 6
     pad = 6
     D = diam + 2 * pad
@@ -136,7 +136,7 @@ def make_orb(acc, diam=52, pressed=False):
         ImageDraw.Draw(glow).ellipse([pad * S - 2 * S, pad * S - 2 * S, (pad + diam) * S + 2 * S, (pad + diam) * S + 2 * S],
                                      outline=(255, 255, 255, 150), width=4 * S)
         layer = Image.alpha_composite(layer, glow.filter(ImageFilter.GaussianBlur(3 * S)))
-    wd = int(3.2 * S)
+    wd = int(5.2 * S)
     m = Image.new("L", (DD, DD), 0); md = ImageDraw.Draw(m)
     md.ellipse([pad * S, pad * S, (pad + diam) * S, (pad + diam) * S], fill=255)
     md.ellipse([pad * S + wd, pad * S + wd, (pad + diam) * S - wd, (pad + diam) * S - wd], fill=0)
