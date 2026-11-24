@@ -1,0 +1,20 @@
+#!/bin/sh
+# Final cleanup: smaller image, no build junk. Runs last (hooks sort by name).
+apt-get clean || true
+apt-get -y autoremove --purge || true
+rm -rf /var/lib/apt/lists/* /var/cache/apt/* /var/cache/debconf/*-old /var/lib/dpkg/*-old
+rm -rf /var/cache/man /var/cache/fontconfig /var/cache/ldconfig/aux-cache
+rm -rf /tmp/* /var/tmp/* /root/.cache /root/.wget-hsts /root/.bash_history
+rm -rf /home/*/.cache 2>/dev/null
+rm -f /var/log/*.log /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/log/bootstrap.log
+find /var/log -type f -exec truncate -s 0 {} + 2>/dev/null
+rm -f /etc/machine-id /var/lib/dbus/machine-id; touch /etc/machine-id
+# docs, man pages and unused translations (keep English + Arabic)
+rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* /usr/share/lintian /usr/share/groff
+for d in /usr/share/locale/*; do
+  case "$(basename "$d")" in en*|ar*|locale.alias) ;; *) rm -rf "$d" ;; esac
+done
+find /usr/share -name '*.pyc' -delete 2>/dev/null
+find /usr -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null
+rm -f /var/lib/systemd/random-seed
+exit 0
