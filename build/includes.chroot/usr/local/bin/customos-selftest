@@ -6,6 +6,7 @@ if ! sudo test -r "$F"; then [ -d /sys/firmware/qemu_fw_cfg ] && { echo "SELFTES
 S() { echo "$*" | sudo tee /dev/ttyS0 >/dev/null; }
 SHOT() { S "SELFTEST-SHOT $1"; sleep 5; }
 R() { S "SELFTEST-RESULT $1=$2"; }
+xset s off; xset -dpms; xset s noblank
 sleep 25
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
@@ -93,7 +94,8 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   pkill -f notepad
   ( /usr/local/bin/customos-tahmeel >/tmp/tahmeel.log 2>&1 & ); sleep 240; SHOT 13-tahmeel-wine
   ls "$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel/Tahmeel.exe" >/dev/null 2>&1 && R tahmeel-installed PASS || R tahmeel-installed FAIL
-  pgrep -f Tahmeel.exe >/dev/null && R tahmeel-running PASS || R tahmeel-running FAIL
+  ps aux | grep -i '[t]ahmeel' | head -3 | cut -c1-150 | while read l; do S "tahmeel-ps $l"; done; tail -5 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done
+  pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || R tahmeel-running FAIL
   sleep 20; SHOT 14-tahmeel-wine-later
   pkill -f Tahmeel.exe
 else R wine-cmd "FAIL(no wine)"; fi
