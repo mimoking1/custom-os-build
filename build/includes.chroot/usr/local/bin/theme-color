@@ -50,13 +50,13 @@ PICK=$(zenity --list --radiolist --width=460 --height=380 \
   --title="Theme Color · لون السمة" \
   --text="Pick an accent color · اختر لون السمة" \
   --column="" --column="Color · اللون" --column="hex" --hide-column=3 \
+  TRUE "Any color: full wheel + hex code · أي لون: عجلة كاملة + كود" "custom" \
   FALSE "Aqua (default) · أكوا (الافتراضي)" "#08e8de" \
   FALSE "Sky Blue · أزرق سماوي" "#4fb2f7" \
   FALSE "Royal Blue · أزرق ملكي" "#2f6fd0" \
   FALSE "Violet · بنفسجي" "#8b5cf6" \
   FALSE "Green · أخضر" "#22b573" \
-  FALSE "Rose · وردي" "#e85d9e" \
-  FALSE "Custom color... · لون مخصص..." "custom" 2>/dev/null) || exit 0
+  FALSE "Rose · وردي" "#e85d9e" 2>/dev/null) || exit 0
 [ -z "${PICK:-}" ] && exit 0
 if [ "$PICK" = "custom" ]; then
   OUT=$(zenity --color-selection --color="#08e8de" --title="Theme Color · لون السمة" 2>/dev/null) || exit 0
