@@ -71,17 +71,6 @@ for WP in ../theme/wallpaper/*.svg; do
     -o "config/includes.chroot/usr/share/backgrounds/customos/$(basename "$WP" .svg).png"
 done
 
-echo "==> Syslinux menu layout (keep text clear of artwork)"
-BLTPL=$(dpkg -L live-build 2>/dev/null | grep -m1 'bootloaders/isolinux$' || true)
-if [ -n "$BLTPL" ] && [ -d "$BLTPL" ]; then
-  mkdir -p config/bootloaders
-  cp -r "$BLTPL" config/bootloaders/
-  # no "Boot menu" title over the artwork
-  find config/bootloaders/isolinux -name '*.cfg' -exec sed -i 's/^\([[:space:]]*\)[Mm][Ee][Nn][Uu] [Tt][Ii][Tt][Ll][Ee].*/\1MENU TITLE /' {} +
-  # keep entries inside the clear zone: shift menu below the artwork
-  grep -q 'MENU VSHIFT' config/bootloaders/isolinux/stdmenu.cfg 2>/dev/null || echo 'MENU VSHIFT 2' >> config/bootloaders/isolinux/stdmenu.cfg 2>/dev/null || true
-fi
-
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux
 sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
