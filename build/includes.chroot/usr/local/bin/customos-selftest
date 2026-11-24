@@ -117,11 +117,10 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   ps aux | grep -i '[t]ahmeel' | head -3 | cut -c1-150 | while read l; do S "tahmeel-ps $l"; done; tail -5 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done
   pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || {
     R tahmeel-running FAIL
-    TD="$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel"
-    ls -la "$TD" 2>&1 | head -8 | while read l; do R "tahmeel-dir" "$(echo "$l" | cut -c1-140)"; done
-    ( cd "$TD" 2>/dev/null && timeout 45 wine Tahmeel.exe ) >/tmp/tahmeel-fg.log 2>&1
+    ls -la /opt/tahmeel/app 2>&1 | head -12 | while read l; do R "tahmeel-dir" "$(echo "$l" | cut -c1-140)"; done
+    ( cd /opt/tahmeel/app && timeout 45 env WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-fg.log 2>&1
     R tahmeel-fg-exit "$?"
-    tail -10 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
+    tail -12 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
   }
   sleep 20; SHOT 14-tahmeel-wine-later
   pkill -f Tahmeel.exe
