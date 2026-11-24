@@ -17,12 +17,14 @@ EOF2
   xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba --create \
     -t double -t double -t double -t double -s "$RF" -s "$GF" -s "$BF" -s 0.92 2>/dev/null || true
   # app accent + selection color
+  # readable text on the accent: dark text for light colors, white for dark ones
+  FG=$(awk "BEGIN{l=0.299*$R+0.587*$G+0.114*$B; print (l>150) ? \"#1d3b53\" : \"#ffffff\"}")
   for v in 3.0 4.0; do
     mkdir -p "$HOME/.config/gtk-$v"
     cat > "$HOME/.config/gtk-$v/gtk.css" <<CSS
 @define-color accent_color $HEX;
 @define-color accent_bg_color $HEX;
-@define-color accent_fg_color #ffffff;
+@define-color accent_fg_color $FG;
 selection { background-color: rgba($R,$G,$B,.35); }
 *:selected { background-color: rgba($R,$G,$B,.35); }
 CSS
@@ -36,6 +38,7 @@ CSS
   rm -rf "$HOME/.themes/CustomOS"
   cp -r /usr/share/themes/CustomOS "$HOME/.themes/CustomOS"
   find "$HOME/.themes/CustomOS" -name '*.xpm' -exec sed -i "s/$OLDA/$HEX/g; s/$OLDL/$LIGHT/g; s/$OLDD/$DARKC/g" {} +
+  sed -i "s/^title_text_active .*/title_text_active $FG/" "$HOME/.themes/CustomOS/xfwm4/themerc"
   printf '%s %s %s\n' "$HEX" "$LIGHT" "$DARKC" > "$STATE"
   xfconf-query -c xfwm4 -p /general/theme -s CustomOS 2>/dev/null || true
   # GTK2 apps
@@ -46,7 +49,7 @@ CSS
     --text="Theme color changed to $HEX (taskbar, title bars, highlights).\nOpen apps pick it up when restarted.\n\nتم تغيير لون السمة. التطبيقات المفتوحة تاخد اللون الجديد بعد إعادة فتحها." &
 }
 
-PICK=$(zenity --list --radiolist --width=460 --height=380 \
+PICK=$(zenity --list --radiolist --width=460 --height=520 \
   --title="Theme Color · لون السمة" \
   --text="Pick an accent color · اختر لون السمة" \
   --column="" --column="Color · اللون" --column="hex" --hide-column=3 \
@@ -56,7 +59,11 @@ PICK=$(zenity --list --radiolist --width=460 --height=380 \
   FALSE "Royal Blue · أزرق ملكي" "#2f6fd0" \
   FALSE "Violet · بنفسجي" "#8b5cf6" \
   FALSE "Green · أخضر" "#22b573" \
-  FALSE "Rose · وردي" "#e85d9e" 2>/dev/null) || exit 0
+  FALSE "Rose · وردي" "#e85d9e" \
+  FALSE "Gray · رمادي" "#8d99a3" \
+  FALSE "Snow · ثلجي" "#f2f7fa" \
+  FALSE "Beige · بيج" "#d8c39a" \
+  FALSE "Black · أسود" "#20242a" 2>/dev/null) || exit 0
 [ -z "${PICK:-}" ] && exit 0
 if [ "$PICK" = "custom" ]; then
   OUT=$(zenity --color-selection --color="#08e8de" --title="Theme Color · لون السمة" 2>/dev/null) || exit 0
