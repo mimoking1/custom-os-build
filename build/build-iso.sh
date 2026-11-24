@@ -45,7 +45,9 @@ lb config \
   --image-name "$ISO_PREFIX" \
   --bootloaders "syslinux,grub-efi" \
   --memtest none \
-  --zsync false
+  --zsync false \
+  --syslinux-timeout 4 \
+  --compression zstd
 
 echo "==> Package lists"
 mkdir -p config/package-lists
@@ -69,6 +71,10 @@ if [ "$VARIANT" = "live" ]; then
     sed -i 's/#08e8de/#4fb2f7/g; s/#52eee7/#83c9f9/g; s/#06aea6/#3b85b9/g' {} +
   sed -i 's/#08e8de #52eee7 #06aea6/#4fb2f7 #83c9f9 #3b85b9/' \
     config/includes.chroot/etc/skel/.config/customos/theme-colors
+  # faster live boot: no apt index refreshes on a read-only USB session
+  mkdir -p config/includes.chroot/etc/systemd/system
+  ln -sf /dev/null config/includes.chroot/etc/systemd/system/apt-daily.timer
+  ln -sf /dev/null config/includes.chroot/etc/systemd/system/apt-daily-upgrade.timer
 fi
 # our fonts: runner needs them for artwork rendering, the ISO ships them
 mkdir -p "$HOME/.local/share/fonts"
