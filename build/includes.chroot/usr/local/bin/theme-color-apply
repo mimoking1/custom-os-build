@@ -28,7 +28,14 @@ for v in 3.0 4.0; do
 selection { background-color: rgba($R,$G,$B,.35); }
 *:selected { background-color: rgba($R,$G,$B,.35); }
 CSS
-    [ "$v" = "3.0" ] && cat "$CFG/panel.css"; } > "$HOME/.config/gtk-$v/gtk.css"
+    if [ "$v" = "3.0" ]; then
+      if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+        cat "$CFG/panel.css"
+      else
+        cat "$CFG/panel-fallback.css" 2>/dev/null || cat "$CFG/panel.css"
+      fi
+    fi
+  } > "$HOME/.config/gtk-$v/gtk.css"
 done
 
 # window title bars + borders: recolor the CustomOS xfwm theme in ~/.themes
