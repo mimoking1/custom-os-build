@@ -1,0 +1,9 @@
+#!/bin/sh
+# Open a Windows file with Wine: exe, msi, bat, cmd, lnk, com, msp
+f="$1"; [ -n "$f" ] || exit 1
+export WINEDEBUG=-all
+case "$(echo "$f" | tr 'A-Z' 'a-z')" in
+  *.msi|*.msp) exec wine msiexec /i "$(winepath -w "$f" 2>/dev/null || echo "$f")" ;;
+  *.bat|*.cmd) exec wine start /wait /unix "$f" ;;
+  *) exec wine start /unix "$f" ;;
+esac

@@ -75,6 +75,13 @@ pkill -f "brave|chromium"; sleep 2
 if command -v wine >/dev/null; then
   OUT=$(timeout 150 wine cmd /c "echo wine-ok" 2>&1 | tail -3)
   echo "$OUT" | grep -q wine-ok && R wine-cmd PASS || R wine-cmd "FAIL($OUT)"
+  printf '@echo off\r\necho bat-ok > %%TEMP%%\\bat.txt\r\n' > /tmp/t.bat
+  timeout 120 /usr/local/bin/customos-wine-open /tmp/t.bat >/dev/null 2>&1
+  B=$(cat "$HOME/.wine/drive_c/users/$USER/Temp/bat.txt" 2>/dev/null | tr -d '\r\n ')
+  [ "$B" = "bat-ok" ] && R wine-bat PASS || R wine-bat "FAIL($B)"
+  timeout 120 wine msiexec /? >/dev/null 2>&1; [ $? -le 1 ] && R wine-msiexec PASS || R wine-msiexec FAIL
+  [ "$(xdg-mime query default application/x-msi)" = customos-wine-open.desktop ] && R mime-msi PASS || R mime-msi FAIL
+  [ "$(xdg-mime query default application/x-ms-dos-executable)" = customos-wine-open.desktop ] && R mime-exe PASS || R mime-exe FAIL
   wine notepad >/dev/null 2>&1 &
   sleep 12; SHOT 12-wine-notepad
   pkill -f notepad
