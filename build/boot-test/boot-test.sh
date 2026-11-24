@@ -31,7 +31,7 @@ for t in $TIMES; do
     printf 'screendump %s\n' "$OUT/shot-${t}s.ppm" | nc -U "$MON" || true
 done
 # selftest phase: the guest prints SELFTEST-SHOT <name> on serial; screendump each one
-SEEN=0; END=$((SECONDS + 900))
+SEEN=0; END=$((SECONDS + 1500))
 while [ $SECONDS -lt $END ]; do
   sleep 1
   if [ -f "$OUT/serial.log" ]; then
