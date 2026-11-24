@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Android Apps (experimental)
+Name[ar]=تطبيقات أندرويد (تجريبي)
+Exec=/usr/local/bin/customos-android
+Icon=phone
+Categories=System;
