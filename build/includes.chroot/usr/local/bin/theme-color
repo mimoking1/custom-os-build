@@ -60,6 +60,7 @@ PICK=$(zenity --list --radiolist --width=460 --height=520 \
   FALSE "Violet · بنفسجي" "#8b5cf6" \
   FALSE "Green · أخضر" "#22b573" \
   FALSE "Rose · وردي" "#e85d9e" \
+  FALSE "Orange · برتقالي" "#f28c28" \
   FALSE "Gray · رمادي" "#8d99a3" \
   FALSE "Snow · ثلجي" "#f2f7fa" \
   FALSE "Beige · بيج" "#d8c39a" \
