@@ -8,4 +8,4 @@ Welcome to @OS_NAME@ (working title)
 
 Directed by Mohamed Sayed · محمد سيد
 
-Theme Color: Settings > Theme Color lets you change the taskbar and app accent color anytime (presets or any custom color).
+Theme Color: Settings > Theme Color recolors the taskbar, window title bars and app highlights anytime, like Windows personalization (presets or any custom color).
