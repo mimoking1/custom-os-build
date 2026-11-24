@@ -26,7 +26,7 @@ if [ ! -e "/usr/share/debootstrap/scripts/$DEBIAN_SUITE" ]; then
   dpkg -i /tmp/debootstrap.deb > /dev/null
 fi
 
-BOOTAPPEND="boot=live components quiet splash locales=en_US.UTF-8 keyboard-layouts=us,ara keyboard-options=grp:win_space_toggle,grp:alt_shift_toggle"
+BOOTAPPEND="boot=live components quiet splash console=ttyS0 locales=en_US.UTF-8 keyboard-layouts=us,ara keyboard-options=grp:win_space_toggle,grp:alt_shift_toggle"
 if [ "$VARIANT" = "live" ]; then
   BOOTAPPEND="$BOOTAPPEND persistence persistence-label=persistence"
 fi
@@ -93,6 +93,7 @@ if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   cp ../installer/calamares/settings.conf config/includes.chroot/etc/calamares/
   cp -a ../installer/calamares/branding/customos config/includes.chroot/usr/share/calamares/branding/
   cp ../installer/install-on-desktop.desktop config/includes.chroot/etc/skel/Desktop/
+  sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" config/includes.chroot/etc/skel/Desktop/install-on-desktop.desktop
   grep -rl '@OS_NAME@' config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares | while read -r f; do sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"; done || true
 else
   echo "==> Live-only label"

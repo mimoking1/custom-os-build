@@ -4,7 +4,7 @@
   <property name="panels" type="array">
     <value value="1" type="int"/>
     <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=9;x=0;y=0"/>
+      <property name="position" type="string" value="p=10;x=0;y=0"/>
       <property name="length" type="uint" value="100"/>
       <property name="position-locked" type="bool" value="true"/>
       <property name="icon-size" type="uint" value="24"/>
@@ -16,8 +16,7 @@
       </property>
       <property name="plugin-ids" type="array">
         <value value="1" type="int"/><value value="2" type="int"/><value value="3" type="int"/>
-        <value value="4" type="int"/><value value="5" type="int"/><value value="6" type="int"/>
-        <value value="7" type="int"/><value value="8" type="int"/>
+        <value value="4" type="int"/><value value="6" type="int"/><value value="7" type="int"/>
       </property>
       <property name="plugin-1" type="string" value="whiskermenu">
         <property name="button-icon" type="string" value="/usr/share/pixmaps/customos/crescent-moon.png"/>
@@ -36,13 +35,7 @@
         <property name="expand" type="bool" value="true"/>
         <property name="style" type="uint" value="0"/>
       </property>
-      <property name="plugin-5" type="string" value="xkb"/>
       <property name="plugin-6" type="string" value="systray"/>
-      <property name="plugin-8" type="string" value="launcher">
-        <property name="items" type="array">
-          <value value="ai-chat.desktop" type="string"/>
-        </property>
-      </property>
       <property name="plugin-7" type="string" value="clock">
         <property name="digital-format" type="string" value="%H:%M  ·  Directed by Mohamed Sayed · محمد سيد"/>
       </property>
