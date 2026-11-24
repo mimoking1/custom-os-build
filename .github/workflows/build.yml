@@ -52,6 +52,7 @@ jobs:
             out/SHA256SUMS.txt
             out/boot-test/*.png
             out/boot-test/serial.log
+            out/boot-test/selftest-results.txt
           retention-days: 30
 
       - name: Publish public release (assets < 2GiB)
