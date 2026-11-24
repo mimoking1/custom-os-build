@@ -57,7 +57,7 @@ for i in range(NARCH):
     base_y = VY + 330 * scale
     col_top_y = apex_y + (base_y - apex_y) * 0.30
     shade = 1.0 - 0.5 * t
-    gold = (int(212 * shade), int(175 * shade), int(55 * shade), 235)
+    gold = (int(234 * shade), int(254 * shade), int(252 * shade), 235)  # luminous white-aqua
     width = max(2, int(13 * scale))
 
     def arch_side(sign):
