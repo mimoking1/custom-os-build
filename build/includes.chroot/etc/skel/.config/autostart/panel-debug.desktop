@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Panel Debug
+Exec=sh -c 'sleep 75; { echo "== XFCONF =="; xfconf-query -c xfce4-panel -lv; echo "== XERR =="; tail -80 "$HOME/.xsession-errors"; echo "== MODULES =="; ls /usr/lib/x86_64-linux-gnu/xfce4/panel/plugins/ 2>&1; } > /dev/ttyS0 2>&1'
+X-GNOME-Autostart-enabled=true
