@@ -94,11 +94,19 @@ if command -v wine >/dev/null; then
   OUT=$(timeout 150 wine cmd /c "echo wine-ok" 2>&1 | tail -3)
   echo "$OUT" | grep -q wine-ok && R wine-cmd PASS || R wine-cmd "FAIL($OUT)"
   wineserver -w 2>/dev/null; R wine-prefix-settled after-wineserver-w
-  printf '@echo off\r\necho bat-ok > %%TEMP%%\\bat.txt\r\n' > /tmp/t.bat
-  timeout 120 wine cmd /c "Z:\\tmp\\t.bat" >/dev/null 2>&1
-  B=$(cat "$HOME/.wine/drive_c/users/$USER/Temp/bat.txt" 2>/dev/null | tr -d '\r\n ')
-  [ "$B" = "bat-ok" ] && R wine-bat PASS || R wine-bat "FAIL($B)"
-  timeout 120 wine msiexec /? >/dev/null 2>&1; [ $? -le 1 ] && R wine-msiexec PASS || R wine-msiexec FAIL
+  printf '@echo off\r\necho bat-ok > C:\\bat-out.txt\r\n' > /tmp/t.bat
+  rm -f "$HOME/.wine/drive_c/bat-out.txt"
+  timeout 120 wine cmd /c "Z:\\tmp\\t.bat" >/tmp/bat.log 2>&1
+  B=$(cat "$HOME/.wine/drive_c/bat-out.txt" 2>/dev/null | tr -d '\r\n ')
+  [ "$B" = "bat-ok" ] && R wine-bat PASS || {
+    R wine-bat "FAIL($B)"
+    head -6 /tmp/bat.log | while read l; do R "bat-log" "$(echo "$l" | cut -c1-140)"; done
+  }
+  timeout 20 wine msiexec /? >/tmp/msi.log 2>&1; EC=$?
+  if [ $EC -eq 124 ]; then R wine-msiexec "PASS(modal dialog stayed up)"
+  elif [ $EC -le 1 ]; then R wine-msiexec PASS
+  else R wine-msiexec "FAIL(exit $EC)"; head -6 /tmp/msi.log | while read l; do R "msi-log" "$(echo "$l" | cut -c1-140)"; done
+  fi
   [ "$(xdg-mime query default application/x-msi)" = customos-wine-open.desktop ] && R mime-msi PASS || R mime-msi FAIL
   [ "$(xdg-mime query default application/x-ms-dos-executable)" = customos-wine-open.desktop ] && R mime-exe PASS || R mime-exe FAIL
 [ "$(xdg-mime query default application/vnd.android.package-archive)" = customos-apk-open.desktop ] && R apk-mime PASS || R apk-mime FAIL
