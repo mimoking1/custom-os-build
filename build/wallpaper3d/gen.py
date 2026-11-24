@@ -45,38 +45,7 @@ for i in range(46):
     sd.polygon(star8(x, y, r, random.uniform(0, math.pi)), fill=(255, 255, 255, alpha))
 img = Image.alpha_composite(img.convert("RGBA"), stars)
 
-# receding arches: perspective corridor toward the vanishing point
-arch = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-ad = ImageDraw.Draw(arch)
-NARCH = 6
-for i in range(NARCH):
-    t = i / (NARCH - 1)                    # 0 = nearest, 1 = farthest
-    scale = 1.0 - 0.80 * t
-    half_w = 820 * scale
-    apex_y = VY - 430 * scale
-    base_y = VY + 330 * scale
-    col_top_y = apex_y + (base_y - apex_y) * 0.30
-    shade = 1.0 - 0.5 * t
-    gold = (int(234 * shade), int(254 * shade), int(252 * shade), 235)  # luminous white-aqua
-    width = max(2, int(13 * scale))
-
-    def arch_side(sign):
-        # circle center on the opposite side so the arc curves inward to the apex
-        cx = VX + sign * half_w * 0.45
-        cy = apex_y + half_w * 0.95
-        r = math.hypot(VX - cx, apex_y - cy)
-        col = (VX - sign * half_w, col_top_y)
-        a_apex = math.degrees(math.atan2(apex_y - cy, VX - cx)) % 360
-        a_col = math.degrees(math.atan2(col[1] - cy, col[0] - cx)) % 360
-        start, end = (a_apex, a_col) if a_col > a_apex else (a_col, a_apex)
-        ad.arc([cx - r, cy - r, cx + r, cy + r], start, end, fill=gold, width=width)
-
-    arch_side(+1)  # left half of the arch
-    arch_side(-1)  # right half
-    for sign in (+1, -1):
-        x = VX - sign * half_w
-        ad.line([(x, col_top_y), (x, base_y)], fill=gold, width=width)
-    ad.line([(VX - half_w, base_y), (VX + half_w, base_y)], fill=gold, width=max(2, width // 2))
+# (arch corridor removed per user request)
 
 # soft depth haze near the horizon
 haze = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -85,7 +54,6 @@ for y in range(H):
     t = max(0.0, 1.0 - abs(y - VY) / 380.0)
     hd.line([(0, y), (W, y)], fill=(8, 130, 122, int(70 * t * t)))
 haze = haze.filter(ImageFilter.GaussianBlur(30))
-img = Image.alpha_composite(img, arch)
 img = Image.alpha_composite(img, haze)
 
 # floor perspective lines
