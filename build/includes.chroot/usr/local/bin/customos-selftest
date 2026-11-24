@@ -8,6 +8,10 @@ SHOT() { S "SELFTEST-SHOT $1"; sleep 5; }
 R() { S "SELFTEST-RESULT $1=$2"; }
 xset s off; xset -dpms; xset s noblank
 sleep 25
+# compositor / panel diagnostics for the black-plugin-box investigation
+xprop -root _NET_WM_CM_S0 2>&1 | while read l; do S "diag-compositor $l"; done
+xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 | while read l; do S "diag-compositing-conf $l"; done
+pgrep -af wrapper 2>/dev/null | head -6 | while read l; do S "diag-wrapper $l"; done
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
 # which wallpaper / icons / panel files exist
