@@ -1,0 +1,68 @@
+#!/bin/bash
+# Runs only when QEMU passes opt/customos/selftest through fw_cfg (CI boot test). Does nothing on real machines.
+modprobe qemu_fw_cfg 2>/dev/null
+F=/sys/firmware/qemu_fw_cfg/by_name/opt/customos/selftest/raw
+[ -r "$F" ] || exit 0
+S() { echo "$*" | sudo tee /dev/ttyS0 >/dev/null; }
+SHOT() { S "SELFTEST-SHOT $1"; sleep 5; }
+R() { S "SELFTEST-RESULT $1=$2"; }
+sleep 25
+S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
+SHOT 01-default
+# which wallpaper / icons / panel files exist
+[ -f /usr/share/icons/hicolor/256x256/apps/customos-pc.png ] && R icons PASS || R icons FAIL
+[ -f /usr/share/pixmaps/customos/orb.png ] && R orb PASS || R orb FAIL
+fc-list | grep -qi "Noto Kufi Arabic" && R kufi-font PASS || R kufi-font FAIL
+fc-list | grep -qi "Comfortaa" && R comfortaa-font PASS || R comfortaa-font FAIL
+thunar >/dev/null 2>&1 &
+sleep 8; SHOT 02-files-open-taskbar-button
+xfce4-popup-whiskermenu >/dev/null 2>&1 &
+sleep 4; SHOT 03-start-menu-open
+xfce4-popup-whiskermenu >/dev/null 2>&1; sleep 2
+pkill thunar; sleep 1
+# theme color: soft orange, wallpaper follows (default wallpaper)
+/usr/local/bin/theme-color-apply "#e8a05c" >/dev/null 2>&1
+sleep 12; SHOT 04-theme-orange
+/usr/local/bin/theme-color-apply "#9fdcf0" >/dev/null 2>&1
+sleep 12; SHOT 05-theme-icy
+# any image as wallpaper
+python3 - <<'PY'
+from PIL import Image, ImageDraw
+im = Image.new("RGB", (1600, 900), (120, 30, 60)); d = ImageDraw.Draw(im)
+for i in range(0, 1600, 80): d.rectangle([i, 0, i + 40, 900], fill=(200, 160, 40))
+d.ellipse([600, 250, 1000, 650], fill=(20, 60, 120))
+im.save("/tmp/custom-wall.png")
+PY
+/usr/local/bin/customos-set-wallpaper /tmp/custom-wall.png
+sleep 6; SHOT 06-custom-wallpaper
+CUR=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image)
+[ "$CUR" = "/tmp/custom-wall.png" ] && R set-any-wallpaper PASS || R set-any-wallpaper "FAIL($CUR)"
+# theme change must NOT replace the user's own wallpaper
+/usr/local/bin/theme-color-apply "#8b5cf6" >/dev/null 2>&1
+sleep 12; SHOT 07-purple-keeps-custom-wallpaper
+CUR=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image)
+[ "$CUR" = "/tmp/custom-wall.png" ] && R theme-keeps-custom-wallpaper PASS || R theme-keeps-custom-wallpaper "FAIL($CUR)"
+# forced theme wallpaper
+/usr/local/bin/theme-color-apply "#8b5cf6" --force-wallpaper >/dev/null 2>&1
+sleep 10; SHOT 08-purple-forced-theme-wallpaper
+# Arabic clock
+/usr/local/bin/customos-clock-language ar
+sleep 8; SHOT 09-clock-arabic
+/usr/local/bin/customos-clock-language en
+sleep 6; SHOT 10-clock-english
+# theme color window
+theme-color >/dev/null 2>&1 &
+sleep 6; SHOT 11-theme-color-window
+pkill -f "/usr/local/bin/theme-color$"; pkill -f "python3 /usr/local/bin/theme-color"; sleep 1
+/usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/null 2>&1
+sleep 8
+# Wine
+if command -v wine >/dev/null; then
+  OUT=$(timeout 150 wine cmd /c "echo wine-ok" 2>&1 | tail -3)
+  echo "$OUT" | grep -q wine-ok && R wine-cmd PASS || R wine-cmd "FAIL($OUT)"
+  wine notepad >/dev/null 2>&1 &
+  sleep 12; SHOT 12-wine-notepad
+  pkill -f notepad
+else R wine-cmd "FAIL(no wine)"; fi
+S "SELFTEST-DONE"
+exit 0

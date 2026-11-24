@@ -12,7 +12,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq live-build debootstrap xorriso squashfs-tools syslinux-efi \
     isolinux syslinux-common librsvg2-bin python3 fonts-noto-core fonts-hosny-amiri \
-    curl ca-certificates debian-archive-keyring > /dev/null
+    curl ca-certificates debian-archive-keyring python3-pil > /dev/null
 # Ubuntu's live-build package is too old for our config (no --bootloaders/--image-name).
 # Overlay the current Debian live-build (arch-all, same deps just installed).
 LB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/l/live-build/ | grep -o 'live-build_[^"]*_all.deb' | sort -V | tail -1)
@@ -66,10 +66,6 @@ cp -a ../build/includes.chroot config/
 # Live variant: light-blue default theme (user request); full keeps aqua
 if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"
-  for f in config/includes.chroot/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml \
-           config/includes.chroot/etc/xdg/xfce4/panel/default.xml; do
-    sed -i -e 's/value="0.03"/value="0.31"/' -e 's/value="0.35"/value="0.70"/' -e 's/value="0.33"/value="0.97"/' "$f"
-  done
   sed -i -e 's/#08e8de/#4fb2f7/g' -e 's/rgba(47,191,169,.35)/rgba(79,178,247,.35)/g' \
     config/includes.chroot/etc/skel/.config/gtk-3.0/gtk.css
   find config/includes.chroot/usr/share/themes/CustomOS -name '*.xpm' -exec \
@@ -105,6 +101,23 @@ python3 ../build/wallpaper3d/gen.py /tmp/horizon3d ../theme/crescent-moon.png
 rsvg-convert -w 1920 -h 1080 /tmp/horizon3d/wallpaper-horizon3d.svg \
   -o config/includes.chroot/usr/share/backgrounds/customos/wallpaper-horizon3d.png
 
+echo "==> Default theme assets (icons, orb, glass panel, wallpaper) for $VARIANT"
+CHR="$(pwd)/config/includes.chroot"
+if [ "$VARIANT" = "live" ]; then ACC="#4fb2f7"; else ACC="#08e8de"; fi
+export CUSTOMOS_SRC="$(pwd)/../build/includes.chroot/usr/share/customos/theme"
+export CUSTOMOS_BASE_WALL="$CHR/usr/share/backgrounds/customos/wallpaper-horizon3d.png"
+export CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png"
+python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --hex "$ACC" --target system --root "$CHR" --only all
+cat "$CHR/etc/skel/.config/customos/panel.css" >> "$CHR/etc/skel/.config/gtk-3.0/gtk.css"
+if [ "$VARIANT" = "live" ]; then
+  python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --default-live-wallpaper "$CHR/usr/share/backgrounds/customos/wallpaper-default.png"
+else
+  cp "$CHR/usr/share/backgrounds/customos/wallpaper-horizon3d.png" "$CHR/usr/share/backgrounds/customos/wallpaper-default.png"
+fi
+DT="$CHR/etc/skel/Desktop"
+if [ "$VARIANT" = "live" ]; then rm -f "$DT/70-guide.desktop"; else rm -f "$DT/69-live-guide.desktop" "$DT/71-guide-ar.desktop"; fi
+unset CUSTOMOS_SRC CUSTOMOS_BASE_WALL CUSTOMOS_CRESCENT
+
 echo "==> Plymouth boot animation (3D crescent flip)"
 PLY=config/includes.chroot/usr/share/plymouth/themes/customos
 mkdir -p "$PLY/frames"
@@ -136,13 +149,13 @@ if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   mkdir -p config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares/branding config/includes.chroot/etc/skel/Desktop
   cp ../installer/calamares/settings.conf config/includes.chroot/etc/calamares/
   cp -a ../installer/calamares/branding/customos config/includes.chroot/usr/share/calamares/branding/
-  cp ../installer/install-on-desktop.desktop config/includes.chroot/etc/skel/Desktop/
-  sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" config/includes.chroot/etc/skel/Desktop/install-on-desktop.desktop
+  cp ../installer/install-on-desktop.desktop config/includes.chroot/etc/skel/Desktop/60-install.desktop
+  sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" config/includes.chroot/etc/skel/Desktop/60-install.desktop
   grep -rl '@OS_NAME@' config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares | while read -r f; do sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"; done || true
 else
   echo "==> Live-only label"
-  mkdir -p config/includes.chroot/etc/skel/Desktop
-  printf '%s\n' "هذه النسخة التجريبية (Live): تعمل من الفلاشة فقط ولا تثبّت شيئاً على الجهاز." "This is the LIVE version: it runs from the USB stick only and installs nothing." "الحفظ الدائم (Persistence): عند حرق الفلاشة ببرنامج Rufus حرّك شريط Persistent partition size لحفظ ملفاتك وإعداداتك." "Persistence is supported: when burning with Rufus, set the Persistent partition size slider to keep your files and settings." > config/includes.chroot/etc/skel/Desktop/README-LIVE.txt
+  mkdir -p config/includes.chroot/etc/skel/Desktop config/includes.chroot/usr/share/customos/guides
+  printf '%s\n' "هذه النسخة التجريبية (Live): تعمل من الفلاشة فقط ولا تثبّت شيئاً على الجهاز." "This is the LIVE version: it runs from the USB stick only and installs nothing." "الحفظ الدائم (Persistence): عند حرق الفلاشة ببرنامج Rufus حرّك شريط Persistent partition size لحفظ ملفاتك وإعداداتك." "Persistence is supported: when burning with Rufus, set the Persistent partition size slider to keep your files and settings." > config/includes.chroot/usr/share/customos/guides/README-LIVE.txt
 fi
 
 echo "==> Hooks"

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Home
+Name[ar]=الرئيسية
+Exec=thunar %h
+Icon=customos-home
+Terminal=false
+Categories=Utility;

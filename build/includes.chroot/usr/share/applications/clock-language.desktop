@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Clock Language (AM/PM ↔ ص/م)
+Name[ar]=لغة الساعة (AM/PM ↔ ص/م)
+Exec=/usr/local/bin/customos-clock-language toggle
+Icon=preferences-system-time
+Categories=Settings;

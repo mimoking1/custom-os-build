@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=My PC
+Name[ar]=جهازي
+Exec=thunar computer:///
+Icon=customos-pc
+Terminal=false
+Categories=Utility;

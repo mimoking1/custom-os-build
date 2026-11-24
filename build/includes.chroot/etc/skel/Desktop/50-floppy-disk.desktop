@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Floppy Disk
+Name[ar]=قرص مرن
+Exec=thunar /media
+Icon=customos-floppy
+Terminal=false
+Categories=Utility;

@@ -16,6 +16,7 @@ qemu-system-x86_64 \
   -display none -vga virtio \
   -monitor unix:"$MON",server,nowait \
   -serial file:"$OUT/serial.log" \
+  -fw_cfg name=opt/customos/selftest,string=1 \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
 QPID=$!
 # capture the branded boot menu first, then auto-select the default entry
@@ -29,7 +30,23 @@ for t in $TIMES; do
   echo "screendump $OUT/shot-${t}s.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || \
     printf 'screendump %s\n' "$OUT/shot-${t}s.ppm" | nc -U "$MON" || true
 done
-sleep 5
+# selftest phase: the guest prints SELFTEST-SHOT <name> on serial; screendump each one
+SEEN=0; END=$((SECONDS + 900))
+while [ $SECONDS -lt $END ]; do
+  sleep 1
+  if [ -f "$OUT/serial.log" ]; then
+    mapfile -t SH < <(tr -d '\r' < "$OUT/serial.log" | grep -a '^SELFTEST-SHOT ' | awk '{print $2}')
+    while [ "$SEEN" -lt "${#SH[@]}" ]; do
+      n="${SH[$SEEN]}"; sleep 3
+      printf 'screendump %s\n' "$OUT/st-$n.ppm" | socat - UNIX-CONNECT:"$MON" >/dev/null 2>&1 || true
+      SEEN=$((SEEN+1))
+    done
+    grep -aq 'SELFTEST-DONE' "$OUT/serial.log" && break
+  fi
+done
+tr -d '\r' < "$OUT/serial.log" | grep -a '^SELFTEST-' > "$OUT/selftest-results.txt" || true
+cat "$OUT/selftest-results.txt"
+sleep 3
 kill $QPID 2>/dev/null; wait $QPID 2>/dev/null
 python3 - "$OUT" <<'PY'
 import sys, os

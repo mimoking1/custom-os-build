@@ -1,0 +1,16 @@
+#!/bin/bash
+# customos-clock-language en|ar|toggle - AM/PM <-> ص/م on the taskbar clock.
+CFG="$HOME/.config/customos"; mkdir -p "$CFG"
+CUR=$(cat "$CFG/clock-lang" 2>/dev/null || echo en)
+case "${1:-toggle}" in ar) NEW=ar;; en) NEW=en;; *) [ "$CUR" = ar ] && NEW=en || NEW=ar;; esac
+echo "$NEW" > "$CFG/clock-lang"
+if [ "$NEW" = ar ]; then
+  printf 'export LC_TIME=ar_EG.UTF-8\n' > "$HOME/.xsessionrc"
+else
+  rm -f "$HOME/.xsessionrc"
+fi
+[ "${2:-}" = "--no-restart" ] && exit 0
+xfce4-panel -q >/dev/null 2>&1; sleep 1
+if [ "$NEW" = ar ]; then LC_TIME=ar_EG.UTF-8 setsid xfce4-panel --disable-wm-check >/dev/null 2>&1 &
+else setsid xfce4-panel --disable-wm-check >/dev/null 2>&1 & fi
+exit 0

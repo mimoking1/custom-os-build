@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Guide AR
+Name[ar]=الدليل بالعربي
+Exec=mousepad /usr/share/customos/guides/README-AR.txt
+Icon=customos-guide
+Terminal=false
+Categories=Utility;

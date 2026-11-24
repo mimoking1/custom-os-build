@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Custom OS selftest (CI only)
+Exec=/usr/local/bin/customos-selftest
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

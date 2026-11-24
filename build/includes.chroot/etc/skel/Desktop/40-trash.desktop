@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Trash
+Name[ar]=المهملات
+Exec=thunar trash:///
+Icon=customos-trash
+Terminal=false
+Categories=Utility;

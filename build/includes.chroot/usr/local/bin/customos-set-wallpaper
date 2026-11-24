@@ -1,0 +1,21 @@
+#!/bin/bash
+# customos-set-wallpaper IMAGE - sets IMAGE as the wallpaper on every monitor.
+# Works for any image on the device (also called from Thunar: right-click > Set as Wallpaper).
+IMG="$(readlink -f "$1" 2>/dev/null)"
+[ -f "$IMG" ] || { echo "usage: customos-set-wallpaper IMAGE" >&2; exit 1; }
+# monitors that already have a property + every currently connected output
+PROPS=$(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep '/last-image$')
+for out in $(xrandr 2>/dev/null | awk '/ connected/{print $1}'); do
+  PROPS="$PROPS
+/backdrop/screen0/monitor${out}/workspace0/last-image"
+done
+PROPS="$PROPS
+/backdrop/screen0/monitor0/workspace0/last-image"
+echo "$PROPS" | sort -u | while read -r p; do
+  [ -n "$p" ] || continue
+  base="${p%/last-image}"
+  xfconf-query -c xfce4-desktop -p "$base/image-style" -n -t int -s 5 2>/dev/null || xfconf-query -c xfce4-desktop -p "$base/image-style" -s 5 2>/dev/null
+  xfconf-query -c xfce4-desktop -p "$base/color-style" -n -t int -s 0 2>/dev/null || true
+  xfconf-query -c xfce4-desktop -p "$p" -n -t string -s "$IMG" 2>/dev/null || xfconf-query -c xfce4-desktop -p "$p" -s "$IMG"
+done
+exit 0

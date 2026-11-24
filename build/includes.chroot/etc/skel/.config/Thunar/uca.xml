@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+  <icon>preferences-desktop-wallpaper</icon>
+  <name>Set as Wallpaper</name>
+  <submenu></submenu>
+  <unique-id>1700000000000001</unique-id>
+  <command>/usr/local/bin/customos-set-wallpaper %f</command>
+  <description>Use this image as the desktop wallpaper</description>
+  <range>*</range>
+  <patterns>*.png;*.jpg;*.jpeg;*.bmp;*.webp;*.tif;*.tiff;*.gif;*.PNG;*.JPG;*.JPEG;*.WEBP</patterns>
+  <image-files/>
+</action>
+</actions>

@@ -1,40 +1,37 @@
 #!/bin/bash
-# theme-color-apply HEX - applies an accent color to: taskbar, title bars and
-# borders, app highlights (GTK2/3/4). Called by the Theme Color window.
+# theme-color-apply HEX [--force-wallpaper] - applies one accent color to: glass taskbar,
+# crescent orb, desktop icons, title bars/borders, app highlights (GTK2/3/4) and the
+# wallpaper sky. The wallpaper only follows when it is still the default one (or the
+# one this tool generated) and "wallpaper follows theme" is on.
 set -u
-HEX="$1"
+HEX="$1"; FORCE="${2:-}"
 case "$HEX" in \#*) ;; *) HEX="#$HEX" ;; esac
+R=$((16#${HEX:1:2})); G=$((16#${HEX:3:2})); B=$((16#${HEX:5:2}))
+CFG="$HOME/.config/customos"; mkdir -p "$CFG" "$HOME/.local/share/customos" "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
 
-hex_to_rgb() { printf "%d %d %d" "0x${HEX:1:2}" "0x${HEX:3:2}" "0x${HEX:5:2}"; }
-read -r R G B <<EOF2
-$(hex_to_rgb)
-EOF2
-RF=$(awk "BEGIN{printf \"%.3f\", $R/255}")
-GF=$(awk "BEGIN{printf \"%.3f\", $G/255}")
-BF=$(awk "BEGIN{printf \"%.3f\", $B/255}")
+# icons + orb + glass css
+/usr/local/bin/customos-theme-render --hex "$HEX" --target user --only all
+FG=$(cat "$CFG/panel-fg" 2>/dev/null || echo "#ffffff")
 
-# taskbar background
-xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba --create \
-  -t double -t double -t double -t double -s "$RF" -s "$GF" -s "$BF" -s 0.92 2>/dev/null || true
+# panel: orb as Start button, css-driven glass background
+xfconf-query -c xfce4-panel -p /plugins/plugin-2/button-icon -n -t string -s "$HOME/.local/share/customos/orb.png" 2>/dev/null \
+  || xfconf-query -c xfce4-panel -p /plugins/plugin-2/button-icon -s "$HOME/.local/share/customos/orb.png" 2>/dev/null || true
 
-# readable text on the accent: dark text for light colors, white for dark ones
-FG=$(awk "BEGIN{l=0.299*$R+0.587*$G+0.114*$B; print (l>150) ? \"#1d3b53\" : \"#ffffff\"}")
-
-# app accent + selection color
+# app accent + selection color + panel glass
 for v in 3.0 4.0; do
-  mkdir -p "$HOME/.config/gtk-$v"
-  cat > "$HOME/.config/gtk-$v/gtk.css" <<CSS
+  { cat <<CSS
 @define-color accent_color $HEX;
 @define-color accent_bg_color $HEX;
 @define-color accent_fg_color $FG;
 selection { background-color: rgba($R,$G,$B,.35); }
 *:selected { background-color: rgba($R,$G,$B,.35); }
 CSS
+    [ "$v" = "3.0" ] && cat "$CFG/panel.css"; } > "$HOME/.config/gtk-$v/gtk.css"
 done
 
 # window title bars + borders: recolor the CustomOS xfwm theme in ~/.themes
-mkdir -p "$HOME/.themes" "$HOME/.config/customos"
-STATE="$HOME/.config/customos/theme-colors"
+mkdir -p "$HOME/.themes"
+STATE="$CFG/theme-colors"
 if [ -f "$STATE" ]; then read -r OLDA OLDL OLDD < "$STATE"; else OLDA="#08e8de"; OLDL="#52eee7"; OLDD="#06aea6"; fi
 LIGHT=$(awk "BEGIN{r=int($R+(255-$R)*0.3);g=int($G+(255-$G)*0.3);b=int($B+(255-$B)*0.3);printf \"#%02x%02x%02x\",r,g,b}")
 DARKC=$(awk "BEGIN{r=int($R*0.75);g=int($G*0.75);b=int($B*0.75);printf \"#%02x%02x%02x\",r,g,b}")
@@ -43,11 +40,22 @@ cp -r /usr/share/themes/CustomOS "$HOME/.themes/CustomOS"
 find "$HOME/.themes/CustomOS" -name '*.xpm' -exec sed -i "s/$OLDA/$HEX/g; s/$OLDL/$LIGHT/g; s/$OLDD/$DARKC/g" {} +
 sed -i "s/^title_text_active .*/title_text_active $FG/" "$HOME/.themes/CustomOS/xfwm4/themerc"
 printf '%s %s %s\n' "$HEX" "$LIGHT" "$DARKC" > "$STATE"
+echo "$HEX" > "$CFG/accent"
 xfconf-query -c xfwm4 -p /general/theme -s CustomOS 2>/dev/null || true
-
-# GTK2 apps
 printf 'gtk-color-scheme = "selected_bg_color:%s"\n' "$HEX" > "$HOME/.gtkrc-2.0"
 
+# wallpaper follows the theme only while it is the default / generated one
+FOLLOW=$(cat "$CFG/wallpaper-follow" 2>/dev/null || echo on)
+CUR=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
+if [ "$FORCE" = "--force-wallpaper" ] || { [ "$FOLLOW" = "on" ] && { case "$CUR" in /usr/share/backgrounds/customos/*|"$HOME"/.local/share/customos/wallpaper-theme*) true;; "") true;; *) false;; esac; }; }; then
+  rm -f "$HOME"/.local/share/customos/wallpaper-theme*.png
+  W="$HOME/.local/share/customos/wallpaper-theme-$(date +%s).png"
+  /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only wall --wall-out "$W" && /usr/local/bin/customos-set-wallpaper "$W"
+fi
+
+# desktop icons pick up the new files
+gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+xfdesktop --reload >/dev/null 2>&1 || true
 xfwm4 --replace >/dev/null 2>&1 &
 xfce4-panel -r >/dev/null 2>&1 &
 exit 0

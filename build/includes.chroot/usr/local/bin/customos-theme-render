@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""customos-theme-render: regenerate every accent-colored asset from one color.
+
+  customos-theme-render --hex #4fb2f7 --target user
+  customos-theme-render --hex #08e8de --target system --root /path/to/includes.chroot
+  customos-theme-render --default-live-wallpaper OUT.png [--src BASE.png]
+
+Outputs: desktop icons (luminance gradient-map of grayscale masters), the glass
+crescent orb, the glass taskbar CSS and the recolored wallpaper sky (moon fixed).
+"""
+import argparse, os, sys, glob
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
+
+SRC = os.environ.get("CUSTOMOS_SRC", "/usr/share/customos/theme")
+BASE_WALL = os.environ.get("CUSTOMOS_BASE_WALL", "/usr/share/backgrounds/customos/wallpaper-horizon3d.png")
+CRESCENT = os.environ.get("CUSTOMOS_CRESCENT", "/usr/share/pixmaps/customos/crescent-moon.png")
+
+ICONS = {  # icon name -> gray master
+    "customos-pc": "computer", "customos-home": "home", "customos-fs": "folder",
+    "customos-trash": "trash-can", "customos-floppy": "floppy",
+    "customos-guide": "notebook", "customos-install": "moon",
+    "customos-files": "folder",
+}
+
+def hx(s):
+    s = s.lstrip("#")
+    return tuple(int(s[i:i+2], 16) for i in (0, 2, 4))
+
+def mix(a, b, k):
+    return tuple(a[i] + (b[i] - a[i]) * k for i in range(3))
+
+def lut(stops):
+    out = []
+    for L in range(256):
+        t = L / 255
+        for i in range(len(stops) - 1):
+            p0, c0 = stops[i]; p1, c1 = stops[i + 1]
+            if p0 <= t <= p1:
+                k = 0 if p1 == p0 else (t - p0) / (p1 - p0)
+                out.append(tuple(int(x) for x in mix(c0, c1, k)))
+                break
+    return out
+
+def accent_lut(acc):
+    return lut([(0.0, mix(acc, (0, 0, 0), 0.72)), (0.45, acc),
+                (0.8, mix(acc, (255, 255, 255), 0.45)), (1.0, mix(acc, (255, 255, 255), 0.92))])
+
+def recolor_icon(master, acc, size=256):
+    im = Image.open(master).convert("LA")
+    L, a = im.split()
+    lt = accent_lut(acc)
+    out = Image.merge("RGBA", (L.point([c[0] for c in lt]), L.point([c[1] for c in lt]),
+                                L.point([c[2] for c in lt]), a))
+    bbox = a.point(lambda v: 255 if v > 8 else 0).getbbox()
+    if bbox:
+        out = out.crop(bbox)
+    s = size / max(out.size)
+    out = out.resize((max(1, int(out.width * s)), max(1, int(out.height * s))), Image.LANCZOS)
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(out, ((size - out.width) // 2, (size - out.height) // 2), out)
+    return canvas
+
+# ---------- wallpaper ----------
+def hshift(im, deg=29):
+    rgb = im.convert("RGB")
+    h, s, v = rgb.convert("HSV").split()
+    h = h.point(lambda x: (x + int(deg * 255 / 360)) % 256 if 85 <= x <= 160 else x)
+    return Image.merge("HSV", (h, s, v)).convert("RGB")
+
+def recolor_wall(im, acc):
+    rgb = im.convert("RGB")
+    L = rgb.convert("L"); S = rgb.convert("HSV").split()[1]; H = rgb.convert("HSV").split()[0]
+    table = []
+    for v in range(256):
+        t = min(v / 150.0, 1.0)
+        if t < 0.5:
+            c = mix(tuple(x * 0.10 for x in acc), tuple(x * 0.55 for x in acc), t / 0.5)
+        else:
+            c = mix(tuple(x * 0.55 for x in acc), tuple(min(255, x * 1.05) for x in acc), (t - 0.5) / 0.5)
+        if v > 170:
+            c = mix(c, (255, 255, 255), (v - 170) / 85.0)
+        table.append(tuple(int(x) for x in c))
+    mapped = Image.merge("RGB", (L.point([c[0] for c in table]), L.point([c[1] for c in table]),
+                                  L.point([c[2] for c in table])))
+    m = S.point(lambda x: 0 if x < 40 else (255 if x > 90 else int((x - 40) * 255 / 50)))
+    hm = H.point(lambda x: 255 if 80 <= x <= 170 else 0).filter(ImageFilter.GaussianBlur(1))
+    m = ImageChops.multiply(m, hm)
+    return Image.composite(mapped, rgb, m)
+
+# ---------- orb ----------
+def shape_grad(size, mask, stops):
+    w, h = size
+    g = Image.new("RGBA", (1, h))
+    for y in range(h):
+        t = y / max(h - 1, 1)
+        for i in range(len(stops) - 1):
+            p0, c0 = stops[i]; p1, c1 = stops[i + 1]
+            if p0 <= t <= p1:
+                k = 0 if p1 == p0 else (t - p0) / (p1 - p0)
+                g.putpixel((0, y), tuple(int(c0[j] + (c1[j] - c0[j]) * k) for j in range(4)))
+                break
+    g = g.resize((w, h))
+    out = Image.new("RGBA", (w, h))
+    out.paste(g, (0, 0), mask)
+    return out
+
+def trim(im, t=10):
+    bbox = im.split()[-1].point(lambda a: 255 if a > t else 0).getbbox()
+    return im.crop(bbox) if bbox else im
+
+def make_orb(acc, diam=44, pressed=False):
+    S = 6
+    pad = 6
+    D = diam + 2 * pad
+    big = diam * S
+    orb = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(orb).ellipse([0, 0, big - 1, big - 1], fill=255)
+    stops = [(0.0, (*[int(x) for x in mix(acc, (255, 255, 255), 0.65)], 170)),
+             (0.5, (*acc, 185)), (1.0, (*[int(x) for x in mix(acc, (0, 0, 0), 0.3)], 200))]
+    body = shape_grad((big, big), orb, stops)
+    gl = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(gl).ellipse([int(big * 0.10), int(big * 0.05), int(big * 0.75), int(big * 0.42)], fill=200)
+    gl = gl.filter(ImageFilter.GaussianBlur(4 * S / 2))
+    gl = ImageChops.multiply(gl, orb)
+    white = Image.new("RGBA", (big, big), (255, 255, 255, 220))
+    body = Image.alpha_composite(body, Image.composite(white, Image.new("RGBA", (big, big), (0, 0, 0, 0)), gl))
+    cres = trim(Image.open(CRESCENT).convert("RGBA"))
+    ch = int(big * 0.58)
+    c = cres.resize((int(cres.width * ch / cres.height), ch), Image.LANCZOS)
+    body.paste(c, ((big - c.width) // 2, (big - c.height) // 2 + 2 * S), c)
+    DD = D * S
+    layer = Image.new("RGBA", (DD, DD), (0, 0, 0, 0))
+    layer.paste(body, (pad * S, pad * S), body)
+    if pressed:
+        glow = Image.new("RGBA", (DD, DD), (0, 0, 0, 0))
+        ImageDraw.Draw(glow).ellipse([pad * S - 2 * S, pad * S - 2 * S, (pad + diam) * S + 2 * S, (pad + diam) * S + 2 * S],
+                                     outline=(255, 255, 255, 150), width=4 * S)
+        layer = Image.alpha_composite(layer, glow.filter(ImageFilter.GaussianBlur(3 * S)))
+    wd = int(3.2 * S)
+    m = Image.new("L", (DD, DD), 0); md = ImageDraw.Draw(m)
+    md.ellipse([pad * S, pad * S, (pad + diam) * S, (pad + diam) * S], fill=255)
+    md.ellipse([pad * S + wd, pad * S + wd, (pad + diam) * S - wd, (pad + diam) * S - wd], fill=0)
+    top, bot = (255, 235) if pressed else (205, 90)
+    g = Image.new("L", (1, DD), 0)
+    for y in range(DD):
+        t = min(max((y - pad * S) / (diam * S), 0), 1)
+        g.putpixel((0, y), int(top + (bot - top) * t ** 0.8))
+    g = g.resize((DD, DD))
+    fill = Image.new("RGBA", (DD, DD), (255, 255, 255, 255))
+    fill.putalpha(ImageChops.multiply(g, m))
+    spec = Image.new("L", (DD, DD), 0)
+    ImageDraw.Draw(spec).arc([pad * S + wd // 3, pad * S + wd // 3, (pad + diam) * S - wd // 3, (pad + diam) * S - wd // 3],
+                             195, 300, fill=255 if pressed else 200, width=max(2, wd // 3))
+    spec = spec.filter(ImageFilter.GaussianBlur(S * 0.7))
+    sp = Image.new("RGBA", (DD, DD), (255, 255, 255, 255)); sp.putalpha(ImageChops.multiply(spec, m))
+    edge = Image.new("RGBA", (DD, DD), (0, 0, 0, 0)); ed = ImageDraw.Draw(edge)
+    ed.ellipse([pad * S, pad * S, (pad + diam) * S, (pad + diam) * S],
+               outline=(255, 255, 255, 200 if pressed else 120), width=max(1, S // 2))
+    ed.ellipse([pad * S + wd, pad * S + wd, (pad + diam) * S - wd, (pad + diam) * S - wd],
+               outline=(10, 40, 70, 70), width=max(1, S // 2))
+    for l in (fill, sp, edge):
+        layer = Image.alpha_composite(layer, l)
+    return layer.resize((D, D), Image.LANCZOS)
+
+# ---------- css ----------
+def panel_css(acc):
+    hi = [int(x) for x in mix(acc, (255, 255, 255), 0.5)]
+    lo = [int(x) for x in mix(acc, (0, 0, 0), 0.4)]
+    mid = acc
+    lum = 0.299 * acc[0] + 0.587 * acc[1] + 0.114 * acc[2]
+    fg = "#0e2f47" if lum > 150 else "#ffffff"
+    def rgba(c, a): return "rgba(%d,%d,%d,%.2f)" % (c[0], c[1], c[2], a)
+    css = f"""/* customos panel glass: generated by customos-theme-render */
+#XfcePanelWindow, .xfce4-panel.background {{
+  background-image: linear-gradient(to bottom, {rgba(hi,.63)} 0%, {rgba(mid,.69)} 45%, {rgba(lo,.76)} 100%);
+  background-color: transparent;
+  border-radius: 22px 22px 0 0;
+  border: none; box-shadow: none; text-shadow: none;
+}}
+.xfce4-panel button, .xfce4-panel label, .xfce4-panel button label {{
+  color: {fg}; text-shadow: none; box-shadow: none;
+  background-image: none; background-color: transparent; border-color: transparent;
+}}
+.xfce4-panel button:hover, .xfce4-panel button:checked {{
+  background-color: rgba(255,255,255,.22); border-radius: 12px;
+}}
+#whiskermenu-button image {{ -gtk-icon-effect: none; }}
+#whiskermenu-button:hover image, #whiskermenu-button:checked image {{ -gtk-icon-effect: highlight; }}
+"""
+    return css, fg
+
+def hexs(c): return "#%02x%02x%02x" % tuple(c)
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--hex")
+    ap.add_argument("--target", default="user")
+    ap.add_argument("--root", default="")
+    ap.add_argument("--only", default="all")  # all | icons | wall | panel
+    ap.add_argument("--wall-out")
+    ap.add_argument("--default-live-wallpaper")
+    ap.add_argument("--src")
+    a = ap.parse_args()
+    if a.default_live_wallpaper:
+        im = Image.open(a.src or BASE_WALL)
+        hshift(im).save(a.default_live_wallpaper)
+        return
+    acc = hx(a.hex)
+    home = os.path.expanduser("~")
+    if a.target == "system":
+        icon_dir = a.root + "/usr/share/icons/hicolor/256x256/apps"
+        orb_dir = a.root + "/usr/share/pixmaps/customos"
+        css_out = a.root + "/etc/skel/.config/customos/panel.css"
+        wall_out = None
+    else:
+        icon_dir = home + "/.local/share/icons/hicolor/256x256/apps"
+        orb_dir = home + "/.local/share/customos"
+        css_out = home + "/.config/customos/panel.css"
+        wall_out = a.wall_out
+    for p in (icon_dir, orb_dir, os.path.dirname(css_out)):
+        os.makedirs(p, exist_ok=True)
+    if a.only in ("all", "icons"):
+        for name, master in ICONS.items():
+            recolor_icon(f"{SRC}/icons-gray/{master}.png", acc).save(f"{icon_dir}/{name}.png")
+        make_orb(acc).save(f"{orb_dir}/orb.png")
+        make_orb(acc, pressed=True).save(f"{orb_dir}/orb-pressed.png")
+    if a.only in ("all", "panel"):
+        css, fg = panel_css(acc)
+        open(css_out, "w").write(css)
+        open(os.path.dirname(css_out) + "/panel-fg", "w").write(fg)
+    if a.only in ("all", "wall") and wall_out:
+        recolor_wall(Image.open(BASE_WALL), acc).save(wall_out)
+
+main()

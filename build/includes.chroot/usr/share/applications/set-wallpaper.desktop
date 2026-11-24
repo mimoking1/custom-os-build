@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Wallpaper Settings
+Name[ar]=إعدادات الخلفية
+Exec=xfdesktop-settings
+Icon=preferences-desktop-wallpaper
+Categories=Settings;

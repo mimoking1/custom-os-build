@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+chmod +x /etc/skel/Desktop/*.desktop 2>/dev/null || true
+chmod +x /usr/local/bin/customos-* /usr/local/bin/theme-color* 2>/dev/null || true
+gtk-update-icon-cache -f /usr/share/icons/hicolor >/dev/null 2>&1 || true
+fc-cache -f >/dev/null 2>&1 || true

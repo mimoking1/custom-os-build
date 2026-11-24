@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Live Guide
+Name[ar]=دليل النسخة التجريبية
+Exec=mousepad /usr/share/customos/guides/README-LIVE.txt
+Icon=customos-guide
+Terminal=false
+Categories=Utility;

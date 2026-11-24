@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=File System
+Name[ar]=نظام الملفات
+Exec=thunar /
+Icon=customos-fs
+Terminal=false
+Categories=Utility;
