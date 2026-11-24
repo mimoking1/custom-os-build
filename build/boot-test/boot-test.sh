@@ -18,7 +18,10 @@ qemu-system-x86_64 \
   -serial file:"$OUT/serial.log" \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
 QPID=$!
-# staged screenshots: boot menu, early live boot, desktop
+# auto-select the default boot entry, then staged screenshots: boot menu, early live boot, desktop
+sleep 8
+echo "sendkey ret" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'sendkey ret
+' | nc -U "$MON" || true
 for t in $TIMES; do
   sleep "$([ "$t" = 15 ] && echo 15 || echo $((t - prev)))"; prev=$t
   echo "screendump $OUT/shot-${t}s.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || \
