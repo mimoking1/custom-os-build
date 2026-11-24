@@ -19,6 +19,12 @@ LB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/l/live-build/ | grep -o
 echo "==> Using Debian $LB_DEB"
 curl -fsS -o /tmp/live-build.deb "https://deb.debian.org/debian/pool/main/l/live-build/$LB_DEB"
 dpkg -i /tmp/live-build.deb > /dev/null || apt-get install -f -y -qq > /dev/null
+# 4s auto-boot on the USB menu (default templates wait forever: timeout 0)
+sed -i 's/^timeout .*/timeout 40/' \
+  /usr/share/live/build/bootloaders/isolinux/isolinux.cfg \
+  /usr/share/live/build/bootloaders/syslinux/syslinux.cfg 2>/dev/null || true
+sed -i 's/^set timeout=.*/set timeout=4/' \
+  /usr/share/live/build/bootloaders/grub-efi/grub.cfg 2>/dev/null || true
 # debootstrap must know the target suite
 if [ ! -e "/usr/share/debootstrap/scripts/$DEBIAN_SUITE" ]; then
   DB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/d/debootstrap/ | grep -o 'debootstrap_[^"]*_all.deb' | sort -V | tail -1)
@@ -46,8 +52,7 @@ lb config \
   --bootloaders "syslinux,grub-efi" \
   --memtest none \
   --zsync false \
-  --syslinux-timeout 4 \
-  --compression zstd
+  --chroot-squashfs-compression-type zstd
 
 echo "==> Package lists"
 mkdir -p config/package-lists
