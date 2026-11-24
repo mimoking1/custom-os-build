@@ -61,7 +61,7 @@ if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"
   for f in config/includes.chroot/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml \
            config/includes.chroot/etc/xdg/xfce4/panel/default.xml; do
-    sed -i -e 's/value="0.03"/value="0.11"/' -e 's/value="0.35"/value="0.44"/' -e 's/value="0.33"/value="0.77"/' "$f"
+    sed -i -e 's/value="0.03"/value="0.31"/' -e 's/value="0.35"/value="0.70"/' -e 's/value="0.33"/value="0.97"/' "$f"
   done
   sed -i -e 's/#08e8de/#4fb2f7/g' -e 's/rgba(47,191,169,.35)/rgba(79,178,247,.35)/g' \
     config/includes.chroot/etc/skel/.config/gtk-3.0/gtk.css
@@ -99,8 +99,8 @@ PLY=config/includes.chroot/usr/share/plymouth/themes/customos
 mkdir -p "$PLY/frames"
 cp ../build/plymouth/customos/customos.plymouth ../build/plymouth/customos/customos.script "$PLY/"
 if [ "$VARIANT" = "live" ]; then
-  sed -i -e 's/Window.SetBackgroundTopColor(0.03, 0.55, 0.52);/Window.SetBackgroundTopColor(0.106, 0.435, 0.769);/' \
-         -e 's/Window.SetBackgroundBottomColor(0.03, 0.78, 0.74);/Window.SetBackgroundBottomColor(0.388, 0.804, 0.961);/' \
+  sed -i -e 's/Window.SetBackgroundTopColor(0.03, 0.55, 0.52);/Window.SetBackgroundTopColor(0.184, 0.561, 0.875);/' \
+         -e 's/Window.SetBackgroundBottomColor(0.03, 0.78, 0.74);/Window.SetBackgroundBottomColor(0.498, 0.831, 0.969);/' \
          "$PLY/customos.script"
 fi
 python3 ../build/plymouth/gen-frames.py ../theme/crescent-moon.png "$PLY/frames"
@@ -113,7 +113,7 @@ fi
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux
 if [ "$VARIANT" = "live" ]; then
-  sed -e "s/@OS_NAME@/$OS_NAME/g" -e 's/#0a9d96/#1b6fc4/g' -e 's/#08e8de/#63cdf5/g' -e 's/#eafefc/#eefaff/g' \
+  sed -e "s/@OS_NAME@/$OS_NAME/g" -e 's/#0a9d96/#2f8fdf/g' -e 's/#08e8de/#7fd4f7/g' -e 's/#eafefc/#eefaff/g' \
     ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
 else
   sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
