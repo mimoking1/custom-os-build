@@ -4,8 +4,14 @@
 set -uo pipefail
 ISO="${1:?iso path}"; OUT="${2:?out dir}"; mkdir -p "$OUT"
 MON="$OUT/monitor.sock"
+if [ -w /dev/kvm ]; then
+  ACCEL="-enable-kvm"; TIMES="15 60 150 260"
+else
+  echo "KVM unavailable, falling back to TCG (slower)"
+  ACCEL="-accel tcg,thread=multi"; TIMES="20 90 240 420"
+fi
 qemu-system-x86_64 \
-  -enable-kvm -m 3072 -smp 2 \
+  $ACCEL -m 3072 -smp 2 \
   -cdrom "$ISO" -boot d \
   -display none -vga virtio \
   -monitor unix:"$MON",server,nowait \
@@ -13,7 +19,7 @@ qemu-system-x86_64 \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
 QPID=$!
 # staged screenshots: boot menu, early live boot, desktop
-for t in 15 60 150 260; do
+for t in $TIMES; do
   sleep "$([ "$t" = 15 ] && echo 15 || echo $((t - prev)))"; prev=$t
   echo "screendump $OUT/shot-${t}s.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || \
     printf 'screendump %s\n' "$OUT/shot-${t}s.ppm" | nc -U "$MON" || true
