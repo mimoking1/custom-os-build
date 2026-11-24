@@ -18,7 +18,7 @@
         <value value="1" type="int"/><value value="2" type="int"/><value value="3" type="int"/>
         <value value="4" type="int"/><value value="6" type="int"/><value value="7" type="int"/>
       </property>
-      <property name="plugin-1" type="string" value="whiskermenu">
+      <property name="plugin-1" type="string" value="applicationsmenu">
         <property name="button-icon" type="string" value="/usr/share/pixmaps/customos/crescent-moon.png"/>
         <property name="button-title" type="string" value="Start"/>
         <property name="show-button-title" type="bool" value="false"/>

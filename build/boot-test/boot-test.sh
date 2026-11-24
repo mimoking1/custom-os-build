@@ -18,8 +18,11 @@ qemu-system-x86_64 \
   -serial file:"$OUT/serial.log" \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
 QPID=$!
-# auto-select the default boot entry, then staged screenshots: boot menu, early live boot, desktop
-sleep 8
+# capture the branded boot menu first, then auto-select the default entry
+sleep 4
+echo "screendump $EVIDENCE/shot-04s-menu.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'screendump %s\n' "$EVIDENCE/shot-04s-menu.ppm" | nc -U "$MON"
+convert "$EVIDENCE/shot-04s-menu.ppm" "$EVIDENCE/shot-04s-menu.png" 2>/dev/null || true
+sleep 4
 echo "sendkey ret" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'sendkey ret
 ' | nc -U "$MON" || true
 for t in $TIMES; do
