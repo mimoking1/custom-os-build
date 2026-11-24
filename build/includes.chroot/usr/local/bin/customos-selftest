@@ -24,6 +24,8 @@ R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true)"
 R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 || true)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
+R firmware-files "$(ls /lib/firmware 2>/dev/null | wc -l)"
+R firmware-loaded "$(sudo dmesg | grep -ci 'firmware' || true)"
 R wallpaper-now "$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>&1 || true)"
 # which wallpaper / icons / panel files exist
 [ -f /usr/share/icons/hicolor/256x256/apps/customos-pc.png ] && R icons PASS || R icons FAIL
