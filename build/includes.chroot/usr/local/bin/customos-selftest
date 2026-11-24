@@ -2,7 +2,7 @@
 # Runs only when QEMU passes opt/customos/selftest through fw_cfg (CI boot test). Does nothing on real machines.
 sudo modprobe qemu_fw_cfg 2>/dev/null
 F=/sys/firmware/qemu_fw_cfg/by_name/opt/customos/selftest/raw
-if [ ! -r "$F" ]; then [ -d /sys/firmware/qemu_fw_cfg ] && echo "SELFTEST-NOFILE" | sudo tee /dev/ttyS0 >/dev/null; exit 0; fi
+if ! sudo test -r "$F"; then [ -d /sys/firmware/qemu_fw_cfg ] && { echo "SELFTEST-NOFILE" | sudo tee /dev/ttyS0 >/dev/null; sudo ls -R /sys/firmware/qemu_fw_cfg/by_name 2>&1 | head -20 | sudo tee /dev/ttyS0 >/dev/null; }; exit 0; fi
 S() { echo "$*" | sudo tee /dev/ttyS0 >/dev/null; }
 SHOT() { S "SELFTEST-SHOT $1"; sleep 5; }
 R() { S "SELFTEST-RESULT $1=$2"; }
