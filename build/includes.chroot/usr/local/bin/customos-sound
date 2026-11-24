@@ -1,0 +1,9 @@
+#!/bin/sh
+# Play one of the system sounds with whatever player exists. Silent if none.
+f="/usr/share/customos/sounds/$1.wav"
+[ -f "$f" ] || exit 0
+if command -v paplay >/dev/null 2>&1; then exec paplay "$f"
+elif command -v pw-play >/dev/null 2>&1; then exec pw-play "$f"
+elif command -v aplay >/dev/null 2>&1; then exec aplay -q "$f"
+fi
+exit 0

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Custom OS USB sounds
+Exec=/usr/local/bin/customos-usb-sounds
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

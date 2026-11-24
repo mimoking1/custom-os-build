@@ -82,6 +82,10 @@ if command -v wine >/dev/null; then
   timeout 120 wine msiexec /? >/dev/null 2>&1; [ $? -le 1 ] && R wine-msiexec PASS || R wine-msiexec FAIL
   [ "$(xdg-mime query default application/x-msi)" = customos-wine-open.desktop ] && R mime-msi PASS || R mime-msi FAIL
   [ "$(xdg-mime query default application/x-ms-dos-executable)" = customos-wine-open.desktop ] && R mime-exe PASS || R mime-exe FAIL
+ls /usr/share/customos/sounds/{startup,shutdown,usb-plug,usb-unplug}.wav >/dev/null 2>&1 && R sound-files PASS || R sound-files FAIL
+P=none; for p in paplay pw-play aplay; do command -v $p >/dev/null 2>&1 && { P=$p; break; }; done; [ "$P" != none ] && R sound-player PASS\($P\) || R sound-player FAIL
+systemctl is-enabled customos-shutdown-sound.service >/dev/null 2>&1 && R shutdown-sound-unit PASS || R shutdown-sound-unit FAIL
+aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEMU
   wine notepad >/dev/null 2>&1 &
   sleep 12; SHOT 12-wine-notepad
   pkill -f notepad
