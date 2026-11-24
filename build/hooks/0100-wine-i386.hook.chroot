@@ -3,11 +3,13 @@
 set -e
 if [ "$(dpkg --print-architecture)" = "i386" ]; then
   apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y wine winetricks
+  DEBIAN_FRONTEND=noninteractive apt-get install -y wine winetricks cabextract
 else
   dpkg --add-architecture i386
   apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y wine wine64 wine32:i386 winetricks
+  DEBIAN_FRONTEND=noninteractive apt-get install -y wine wine64 wine32:i386 winetricks cabextract
 fi
 update-desktop-database /usr/share/applications || true
+update-mime-database /usr/share/mime || true
+# make double-click work for Windows file types
 update-mime-database /usr/share/mime || true

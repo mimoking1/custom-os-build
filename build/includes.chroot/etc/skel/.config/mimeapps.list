@@ -1,7 +1,13 @@
 [Default Applications]
-application/x-ms-dos-executable=wine.desktop
-application/x-msi=wine.desktop
-application/vnd.microsoft.portable-executable=wine.desktop
+application/x-ms-dos-executable=customos-wine-open.desktop
+application/x-msdownload=customos-wine-open.desktop
+application/x-msi=customos-wine-open.desktop
+application/x-ms-shortcut=customos-wine-open.desktop
+application/x-bat=customos-wine-open.desktop
+application/x-msdos-program=customos-wine-open.desktop
+application/vnd.microsoft.portable-executable=customos-wine-open.desktop
+application/x-dosexec=customos-wine-open.desktop
+text/x-msdos-batch=customos-wine-open.desktop
 x-scheme-handler/http=hilal-browser.desktop
 x-scheme-handler/https=hilal-browser.desktop
 text/html=hilal-browser.desktop

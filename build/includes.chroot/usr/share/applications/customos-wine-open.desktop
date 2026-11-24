@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Windows Program (Wine)
+Name[ar]=برنامج ويندوز (Wine)
+Exec=/usr/local/bin/customos-wine-open %f
+Icon=wine
+NoDisplay=true
+MimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;application/x-ms-shortcut;application/x-bat;application/x-msdos-program;application/vnd.microsoft.portable-executable;application/x-dosexec;text/x-msdos-batch;
