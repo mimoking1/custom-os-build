@@ -56,6 +56,11 @@ fi
 
 echo "==> Includes (theme, skel, branding)"
 cp -a ../build/includes.chroot config/
+# our fonts: runner needs them for artwork rendering, the ISO ships them
+mkdir -p "$HOME/.local/share/fonts"
+cp ../theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f > /dev/null 2>&1 || true
+mkdir -p config/includes.chroot/usr/share/fonts/truetype/customos
+cp ../theme/fonts/*.ttf config/includes.chroot/usr/share/fonts/truetype/customos/
 # OS name substitution across shipped files
 grep -rl '@OS_NAME@' config/includes.chroot | while read -r f; do
   sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"
@@ -70,6 +75,13 @@ for WP in ../theme/wallpaper/*.svg; do
   rsvg-convert -w 1920 -h 1080 "$WP" \
     -o "config/includes.chroot/usr/share/backgrounds/customos/$(basename "$WP" .svg).png"
 done
+
+echo "==> Plymouth boot animation (3D crescent flip)"
+PLY=config/includes.chroot/usr/share/plymouth/themes/customos
+mkdir -p "$PLY/frames"
+cp ../build/plymouth/customos/customos.plymouth ../build/plymouth/customos/customos.script "$PLY/"
+python3 ../build/plymouth/gen-frames.py ../theme/crescent-moon.png "$PLY/frames"
+sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
 
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux

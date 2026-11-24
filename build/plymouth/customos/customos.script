@@ -1,0 +1,26 @@
+# Custom OS boot splash: teal gradient, 3D-flip crescent animation, title.
+Window.SetBackgroundTopColor(0.03, 0.55, 0.52);
+Window.SetBackgroundBottomColor(0.03, 0.78, 0.74);
+
+frames = [];
+for (i = 0; i < 24; i++)
+  frames[i] = Image("frames/flip-" + (i < 10 ? "0" : "") + i + ".png");
+
+title = Image("title.png");
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+
+moon = Sprite(frames[0]);
+moon.SetPosition(screen_w / 2 - 140, screen_h / 2 - 190, 0);
+
+title_sprite = Sprite(title);
+title_sprite.SetPosition(screen_w / 2 - title.GetWidth() / 2, screen_h / 2 + 10, 0);
+
+frame = 0;
+fun refresh_callback()
+  {
+    moon.SetImage(frames[Math.int(frame) % 24]);
+    frame += 0.5;  # half-speed for a slow, smooth flip
+  }
+Plymouth.SetRefreshFunction(refresh_callback);

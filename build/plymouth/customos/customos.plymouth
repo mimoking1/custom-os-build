@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Custom OS
+Description=Custom OS boot splash - animated crescent
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/customos
+ScriptFile=/usr/share/plymouth/themes/customos/customos.script

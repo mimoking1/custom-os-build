@@ -31,3 +31,6 @@ pngtree's free license is personal/non-profit only, requires an account and
 attribution, and forbids redistribution. wallpaper-islamic-skyline.svg is an
 ORIGINAL design (mosque skyline silhouette + gold crescent over the aqua waves)
 made in the same spirit.
+
+## Fonts
+- Comfortaa (rounded display font, boot artwork title): SIL Open Font License 1.1, https://github.com/googlefonts/comfortaa

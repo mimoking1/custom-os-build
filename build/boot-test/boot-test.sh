@@ -5,7 +5,7 @@ set -uo pipefail
 ISO="${1:?iso path}"; OUT="${2:?out dir}"; mkdir -p "$OUT"
 MON="$OUT/monitor.sock"
 if [ -w /dev/kvm ]; then
-  ACCEL="-enable-kvm"; TIMES="15 60 150 260"
+  ACCEL="-enable-kvm"; TIMES="14 22 30 60 150 260"
 else
   echo "KVM unavailable, falling back to TCG (slower)"
   ACCEL="-accel tcg,thread=multi"; TIMES="20 90 240 420"
