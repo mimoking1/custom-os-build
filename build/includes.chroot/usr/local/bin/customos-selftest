@@ -91,6 +91,11 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   wine notepad >/dev/null 2>&1 &
   sleep 12; SHOT 12-wine-notepad
   pkill -f notepad
+  ( /usr/local/bin/customos-tahmeel >/tmp/tahmeel.log 2>&1 & ); sleep 240; SHOT 13-tahmeel-wine
+  ls "$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel/Tahmeel.exe" >/dev/null 2>&1 && R tahmeel-installed PASS || R tahmeel-installed FAIL
+  pgrep -f Tahmeel.exe >/dev/null && R tahmeel-running PASS || R tahmeel-running FAIL
+  sleep 20; SHOT 14-tahmeel-wine-later
+  pkill -f Tahmeel.exe
 else R wine-cmd "FAIL(no wine)"; fi
 S "SELFTEST-DONE"
 exit 0
