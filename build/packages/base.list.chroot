@@ -70,3 +70,6 @@ xdg-desktop-portal-gtk
 # graphical app store (Flathub is preconfigured)
 gnome-software
 gnome-software-plugin-flatpak
+fonts-dejavu-core
+fonts-liberation
+fonts-noto-ui-core
