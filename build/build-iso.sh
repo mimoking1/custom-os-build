@@ -65,6 +65,10 @@ if [ "$VARIANT" = "live" ]; then
   done
   sed -i -e 's/#08e8de/#4fb2f7/g' -e 's/rgba(47,191,169,.35)/rgba(79,178,247,.35)/g' \
     config/includes.chroot/etc/skel/.config/gtk-3.0/gtk.css
+  find config/includes.chroot/usr/share/themes/CustomOS -name '*.xpm' -exec \
+    sed -i 's/#08e8de/#4fb2f7/g; s/#52eee7/#83c9f9/g; s/#06aea6/#3b85b9/g' {} +
+  sed -i 's/#08e8de #52eee7 #06aea6/#4fb2f7 #83c9f9 #3b85b9/' \
+    config/includes.chroot/etc/skel/.config/customos/theme-colors
 fi
 # our fonts: runner needs them for artwork rendering, the ISO ships them
 mkdir -p "$HOME/.local/share/fonts"

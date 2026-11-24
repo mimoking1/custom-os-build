@@ -1,0 +1,26 @@
+/* XPM */
+static char * x[] = {
+"20 20 2 1",
+"a c #06aea6",
+"g c #ffffff",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaggaaaaaaaaggaaaa",
+"aaaagggaaaaaagggaaaa",
+"aaaaagggaaaagggaaaaa",
+"aaaaaagggaagggaaaaaa",
+"aaaaaaaggggggaaaaaaa",
+"aaaaaaaaggggaaaaaaaa",
+"aaaaaaaaggggaaaaaaaa",
+"aaaaaaaggggggaaaaaaa",
+"aaaaaagggaagggaaaaaa",
+"aaaaagggaaaagggaaaaa",
+"aaaagggaaaaaagggaaaa",
+"aaaaggaaaaaaaaggaaaa",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaaaaaa",
+"aaaaaaaaaaaaaaaaaaaa"
+};
