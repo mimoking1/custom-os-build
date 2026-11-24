@@ -73,6 +73,17 @@ fi
 
 echo "==> Includes (theme, skel, branding)"
 cp -a ../build/includes.chroot config/
+# every launcher in /usr/local/bin must be executable (git modes have bitten us)
+chmod 755 config/includes.chroot/usr/local/bin/* 2>/dev/null || true
+# Tahmeel: unpack the NSIS payload at build time; Wine runs the app directly (no flaky install)
+echo "==> Tahmeel: extract app payload for direct Wine launch"
+apt-get install -y -qq p7zip-full > /dev/null
+TAH=config/includes.chroot/opt/tahmeel
+mkdir -p "$TAH/app"
+7z x -y -o"$TAH/app" "$TAH/Tahmeel-Setup.exe" > /dev/null
+rm -rf "$TAH/app/\$PLUGINSDIR"
+rm -f "$TAH"/Tahmeel-Setup.exe
+[ -s "$TAH/app/Tahmeel.exe" ] || { echo "Tahmeel payload missing after extraction"; exit 1; }
 . ../build/browser-name.conf
 mkdir -p config/includes.chroot/usr/share/customos
 cp ../build/browser-name.conf config/includes.chroot/usr/share/customos/browser.conf

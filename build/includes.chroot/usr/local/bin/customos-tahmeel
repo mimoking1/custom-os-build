@@ -1,9 +1,6 @@
 #!/bin/bash
-# Launch Tahmeel (Windows download manager) under Wine; installs per-user on first run.
+# Launch Tahmeel (Windows download manager) under Wine from the pre-unpacked payload.
 export WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml="
-EXE="$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel/Tahmeel.exe"
-if [ ! -f "$EXE" ]; then
-  wine /opt/tahmeel/Tahmeel-Setup.exe /S || exit 1
-  wineserver -w
-fi
-exec wine "$EXE" "$@"
+APP=/opt/tahmeel/app/Tahmeel.exe
+[ -f "$APP" ] || { echo "Tahmeel payload not found at $APP" >&2; exit 1; }
+exec wine "$APP" --no-sandbox --disable-gpu "$@"

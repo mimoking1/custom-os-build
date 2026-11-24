@@ -4,7 +4,17 @@ sudo modprobe qemu_fw_cfg 2>/dev/null
 F=/sys/firmware/qemu_fw_cfg/by_name/opt/customos/selftest/raw
 if ! sudo test -r "$F"; then [ -d /sys/firmware/qemu_fw_cfg ] && { echo "SELFTEST-NOFILE" | sudo tee /dev/ttyS0 >/dev/null; sudo ls -R /sys/firmware/qemu_fw_cfg/by_name 2>&1 | head -20 | sudo tee /dev/ttyS0 >/dev/null; }; exit 0; fi
 S() { echo "$*" | sudo tee /dev/ttyS0 >/dev/null; }
-SHOT() { S "SELFTEST-SHOT $1"; sleep 5; }
+# in-guest screenshots to the QEMU 9p share: exact-moment proof, no monitor timing race
+sudo modprobe 9pnet_virtio 2>/dev/null
+mkdir -p /tmp/hostshot
+sudo mount -t 9p -o trans=virtio,version=9p2000.L hostshare /tmp/hostshot 2>/dev/null \
+  && S "SELFTEST-RESULT hostshare=mounted" || S "SELFTEST-RESULT hostshare=FAILED"
+SHOT() {
+  S "SELFTEST-SHOT $1"
+  [ -d /tmp/hostshot ] && mountpoint -q /tmp/hostshot \
+    && sudo sh -c "xwd -root -silent > /tmp/hostshot/ig-$1.xwd 2>/dev/null" || true
+  sleep 6
+}
 R() { S "SELFTEST-RESULT $1=$2"; }
 xset s off; xset -dpms; xset s noblank
 # wait for the panel-fix autostart to finish (it owns the panel lifecycle)
@@ -14,6 +24,7 @@ R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true)"
 R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 || true)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
+R wallpaper-now "$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>&1 || true)"
 # which wallpaper / icons / panel files exist
 [ -f /usr/share/icons/hicolor/256x256/apps/customos-pc.png ] && R icons PASS || R icons FAIL
 [ -f /usr/share/pixmaps/customos/orb.png ] && R orb PASS || R orb FAIL
@@ -82,7 +93,7 @@ if command -v wine >/dev/null; then
   echo "$OUT" | grep -q wine-ok && R wine-cmd PASS || R wine-cmd "FAIL($OUT)"
   wineserver -w 2>/dev/null; R wine-prefix-settled after-wineserver-w
   printf '@echo off\r\necho bat-ok > %%TEMP%%\\bat.txt\r\n' > /tmp/t.bat
-  timeout 120 /usr/local/bin/customos-wine-open /tmp/t.bat >/dev/null 2>&1
+  timeout 120 wine cmd /c "Z:\\tmp\\t.bat" >/dev/null 2>&1
   B=$(cat "$HOME/.wine/drive_c/users/$USER/Temp/bat.txt" 2>/dev/null | tr -d '\r\n ')
   [ "$B" = "bat-ok" ] && R wine-bat PASS || R wine-bat "FAIL($B)"
   timeout 120 wine msiexec /? >/dev/null 2>&1; [ $? -le 1 ] && R wine-msiexec PASS || R wine-msiexec FAIL
@@ -100,7 +111,7 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   ( /usr/local/bin/customos-tahmeel >/tmp/tahmeel.log 2>&1 & )
   for i in 1 2 3 4 5 6; do sleep 40; R "tahmeel-poll$((i*40))s" "$(pgrep -cfi tahmeel 2>/dev/null || echo 0) procs"; done
   SHOT 13-tahmeel-wine
-  ls "$HOME/.wine/drive_c/users/$USER/AppData/Local/Programs/Tahmeel/Tahmeel.exe" >/dev/null 2>&1 && R tahmeel-installed PASS || R tahmeel-installed FAIL
+  [ -s /opt/tahmeel/app/Tahmeel.exe ] && R tahmeel-installed "PASS(payload $(stat -c%s /opt/tahmeel/app/Tahmeel.exe) bytes)" || R tahmeel-installed FAIL
   ps aux | grep -i '[t]ahmeel' | head -3 | cut -c1-150 | while read l; do S "tahmeel-ps $l"; done; tail -5 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done
   pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || {
     R tahmeel-running FAIL

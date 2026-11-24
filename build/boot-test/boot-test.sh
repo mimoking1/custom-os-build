@@ -4,6 +4,7 @@
 set -uo pipefail
 ISO="${1:?iso path}"; OUT="${2:?out dir}"; mkdir -p "$OUT"
 MON="$OUT/monitor.sock"
+mkdir -p "$OUT/hostshare"
 if [ -w /dev/kvm ]; then
   ACCEL="-enable-kvm"; TIMES="14 22 30 60 150 260"
 else
@@ -17,6 +18,7 @@ ${QEMU_BIN:-qemu-system-x86_64} ${QEMU_CPU:+-cpu $QEMU_CPU} \
   -monitor unix:"$MON",server,nowait \
   -serial file:"$OUT/serial.log" \
   -fw_cfg name=opt/customos/selftest,string=1 \
+  -virtfs local,path="$OUT/hostshare",mount_tag=hostshare,security_model=none \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
 QPID=$!
 # capture the branded boot menu first, then auto-select the default entry
@@ -44,6 +46,13 @@ while [ $SECONDS -lt $END ]; do
     grep -aq 'SELFTEST-DONE' "$OUT/serial.log" && break
   fi
 done
+# in-guest screenshots: convert xwd dumps from the 9p share into the artifact dir
+if command -v convert >/dev/null 2>&1; then
+  for f in "$OUT"/hostshare/*.xwd; do
+    [ -e "$f" ] || continue
+    convert "$f" "$OUT/$(basename "${f%.xwd}").png" 2>/dev/null || true
+  done
+fi
 tr -d '\r' < "$OUT/serial.log" | grep -a '^SELFTEST-' > "$OUT/selftest-results.txt" || true
 cat "$OUT/selftest-results.txt"
 sleep 3
