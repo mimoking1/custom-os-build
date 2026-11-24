@@ -7,18 +7,11 @@ S() { echo "$*" | sudo tee /dev/ttyS0 >/dev/null; }
 SHOT() { S "SELFTEST-SHOT $1"; sleep 5; }
 R() { S "SELFTEST-RESULT $1=$2"; }
 xset s off; xset -dpms; xset s noblank
-sleep 25
-# compositor / panel diagnostics for the black-plugin-box investigation
-R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1)"
-R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1)"
-# if the compositor never claimed the screen, try a runtime re-toggle and re-probe
-if ! xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
-  xfconf-query -c xfwm4 -p /general/use_compositing -s false; sleep 2
-  xfconf-query -c xfwm4 -p /general/use_compositing -s true; sleep 5
-  R diag-compositor-after-retoggle "$(xprop -root _NET_WM_CM_S0 2>&1)"
-  xfce4-panel -r 2>/dev/null
-  sleep 4
-fi
+# wait for the panel-fix autostart to finish (it owns the panel lifecycle)
+for i in $(seq 1 60); do [ -f /tmp/customos-panel-fix-done ] && break; sleep 2; done
+sleep 6
+R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true)"
+R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 || true)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
 # which wallpaper / icons / panel files exist
