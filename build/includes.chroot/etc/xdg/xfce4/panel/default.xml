@@ -48,11 +48,13 @@
       <property name="display-name" type="uint" value="0"/>
     </property>
     <property name="plugin-7" type="string" value="clock">
-      <property name="digital-layout" type="uint" value="3"/>
+      <property name="digital-layout" type="uint" value="1"/>
+      <property name="digital-time-format" type="string" value="%I:%M %p"/>
       <property name="digital-format" type="string" value="%I:%M %p"/>
     </property>
     <property name="plugin-9" type="string" value="clock">
-      <property name="digital-layout" type="uint" value="3"/>
+      <property name="digital-layout" type="uint" value="1"/>
+      <property name="digital-time-format" type="string" value="&lt;span font_family='Comfortaa' weight='bold' size='9pt'&gt;Directed by Mohamed Sayed  ·  &lt;/span&gt;&lt;span font_family='Noto Kufi Arabic' weight='bold' size='8pt'&gt;محمد سيد&lt;/span&gt;"/>
       <property name="digital-format" type="string" value="&lt;span font_family='Comfortaa' weight='bold' size='9pt'&gt;Directed by Mohamed Sayed  ·  &lt;/span&gt;&lt;span font_family='Noto Kufi Arabic' weight='bold' size='8pt'&gt;محمد سيد&lt;/span&gt;"/>
     </property>
   </property>
