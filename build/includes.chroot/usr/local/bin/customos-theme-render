@@ -108,7 +108,7 @@ def trim(im, t=10):
     bbox = im.split()[-1].point(lambda a: 255 if a > t else 0).getbbox()
     return im.crop(bbox) if bbox else im
 
-def make_orb(acc, diam=44, pressed=False):
+def make_orb(acc, diam=52, pressed=False):
     S = 6
     pad = 6
     D = diam + 2 * pad
@@ -174,16 +174,23 @@ def panel_css(acc):
 #XfcePanelWindow, .xfce4-panel.background {{
   background-image: linear-gradient(to bottom, {rgba(hi,.63)} 0%, {rgba(mid,.69)} 45%, {rgba(lo,.76)} 100%);
   background-color: transparent;
-  border-radius: 22px 22px 0 0;
-  border: none; box-shadow: none; text-shadow: none;
+  background-clip: padding-box;
+  border-style: solid; border-color: transparent;
+  border-width: 22px 12px 8px 12px;
+  border-radius: 22px;
+  box-shadow: none; text-shadow: none;
 }}
+#XfcePanelWindow * {{ background-image: none; background-color: transparent; border-image: none; box-shadow: none; text-shadow: none; }}
 .xfce4-panel button, .xfce4-panel label, .xfce4-panel button label {{
   color: {fg}; text-shadow: none; box-shadow: none;
   background-image: none; background-color: transparent; border-color: transparent;
 }}
+.xfce4-panel label {{ padding-top: 12px; }}
+.xfce4-panel button {{ padding: 0 4px; margin: 0; min-height: 0; }}
 .xfce4-panel button:hover, .xfce4-panel button:checked {{
   background-color: rgba(255,255,255,.22); border-radius: 12px;
 }}
+#whiskermenu-button {{ padding: 0; margin: 0 0 0 0; }}
 #whiskermenu-button image {{ -gtk-icon-effect: none; }}
 #whiskermenu-button:hover image, #whiskermenu-button:checked image {{ -gtk-icon-effect: highlight; }}
 """
