@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Theme Color
+Name[ar]=لون السمة
+Comment=Change the taskbar and app accent color
+Comment[ar]=غيّر لون شريط المهام ولون السمة
+Exec=/usr/local/bin/theme-color
+Icon=preferences-color
+Categories=Settings;
+Keywords=color;theme;accent;لون;سمة;

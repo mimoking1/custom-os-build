@@ -7,3 +7,5 @@ Welcome to @OS_NAME@ (working title)
 - Security updates install automatically; control them in Settings > Security Updates.
 
 Directed by Mohamed Sayed · محمد سيد
+
+Theme Color: Settings > Theme Color lets you change the taskbar and app accent color anytime (presets or any custom color).

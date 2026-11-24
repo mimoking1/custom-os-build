@@ -1,0 +1,57 @@
+#!/bin/bash
+# Theme Color: change the system accent color (taskbar + app highlights).
+# Presets or any custom color; applies instantly, no restart of the session.
+set -u
+
+hex_to_rgb() { printf "%d %d %d" "0x${1:1:2}" "0x${1:3:2}" "0x${1:5:2}"; }
+
+apply_color() {
+  HEX="$1"
+  read -r R G B <<EOF2
+$(hex_to_rgb "$HEX")
+EOF2
+  RF=$(awk "BEGIN{printf \"%.3f\", $R/255}")
+  GF=$(awk "BEGIN{printf \"%.3f\", $G/255}")
+  BF=$(awk "BEGIN{printf \"%.3f\", $B/255}")
+  # taskbar background
+  xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba --create \
+    -t double -t double -t double -t double -s "$RF" -s "$GF" -s "$BF" -s 0.92 2>/dev/null || true
+  # app accent + selection color
+  for v in 3.0 4.0; do
+    mkdir -p "$HOME/.config/gtk-$v"
+    cat > "$HOME/.config/gtk-$v/gtk.css" <<CSS
+@define-color accent_color $HEX;
+@define-color accent_bg_color $HEX;
+@define-color accent_fg_color #ffffff;
+selection { background-color: rgba($R,$G,$B,.35); }
+*:selected { background-color: rgba($R,$G,$B,.35); }
+CSS
+  done
+  xfce4-panel -r >/dev/null 2>&1 &
+  zenity --info --width=420 --title="Theme Color" \
+    --text="Accent color changed to $HEX.\nOpen apps pick it up when restarted.\n\nتم تغيير لون السمة. التطبيقات المفتوحة تاخد اللون الجديد بعد إعادة فتحها." &
+}
+
+PICK=$(zenity --list --radiolist --width=460 --height=380 \
+  --title="Theme Color · لون السمة" \
+  --text="Pick an accent color · اختر لون السمة" \
+  --column="" --column="Color · اللون" --column="hex" --hide-column=3 \
+  FALSE "Aqua (default) · أكوا (الافتراضي)" "#08e8de" \
+  FALSE "Sky Blue · أزرق سماوي" "#4fb2f7" \
+  FALSE "Royal Blue · أزرق ملكي" "#2f6fd0" \
+  FALSE "Violet · بنفسجي" "#8b5cf6" \
+  FALSE "Green · أخضر" "#22b573" \
+  FALSE "Rose · وردي" "#e85d9e" \
+  FALSE "Custom color... · لون مخصص..." "custom" 2>/dev/null) || exit 0
+[ -z "${PICK:-}" ] && exit 0
+if [ "$PICK" = "custom" ]; then
+  OUT=$(zenity --color-selection --color="#08e8de" --title="Theme Color · لون السمة" 2>/dev/null) || exit 0
+  [ -z "${OUT:-}" ] && exit 0
+  case "$OUT" in
+    \#*) HEX="$OUT" ;;
+    rgb*) HEX=$(printf '#%02x%02x%02x' $(printf '%s' "$OUT" | tr -d 'rgb() ' | tr ',' ' ')) ;;
+  esac
+else
+  HEX="$PICK"
+fi
+apply_color "$HEX"

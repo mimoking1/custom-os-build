@@ -56,6 +56,16 @@ fi
 
 echo "==> Includes (theme, skel, branding)"
 cp -a ../build/includes.chroot config/
+# Live variant: light-blue default theme (user request); full keeps aqua
+if [ "$VARIANT" = "live" ]; then
+  echo "==> Live variant: applying light-blue default theme"
+  for f in config/includes.chroot/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml \
+           config/includes.chroot/etc/xdg/xfce4/panel/default.xml; do
+    sed -i -e 's/value="0.03"/value="0.11"/' -e 's/value="0.35"/value="0.44"/' -e 's/value="0.33"/value="0.77"/' "$f"
+  done
+  sed -i -e 's/#08e8de/#4fb2f7/g' -e 's/rgba(47,191,169,.35)/rgba(79,178,247,.35)/g' \
+    config/includes.chroot/etc/skel/.config/gtk-3.0/gtk.css
+fi
 # our fonts: runner needs them for artwork rendering, the ISO ships them
 mkdir -p "$HOME/.local/share/fonts"
 cp ../theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f > /dev/null 2>&1 || true
@@ -84,12 +94,26 @@ echo "==> Plymouth boot animation (3D crescent flip)"
 PLY=config/includes.chroot/usr/share/plymouth/themes/customos
 mkdir -p "$PLY/frames"
 cp ../build/plymouth/customos/customos.plymouth ../build/plymouth/customos/customos.script "$PLY/"
+if [ "$VARIANT" = "live" ]; then
+  sed -i -e 's/Window.SetBackgroundTopColor(0.03, 0.55, 0.52);/Window.SetBackgroundTopColor(0.106, 0.435, 0.769);/' \
+         -e 's/Window.SetBackgroundBottomColor(0.03, 0.78, 0.74);/Window.SetBackgroundBottomColor(0.388, 0.804, 0.961);/' \
+         "$PLY/customos.script"
+fi
 python3 ../build/plymouth/gen-frames.py ../theme/crescent-moon.png "$PLY/frames"
-sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
+if [ "$VARIANT" = "live" ]; then
+  sed -e "s/@OS_NAME@/$OS_NAME/g" -e 's/#eafefc/#eefaff/g' ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
+else
+  sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
+fi
 
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux
-sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
+if [ "$VARIANT" = "live" ]; then
+  sed -e "s/@OS_NAME@/$OS_NAME/g" -e 's/#0a9d96/#1b6fc4/g' -e 's/#08e8de/#63cdf5/g' -e 's/#eafefc/#eefaff/g' \
+    ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
+else
+  sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
+fi
 printf '%s\n' "$OS_NAME (working title)" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
 
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
