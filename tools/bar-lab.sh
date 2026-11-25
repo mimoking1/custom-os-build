@@ -49,19 +49,33 @@ if ! wait_marker "LAB-READY" 1 900; then
 fi
 wait_marker "LAB-SHELL-UP" 1 60 || echo "warn: no LAB-SHELL-UP"
 
-send_block() {  # $1 = shell file to upload+run in the guest (ACK-paced: tty drops bursts)
-  printf 'BEGIN\n' >&9
-  sleep 0.3
-  while IFS= read -r c; do
-    printf 'W %s\n' "$c" >&9
-    OKWS=$((OKWS+1))
-    wait_marker "OKW" "$OKWS" 30 || { echo "warn: OKW $OKWS missed"; break; }
-  done < <(base64 -w0 "$1" | fold -w 700)
-  printf 'RUN\n' >&9
+send_block() {  # $1 = shell file; ACK-paced chunks + md5 verify, resend on mismatch
+  local want try md5s
+  want=$(md5sum "$1" | awk '{print $1}')
+  for try in 1 2 3; do
+    printf 'BEGIN\n' >&9
+    sleep 0.3
+    while IFS= read -r c; do
+      printf 'W %s\n' "$c" >&9
+      OKWS=$((OKWS+1))
+      wait_marker "OKW" "$OKWS" 30 || { echo "warn: OKW $OKWS missed"; break; }
+    done < <(base64 -w0 "$1" | fold -w 700)
+    MD5S=$((MD5S+1))
+    printf 'SUM\n' >&9
+    wait_marker "LAB-MD5" "$MD5S" 30 || { echo "warn: LAB-MD5 missed"; continue; }
+    if grep -a "LAB-MD5" "$OUT/ser.log" | tail -1 | grep -q "$want"; then
+      printf 'RUN\n' >&9
+      return 0
+    fi
+    echo "md5 mismatch (try $try), resending"
+    sleep 1
+  done
+  echo "ERROR: block never verified"; return 1
 }
 
 DONES=0
 OKWS=0
+MD5S=0
 run_cmd_block() {  # $1 = shell file
   send_block "$1"
   DONES=$((DONES+1))

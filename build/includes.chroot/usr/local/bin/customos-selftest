@@ -261,7 +261,10 @@ S "SELFTEST-DONE"
 # (and normal users) never have that file, so this is inert outside the lab workflow.
 if sudo test -r /sys/firmware/qemu_fw_cfg/by_name/opt/customos/lab/raw; then
   S "LAB-READY"
+  sudo systemctl mask --runtime serial-getty@ttyS0.service 2>/dev/null
   sudo systemctl stop serial-getty@ttyS0.service 2>/dev/null
+  sudo pkill -f 'agetty.*ttyS0' 2>/dev/null
+  sleep 1
   sudo chmod 666 /dev/ttyS0 2>/dev/null
   /usr/local/bin/customos-lab-shell
 fi
