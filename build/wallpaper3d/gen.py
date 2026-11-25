@@ -73,7 +73,6 @@ img.convert("RGB").save(png_path, "PNG")
 b64 = base64.b64encode(open(png_path, "rb").read()).decode()
 svg = ('<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">\n'
        '<image x="0" y="0" width="1920" height="1080" href="data:image/png;base64,%s"/>\n'
-       '<text x="960" y="988" text-anchor="middle" font-family="Amiri, Noto Sans Arabic, sans-serif" font-size="22" fill="#eafefc" opacity="0.92">Directed by Mohamed Sayed &#183; &#1605;&#1581;&#1605;&#1583; &#1587;&#1610;&#1583;</text>\n'
        '</svg>\n') % b64
 open(os.path.join(OUTDIR, "wallpaper-horizon3d.svg"), "w").write(svg)
 print("horizon3d generated:", png_path)

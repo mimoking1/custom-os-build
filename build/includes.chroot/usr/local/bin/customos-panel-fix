@@ -32,8 +32,10 @@ if [ $i -ge 40 ]; then
   fi
 fi
 
-# no compositor -> alpha renders black; switch the panel to the opaque fallback look
-if ! /usr/local/bin/customos-cm-check; then
+# native panel IMAGE background ALWAYS: xfce4-panel pushes it into external plugin plugs
+# (whiskermenu/systray/xkb/genmon are GtkPlug processes; CSS alpha cannot cross, they paint
+# their own dark theme bg without it). The approved taskbar look is a static gradient anyway.
+if true; then
   ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
   # native panel IMAGE background: xfce4-panel pushes it to external plugin plugs (CSS cannot cross into plugin processes)
   mkdir -p "$HOME/.config/customos"

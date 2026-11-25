@@ -9,8 +9,7 @@ export WINEDLLOVERRIDES="mscoree,mshtml="
 APP=/opt/tahmeel/app/Tahmeel.exe
 [ -f "$APP" ] || { echo "Tahmeel payload not found at $APP" >&2; exit 1; }
 if [ ! -f "$WINEPREFIX/.customos-init" ]; then
-  wineboot -u >/dev/null 2>&1; wineserver -w 2>/dev/null
-  wine winecfg /v win10 >/dev/null 2>&1; wineserver -w 2>/dev/null
+  ( unset DISPLAY; wineboot -u >/dev/null 2>&1; wineserver -w 2>/dev/null; wine winecfg /v win10 >/dev/null 2>&1; wineserver -w 2>/dev/null )
   touch "$WINEPREFIX/.customos-init" 2>/dev/null || true
 fi
 cd /opt/tahmeel/app || exit 1
