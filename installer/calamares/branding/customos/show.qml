@@ -3,7 +3,7 @@ Rectangle {
     color: "#0a9d96"
     Text {
         anchors.centerIn: parent
-        text: "أهلاً بك في @OS_NAME@\nWelcome to @OS_NAME@"
+        text: "أهلاً بك في @OS_NAME_AR@ - @OS_NAME@\nWelcome to @OS_NAME_AR@ - @OS_NAME@"
         color: "white"
         font.pixelSize: 28
         horizontalAlignment: Text.AlignHCenter

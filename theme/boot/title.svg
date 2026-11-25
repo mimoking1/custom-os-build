@@ -1,4 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="520" height="120" viewBox="0 0 520 120">
-<text x="260" y="62" text-anchor="middle" font-family="Comfortaa, sans-serif" font-size="52" font-weight="bold" fill="#ffffff">@OS_NAME@</text>
+<text x="260" y="62" text-anchor="middle" font-family="Comfortaa, sans-serif" font-size="52" font-weight="bold" fill="#ffffff">@OS_NAME_AR@ - @OS_NAME@</text>
 <text x="260" y="100" text-anchor="middle" font-family="Amiri, Noto Sans Arabic, sans-serif" font-size="20" fill="#eafefc">Directed by Mohamed Sayed &#183; &#1605;&#1581;&#1605;&#1583; &#1587;&#1610;&#1583;</text>
 </svg>

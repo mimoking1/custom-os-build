@@ -169,20 +169,20 @@ if [ "$VARIANT" = "live" ]; then
 fi
 python3 ../build/plymouth/gen-frames.py ../theme/crescent-moon.png "$PLY/frames"
 if [ "$VARIANT" = "live" ]; then
-  sed -e "s/@OS_NAME@/$OS_NAME/g" -e 's/#eafefc/#eefaff/g' ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
+  sed -e "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" -e 's/#eafefc/#eefaff/g' ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
 else
-  sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
+  sed "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" ../theme/boot/title.svg | rsvg-convert -o "$PLY/title.png"
 fi
 
 echo "==> Boot splash + ISO credits"
 mkdir -p config/includes.binary/isolinux
 if [ "$VARIANT" = "live" ]; then
-  sed -e "s/@OS_NAME@/$OS_NAME/g" -e 's/#0a9d96/#2f8fdf/g' -e 's/#08e8de/#7fd4f7/g' -e 's/#eafefc/#eefaff/g' \
+  sed -e "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" -e 's/#0a9d96/#2f8fdf/g' -e 's/#08e8de/#7fd4f7/g' -e 's/#eafefc/#eefaff/g' \
     ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
 else
-  sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
+  sed "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
 fi
-printf '%s\n' "$OS_NAME" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
+printf '%s\n' "$OS_NAME_AR - $OS_NAME" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
 
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   echo "==> Calamares installer files (full variant)"
@@ -191,7 +191,7 @@ if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   cp -a ../installer/calamares/branding/customos config/includes.chroot/usr/share/calamares/branding/
   cp ../installer/install-on-desktop.desktop config/includes.chroot/etc/skel/Desktop/60-install.desktop
   sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" config/includes.chroot/etc/skel/Desktop/60-install.desktop
-  grep -rl '@OS_NAME@' config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares | while read -r f; do sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"; done || true
+  grep -rl -e '@OS_NAME@' -e '@OS_NAME_AR@' config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares | while read -r f; do sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" "$f"; done || true
 else
   echo "==> Live-only label"
   mkdir -p config/includes.chroot/etc/skel/Desktop config/includes.chroot/usr/share/customos/guides

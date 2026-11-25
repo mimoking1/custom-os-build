@@ -4,11 +4,11 @@ welcomeStyleCalamares: true
 welcomeExpandingLogo: true
 windowPlacement: center
 strings:
-    productName:         @OS_NAME@
+    productName:         @OS_NAME_AR@ - @OS_NAME@
     shortProductName:    @OS_NAME@
     version:             "1.0"
     shortVersion:        "1.0"
-    versionedName:       "@OS_NAME@ 1.0"
+    versionedName:       "@OS_NAME_AR@ - @OS_NAME@ 1.0"
     shortVersionedName:  "@OS_NAME@ 1.0"
     bootloaderEntryName: "@OS_NAME@"
     productUrl:          ""
