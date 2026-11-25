@@ -60,9 +60,9 @@ class Pill(Gtk.Window):
         cr.close_path()
         a = self.acc
         g = cairo.LinearGradient(0, 0, 0, self.h)
-        g.add_color_stop_rgba(0.0, min(1, a[0] + 0.62), min(1, a[1] + 0.62), min(1, a[2] + 0.58), 0.74)
-        g.add_color_stop_rgba(0.5, a[0] + (1 - a[0]) * 0.35, a[1] + (1 - a[1]) * 0.35, a[2] + (1 - a[2]) * 0.30, 0.70)
-        g.add_color_stop_rgba(1.0, a[0] * 0.80 + 0.10, a[1] * 0.80 + 0.10, a[2] * 0.90 + 0.06, 0.72)
+        g.add_color_stop_rgba(0.0, min(1, a[0] + 0.70), min(1, a[1] + 0.70), min(1, a[2] + 0.65), 0.88)
+        g.add_color_stop_rgba(0.5, a[0] + (1 - a[0]) * 0.60, a[1] + (1 - a[1]) * 0.60, a[2] + (1 - a[2]) * 0.55, 0.85)
+        g.add_color_stop_rgba(1.0, a[0] + (1 - a[0]) * 0.35, a[1] + (1 - a[1]) * 0.35, a[2] + (1 - a[2]) * 0.30, 0.85)
         cr.set_source(g)
         cr.fill_preserve()
         cr.set_source_rgba(1, 1, 1, 0.45)
