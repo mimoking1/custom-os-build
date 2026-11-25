@@ -8,6 +8,12 @@ on:
         default: 'both'
         type: choice
         options: [full, live, both, full32, live32, both32, all]
+      deliver:
+        description: 'Upload ISOs to Gofile and publish download links'
+        required: false
+        default: 'no'
+        type: choice
+        options: ['no', 'yes']
   push:
     tags: ['v*']
 
@@ -102,6 +108,32 @@ jobs:
             out/boot-test/serial.log
             out/boot-test/selftest-results.txt
           retention-days: 1
+
+      - name: Deliver ISO via Gofile (no-account download link)
+        if: ${{ inputs.deliver == 'yes' }}
+        run: |
+          set -e
+          ISO=$(ls out/*.iso | head -1)
+          BASE=$(basename "$ISO")
+          SHA=$(sha256sum "$ISO" | awk '{print $1}')
+          SIZE=$(stat -c%s "$ISO")
+          echo "==> Uploading $BASE ($(( SIZE / 1048576 )) MiB) to Gofile"
+          RESP=""
+          for attempt in 1 2 3; do
+            RESP=$(curl -fsS --retry 3 --retry-delay 10 -F "file=@$ISO" https://upload.gofile.io/uploadfile) && break
+            echo "upload attempt $attempt failed, retrying"; sleep 20
+          done
+          echo "$RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('status')=='ok', d; open('out/gofile-link.txt','w').write(d['data']['downloadPage'])" || { echo "::error::Gofile upload failed: $RESP"; exit 1; }
+          LINK=$(cat out/gofile-link.txt)
+          {
+            echo "variant: ${{ matrix.variant }}"
+            echo "file: $BASE"
+            echo "size_bytes: $SIZE"
+            echo "sha256: $SHA"
+            echo "download: $LINK"
+          } | tee "out/delivery-${{ matrix.variant }}.txt"
+          gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --latest=false
+          gh release upload ci-evidence "out/delivery-${{ matrix.variant }}.txt#${GITHUB_RUN_ID}-delivery-${{ matrix.variant }}.txt" --clobber || true
 
       - name: Publish public release (assets < 2GiB)
         run: |
