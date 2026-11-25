@@ -10,7 +10,7 @@ else
   rm -f "$HOME/.xsessionrc"
 fi
 [ "${2:-}" = "--no-restart" ] && exit 0
-xfce4-panel -q >/dev/null 2>&1; sleep 1
+timeout 15 xfce4-panel -q >/dev/null 2>&1; sleep 1
 if [ "$NEW" = ar ]; then LC_TIME=ar_EG.UTF-8 setsid xfce4-panel --disable-wm-check >/dev/null 2>&1 &
 else setsid xfce4-panel --disable-wm-check >/dev/null 2>&1 & fi
 exit 0
