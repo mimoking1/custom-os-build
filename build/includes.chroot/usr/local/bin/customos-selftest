@@ -40,14 +40,22 @@ R diag-gl-renderer "$(glxinfo 2>/dev/null | grep -i "OpenGL renderer" | cut -c1-
 R diag-xext "Composite/Damage/XFixes present: $(xdpyinfo 2>/dev/null | grep -ciE "^ *(Composite|DAMAGE|XFIXES|RENDER)") of 4 (RENDER counts twice-safe)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
-xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" || {
-  timeout 12 picom --backend xrender --no-vsync --config /dev/null --log-level debug --log-file /tmp/picom-fg.log >/dev/null 2>&1
-  R picom-fg-run "exit=$? (foreground debug, config /dev/null)"
-  head -6 /tmp/picom-fg.log 2>/dev/null | while read l; do R "picom-fg-head" "$(echo "$l" | cut -c1-150)"; done
-  tail -6 /tmp/picom-fg.log 2>/dev/null | while read l; do R "picom-fg-tail" "$(echo "$l" | cut -c1-150)"; done
-  xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" && R picom-cm-claimed "PASS(claimed after foreground start)" || R picom-cm-claimed FAIL
-  pgrep -x picom >/dev/null || nohup picom --backend xrender --no-vsync --daemon --log-level info --log-file /tmp/customos-picom.log >/dev/null 2>&1
-}
+R picom-procs "$(pgrep -cx picom 2>/dev/null || echo 0) picom processes"
+R picom-autolog-head "$(head -2 /tmp/customos-picom.log 2>/dev/null | cut -c1-120 | tr '\n' '|')"
+R picom-autolog-tail "$(tail -3 /tmp/customos-picom.log 2>/dev/null | cut -c1-120 | tr '\n' '|')"
+if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+  R picom-cm-claimed "PASS(root property present)"
+else
+  if pgrep -x picom >/dev/null; then
+    R picom-cm-claimed "FAIL(picom alive but root property absent; $(tail -1 /tmp/customos-picom.log 2>/dev/null | cut -c1-100))"
+  else
+    timeout 12 picom --backend xrender --no-vsync --config /dev/null --log-level debug --log-file /tmp/picom-fg.log >/dev/null 2>&1
+    R picom-fg-run "exit=$? (foreground debug, config /dev/null)"
+    grep -a "ERROR\|FATAL\|another composite" /tmp/picom-fg.log 2>/dev/null | head -4 | while read l; do R "picom-fg-err" "$(echo "$l" | cut -c1-150)"; done
+    xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" && R picom-cm-claimed "PASS(claimed after foreground start)" || R picom-cm-claimed "FAIL(no process, foreground run failed)"
+    pgrep -x picom >/dev/null || nohup picom --backend xrender --no-vsync --daemon --log-level info --log-file /tmp/customos-picom.log >/dev/null 2>&1
+  fi
+fi
 pgrep -x xfce4-panel >/dev/null && R panel-process PASS || R panel-process "FAIL(panel not running at first shot)"
 R firmware-files "$(ls /lib/firmware 2>/dev/null | wc -l)"
 R firmware-loaded "$(sudo dmesg | grep -ci 'firmware' || true)"

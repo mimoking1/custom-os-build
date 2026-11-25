@@ -21,15 +21,14 @@ while [ $i -lt 40 ]; do
   sleep 1
 done
 if [ $i -ge 40 ]; then
-  LOG "compositor NOT up after 40s; trying xfwm4 compositor re-toggle"
+  LOG "compositor NOT up after 40s; starting picom fallback (xfwm4 compositing stays off)"
   timeout 10 xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
-  sleep 2
-  timeout 10 xfconf-query -c xfwm4 -p /general/use_compositing -s true 2>/dev/null
-  sleep 5
+  pgrep -x picom >/dev/null 2>&1 || picom --backend xrender --no-vsync --no-fading-openclose --daemon --log-level info --log-file /tmp/customos-picom.log 2>/dev/null
+  sleep 6
   if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
-    LOG "compositor up after re-toggle"
+    LOG "compositor up via picom fallback"
   else
-    LOG "compositor still absent after re-toggle; starting panel anyway"
+    LOG "compositor still absent after picom fallback; starting panel anyway (opaque look)"
   fi
 fi
 
