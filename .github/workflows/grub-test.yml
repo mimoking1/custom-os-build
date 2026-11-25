@@ -1,0 +1,87 @@
+name: grub-theme-test
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'live or full (background colors)'
+        default: 'live'
+jobs:
+  grubshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq grub-common grub-pc-bin xorriso mtools qemu-system-x86 socat python3-pil librsvg2-bin
+          sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
+          sudo chmod 666 /dev/kvm || true
+      - name: Assemble minimal GRUB ISO with the real theme
+        run: |
+          set -x
+          V="${{ github.event.inputs.variant }}"
+          if [ "$V" = "live" ]; then BG_TOP="#1b6fc4"; BG_BOT="#63cdf5"; OS_NAME="Glow Live"; else BG_TOP="#0a9d96"; BG_BOT="#08e8de"; OS_NAME="Glow"; fi
+          OS_NAME_AR="ضي"
+          mkdir -p /tmp/fc && cp theme/fonts/*.ttf /tmp/fc/ && mkdir -p "$HOME/.local/share/fonts" && cp theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f >/dev/null 2>&1 || true
+          ISO=/tmp/iso/boot/grub
+          mkdir -p "$ISO/fonts" "$ISO/live-theme"
+          cp build/bootloaders/grub-pc/live-theme/*.png "$ISO/live-theme/" || true
+          sed -e "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" -e "s/@BG_TOP@/$BG_TOP/g; s/@BG_BOT@/$BG_BOT/g" theme/boot/grub-bg.svg | rsvg-convert -w 1024 -h 768 -o "$ISO/live-theme/background.png"
+          grub-mkfont -s 29 -n "Comfortaa Bold" -o "$ISO/fonts/comfortaa-bold-29.pf2" theme/fonts/Comfortaa-Bold.ttf
+          grub-mkfont -s 13 -n "Comfortaa Regular" -o "$ISO/fonts/comfortaa-regular-13.pf2" theme/fonts/Comfortaa-Regular.ttf
+          ls -la "$ISO/fonts" "$ISO/live-theme" | head -30
+          cp build/bootloaders/grub-pc/config.cfg "$ISO/config.cfg"
+          cat > "$ISO/grub.cfg" <<'CFG'
+source /boot/grub/config.cfg
+# font diagnostics on the gfx console BEFORE the theme takes over
+insmod gfxterm
+terminal_output gfxterm
+echo "=== LSFONTS ==="
+lsfonts
+echo "=== END LSFONTS ==="
+sleep 6
+set theme=/boot/grub/live-theme/theme.txt
+export theme
+menuentry "                    Live system (amd64)" { true }
+menuentry "       Live system (amd64 fail-safe mode)" { true }
+submenu "                                           Utilities" { menuentry "memtest" { true } }
+CFG
+          grub-mkrescue -o /tmp/grub-test.iso /tmp/iso 2>&1 | tail -3
+          ls -la /tmp/grub-test.iso
+      - name: Boot and screendump
+        run: |
+          set -x
+          OUT=/tmp/grubshots; mkdir -p "$OUT"
+          if [ -w /dev/kvm ]; then ACCEL="-enable-kvm"; else ACCEL="-accel tcg,thread=multi"; fi
+          qemu-system-x86_64 $ACCEL -m 1024 -cdrom /tmp/grub-test.iso -boot d \
+            -display none -vga std -monitor unix:"$OUT/mon.sock",server,nowait -serial file:"$OUT/serial.log" &
+          QP=$!
+          sleep 5
+          echo "screendump $OUT/fonts.ppm" | socat - UNIX-CONNECT:"$OUT/mon.sock" || true
+          sleep 8
+          echo "screendump $OUT/menu.ppm" | socat - UNIX-CONNECT:"$OUT/mon.sock" || true
+          sleep 2
+          echo "sendkey down" | socat - UNIX-CONNECT:"$OUT/mon.sock" || true
+          sleep 2
+          echo "screendump $OUT/menu-sel.ppm" | socat - UNIX-CONNECT:"$OUT/mon.sock" || true
+          kill $QP 2>/dev/null || true
+          python3 - <<'PY'
+          from PIL import Image
+          import os
+          for f in os.listdir('/tmp/grubshots'):
+              if f.endswith('.ppm'):
+                  Image.open('/tmp/grubshots/'+f).convert('RGB').save('/tmp/grubshots/'+f.replace('.ppm','.png'))
+          print(os.listdir('/tmp/grubshots'))
+PY
+      - name: Publish shots to ci-evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --notes "x" --latest=false
+          for f in /tmp/grubshots/*.png /tmp/grubshots/serial.log; do
+            [ -f "$f" ] || continue
+            n="grubtest-${GITHUB_RUN_ID}-$(basename "$f")"
+            cp "$f" "/tmp/$n"
+            gh release upload ci-evidence "/tmp/$n" --clobber </dev/null || true
+          done
