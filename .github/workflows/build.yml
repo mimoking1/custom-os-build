@@ -54,7 +54,7 @@ jobs:
 
       - name: Build MSI self-test package
         run: |
-          sudo apt-get install -y -qq msitools
+          sudo apt-get install -y -qq msitools wixl || sudo apt-get install -y -qq wixl
           mkdir -p build/includes.chroot/usr/share/customos/tests
           wixl -v build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi
           ls -la build/includes.chroot/usr/share/customos/tests/
