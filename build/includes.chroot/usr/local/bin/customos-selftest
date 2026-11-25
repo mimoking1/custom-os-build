@@ -5,10 +5,10 @@ F=/sys/firmware/qemu_fw_cfg/by_name/opt/customos/selftest/raw
 if ! sudo test -r "$F"; then [ -d /sys/firmware/qemu_fw_cfg ] && { echo "SELFTEST-NOFILE" | sudo tee /dev/ttyS0 >/dev/null; sudo ls -R /sys/firmware/qemu_fw_cfg/by_name 2>&1 | head -20 | sudo tee /dev/ttyS0 >/dev/null; }; exit 0; fi
 S() { echo "$*" | sudo tee /dev/ttyS0 >/dev/null; }
 # in-guest screenshots to the QEMU 9p share: exact-moment proof, no monitor timing race
-sudo modprobe 9pnet_virtio 2>/dev/null
+sudo modprobe 9pnet_virtio 2>/tmp/modprobe-9p.err || S "SELFTEST-RESULT modprobe-9p=FAIL($(head -1 /tmp/modprobe-9p.err | cut -c1-120))"
 mkdir -p /tmp/hostshot
-sudo mount -t 9p -o trans=virtio,version=9p2000.L hostshare /tmp/hostshot 2>/dev/null \
-  && S "SELFTEST-RESULT hostshare=mounted" || S "SELFTEST-RESULT hostshare=FAILED"
+sudo mount -t 9p -o trans=virtio,version=9p2000.L hostshare /tmp/hostshot 2>/tmp/hostshare.err \
+  && S "SELFTEST-RESULT hostshare=mounted" || { S "SELFTEST-RESULT hostshare=FAILED($(head -2 /tmp/hostshare.err | tr "\n" " " | cut -c1-140))"; S "SELFTEST-RESULT hostshare-dmesg=$(sudo dmesg 2>/dev/null | grep -i "9p\|virtio" | tail -2 | tr "\n" "|" | cut -c1-140)"; }
 # X access repair: screenshots via sudo and wine windows need a working cookie
 export DISPLAY="${DISPLAY:-:0}"
 S "SELFTEST-RESULT x-env=user:$(id -un),DISPLAY=$DISPLAY,XAUTHORITY=${XAUTHORITY:-unset}"
