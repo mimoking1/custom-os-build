@@ -49,7 +49,7 @@
     <property name="plugin-7" type="string" value="clock">
       <property name="mode" type="uint" value="2"/>
       <property name="digital-layout" type="uint" value="1"/>
-      <property name="digital-time-format" type="string" value="&lt;span font_family='Comfortaa' weight='bold' size='13pt'&gt;%I:%M&lt;/span&gt; &lt;span font_family='Comfortaa' weight='bold' size='9pt'&gt;%p&lt;/span&gt;&lt;span alpha='0' letter_spacing='22528'&gt;0&lt;/span&gt;"/>
+      <property name="digital-time-format" type="string" value="&lt;span font_family='Comfortaa' weight='bold' size='13pt'&gt;%I:%M&lt;/span&gt; &lt;span font_family='Comfortaa' weight='bold' size='9pt'&gt;%p&lt;/span&gt;&lt;span foreground='#00000000' weight='bold' size='13pt'&gt;000&lt;/span&gt;"/>
       <property name="digital-date-format" type="string" value="&lt;span size='1pt'&gt; &lt;/span&gt;"/>
     </property>
   </property>

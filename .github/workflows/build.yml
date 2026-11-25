@@ -82,11 +82,14 @@ jobs:
           gh release view ci-evidence >/dev/null 2>&1 ||             gh release create ci-evidence --title "CI evidence (rolling)" --notes "Automated evidence upload. Assets prefixed by run id; only the latest run is kept." --latest=false
           # keep only this run's assets
           gh release view ci-evidence --json assets --jq '.assets[].name' | while read a; do
-            case "$a" in ${GITHUB_RUN_ID}-*) ;; *) gh release delete-asset ci-evidence "$a" -y || true;; esac
+            case "$a" in ${GITHUB_RUN_ID}-*) ;; *) gh release delete-asset ci-evidence "$a" -y </dev/null || true;; esac
           done
+          mkdir -p /tmp/evidence
           for f in out/boot-test/*.png out/boot-test/serial.log out/boot-test/selftest-results.txt out/SHA256SUMS.txt; do
             [ -f "$f" ] || continue
-            gh release upload ci-evidence "$f#${GITHUB_RUN_ID}-${{ matrix.variant }}-$(basename "$f")" --clobber || true
+            n="${GITHUB_RUN_ID}-${{ matrix.variant }}-$(basename "$f")"
+            cp "$f" "/tmp/evidence/$n"
+            gh release upload ci-evidence "/tmp/evidence/$n" --clobber </dev/null || true
           done
 
       - name: Upload ISO + evidence
@@ -111,8 +114,11 @@ jobs:
 
       - name: Deliver ISO via Gofile (no-account download link)
         if: ${{ inputs.deliver == 'yes' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
+          mkdir -p /tmp/evidence
           ISO=$(ls out/*.iso | head -1)
           BASE=$(basename "$ISO")
           SHA=$(sha256sum "$ISO" | awk '{print $1}')
@@ -132,9 +138,11 @@ jobs:
             echo "sha256: $SHA"
             echo "download: $LINK"
           } | tee "out/delivery-${{ matrix.variant }}.txt"
-          gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --latest=false
-          gh release upload ci-evidence "out/delivery-${{ matrix.variant }}.txt#${GITHUB_RUN_ID}-delivery-${{ matrix.variant }}.txt" --clobber || true
-          gh release upload ci-evidence "out/gofile-admin.txt#${GITHUB_RUN_ID}-gofile-admin-${{ matrix.variant }}.txt" --clobber || true
+          gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --latest=false || true
+          cp "out/delivery-${{ matrix.variant }}.txt" "/tmp/evidence/${GITHUB_RUN_ID}-delivery-${{ matrix.variant }}.txt"
+          cp "out/gofile-admin.txt" "/tmp/evidence/${GITHUB_RUN_ID}-gofile-admin-${{ matrix.variant }}.txt"
+          gh release upload ci-evidence "/tmp/evidence/${GITHUB_RUN_ID}-delivery-${{ matrix.variant }}.txt" --clobber </dev/null || true
+          gh release upload ci-evidence "/tmp/evidence/${GITHUB_RUN_ID}-gofile-admin-${{ matrix.variant }}.txt" --clobber </dev/null || true
 
       - name: Publish public release (assets < 2GiB)
         run: |
