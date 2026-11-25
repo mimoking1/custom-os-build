@@ -1,6 +1,7 @@
 # Core desktop (light) + everyday apps. Debian package names, one per line.
 task-xfce-desktop
 xfce4-goodies
+xfce4-genmon-plugin
 lightdm
 lightdm-gtk-greeter
 network-manager-gnome
