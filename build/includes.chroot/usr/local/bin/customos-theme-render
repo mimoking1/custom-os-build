@@ -217,7 +217,7 @@ def panel_fallback_css(acc):
 window#XfcePanelWindow {{
   background-image: {grad};
   background-color: {rgb(mid2)};
-  background-clip: padding-box;
+  background-clip: border-box;
   border-style: solid; border-color: transparent;
   border-width: 22px 12px 8px 12px;
   border-radius: 22px;
