@@ -24,7 +24,7 @@ jobs:
       - name: Install KVM
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil imagemagick
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil python3-numpy imagemagick
           sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
           sudo chmod 666 /dev/kvm || true
           ls -la /dev/kvm
