@@ -28,7 +28,7 @@ jobs:
           mkdir -p "$HOME/.local/share/fonts" && cp theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f >/dev/null 2>&1 || true
           ISO=/tmp/iso/boot/grub
           mkdir -p "$ISO/fonts" "$ISO/live-theme"
-          cp build/bootloaders/grub-pc/live-theme/*.png "$ISO/live-theme/" || true
+          cp build/bootloaders/grub-pc/live-theme/*.png build/bootloaders/grub-pc/live-theme/theme.txt "$ISO/live-theme/"
           sed -e "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" -e "s/@BG_TOP@/$BG_TOP/g; s/@BG_BOT@/$BG_BOT/g" theme/boot/grub-bg.svg | rsvg-convert -w 1024 -h 768 -o "$ISO/live-theme/background.png"
           grub-mkfont -s 29 -n "Comfortaa Bold" -o "$ISO/fonts/comfortaa-bold-29.pf2" theme/fonts/Comfortaa-Bold.ttf
           grub-mkfont -s 13 -n "Comfortaa Regular" -o "$ISO/fonts/comfortaa-regular-13.pf2" theme/fonts/Comfortaa-Regular.ttf
@@ -41,6 +41,9 @@ jobs:
             'echo "=== LSFONTS ==="' \
             'lsfonts' \
             'echo "=== END LSFONTS ==="' \
+            'echo "=== THEME FILES ==="' \
+            'ls /boot/grub/live-theme/' \
+            'echo "=== END FILES ==="' \
             'sleep 6' \
             'set theme=/boot/grub/live-theme/theme.txt' \
             'export theme' \
