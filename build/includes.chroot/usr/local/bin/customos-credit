@@ -1,0 +1,3 @@
+#!/bin/sh
+# genmon shows "XXX" when the command output is empty; emit one space.
+printf ' '
