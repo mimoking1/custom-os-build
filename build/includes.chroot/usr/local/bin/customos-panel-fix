@@ -46,16 +46,20 @@ if true; then
     LOG "native panel bg image set"
   fi
   /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panel 2>/dev/null
-  if [ -f "$HOME/.config/customos/panel-fallback.css" ] && \
-     ! grep -q "customos panel fallback" "$HOME/.config/gtk-3.0/gtk.css" 2>/dev/null; then
-    cat "$HOME/.config/customos/panel-fallback.css" >> "$HOME/.config/gtk-3.0/gtk.css"
-    LOG "opaque fallback panel css applied"
-  fi
 fi
 
 sleep 2
 setsid xfce4-panel >/dev/null 2>&1 &
 LOG "panel started (compositor wait=$i)"
+
+# Glass vs opaque fallback, decided ONCE from the final compositor state (approved look:
+# the floating rounded glass bar is the default; the square opaque bar is ONLY the
+# no-compositor fallback). theme-color-apply rebuilds gtk.css from scratch and picks the
+# panel css by the live _NET_WM_CM_S0 owner, so the panel style no longer depends on
+# boot ordering between this script and firstlogin.
+ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
+/usr/local/bin/theme-color-apply "$ACCENT" >/dev/null 2>&1 || true
+LOG "gtk.css rebuilt for final compositor state"
 
 sleep 12
 xfce4-panel -r 2>/dev/null

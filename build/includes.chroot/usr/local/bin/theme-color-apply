@@ -29,7 +29,10 @@ selection { background-color: rgba($R,$G,$B,.35); }
 *:selected { background-color: rgba($R,$G,$B,.35); }
 CSS
     if [ "$v" = "3.0" ]; then
-      if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+      # customos-cm-check (python-xlib selection owner) is reliable with picom v10+;
+      # the xprop root-property read is not. Glass stays the default; the opaque
+      # square bar is only for machines where no compositor could start at all.
+      if /usr/local/bin/customos-cm-check 2>/dev/null; then
         cat "$CFG/panel.css"
       else
         cat "$CFG/panel-fallback.css" 2>/dev/null || cat "$CFG/panel.css"
