@@ -47,7 +47,17 @@ if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
   R picom-cm-claimed "PASS(root property present)"
 else
   if pgrep -x picom >/dev/null; then
-    R picom-cm-claimed "FAIL(picom alive but root property absent; $(tail -1 /tmp/customos-picom.log 2>/dev/null | cut -c1-100))"
+    pkill -x picom; sleep 1
+    timeout 12 picom --backend xrender --no-vsync --config /dev/null --log-level debug --log-file /tmp/picom-fg.log >/dev/null 2>&1
+    R picom-fg-run "exit=$? (killed daemon, foreground debug)"
+    grep -a "ERROR\|FATAL\|error" /tmp/picom-fg.log 2>/dev/null | head -4 | while read l; do R "picom-fg-err" "$(echo "$l" | cut -c1-150)"; done
+    tail -4 /tmp/picom-fg.log 2>/dev/null | while read l; do R "picom-fg-tail" "$(echo "$l" | cut -c1-150)"; done
+    if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+      R picom-cm-claimed "PASS(foreground picom claimed; daemon was the problem)"
+    else
+      R picom-cm-claimed "FAIL(foreground picom also failed)"
+    fi
+    pgrep -x picom >/dev/null || nohup picom --backend xrender --no-vsync --no-fading-openclose --daemon --log-level info --log-file /tmp/customos-picom.log >/dev/null 2>&1
   else
     timeout 12 picom --backend xrender --no-vsync --config /dev/null --log-level debug --log-file /tmp/picom-fg.log >/dev/null 2>&1
     R picom-fg-run "exit=$? (foreground debug, config /dev/null)"
