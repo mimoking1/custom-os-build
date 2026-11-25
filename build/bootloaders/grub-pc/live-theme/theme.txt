@@ -8,7 +8,7 @@ desktop-color: "#0a9d96"
   top = 48%
   width = 66%
   height = 26%
-  item_font = "Comfortaa Bold Regular 29"
+  item_font = "Comfortaa Bold Bold 29"
   item_color = "#14384a"
   selected_item_color = "#0b2836"
   item_height = 38
