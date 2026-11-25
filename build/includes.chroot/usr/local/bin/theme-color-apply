@@ -38,19 +38,19 @@ CSS
   } > "$HOME/.config/gtk-$v/gtk.css"
 done
 
-# window title bars + borders: recolor the Daay xfwm theme in ~/.themes
+# window title bars + borders: recolor the Glow xfwm theme in ~/.themes
 mkdir -p "$HOME/.themes"
 STATE="$CFG/theme-colors"
 if [ -f "$STATE" ]; then read -r OLDA OLDL OLDD < "$STATE"; else OLDA="#08e8de"; OLDL="#52eee7"; OLDD="#06aea6"; fi
 LIGHT=$(awk "BEGIN{r=int($R+(255-$R)*0.3);g=int($G+(255-$G)*0.3);b=int($B+(255-$B)*0.3);printf \"#%02x%02x%02x\",r,g,b}")
 DARKC=$(awk "BEGIN{r=int($R*0.75);g=int($G*0.75);b=int($B*0.75);printf \"#%02x%02x%02x\",r,g,b}")
-rm -rf "$HOME/.themes/Daay"
-cp -r /usr/share/themes/Daay "$HOME/.themes/Daay"
-find "$HOME/.themes/Daay" -name '*.xpm' -exec sed -i "s/$OLDA/$HEX/g; s/$OLDL/$LIGHT/g; s/$OLDD/$DARKC/g" {} +
-sed -i "s/^title_text_active .*/title_text_active $FG/" "$HOME/.themes/Daay/xfwm4/themerc"
+rm -rf "$HOME/.themes/Glow"
+cp -r /usr/share/themes/Glow "$HOME/.themes/Glow"
+find "$HOME/.themes/Glow" -name '*.xpm' -exec sed -i "s/$OLDA/$HEX/g; s/$OLDL/$LIGHT/g; s/$OLDD/$DARKC/g" {} +
+sed -i "s/^title_text_active .*/title_text_active $FG/" "$HOME/.themes/Glow/xfwm4/themerc"
 printf '%s %s %s\n' "$HEX" "$LIGHT" "$DARKC" > "$STATE"
 echo "$HEX" > "$CFG/accent"
-xfconf-query -c xfwm4 -p /general/theme -s Daay 2>/dev/null || true
+xfconf-query -c xfwm4 -p /general/theme -s Glow 2>/dev/null || true
 printf 'gtk-color-scheme = "selected_bg_color:%s"\n' "$HEX" > "$HOME/.gtkrc-2.0"
 
 # wallpaper follows the theme only while it is the default / generated one
