@@ -1,6 +1,6 @@
 [Plymouth Theme]
-Name=Custom OS
-Description=Custom OS boot splash - animated crescent
+Name=Dhay
+Description=Dhay boot splash - animated crescent
 ModuleName=script
 
 [script]

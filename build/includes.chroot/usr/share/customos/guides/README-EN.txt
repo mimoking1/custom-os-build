@@ -1,4 +1,4 @@
-Welcome to @OS_NAME@ (working title)
+Welcome to @OS_NAME@
 ====================================
 - Everything is preinstalled and ready: office, media, internet, archives, PDF, screenshots.
 - Default language is English. Arabic is ready out of the box:

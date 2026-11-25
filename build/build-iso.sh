@@ -107,7 +107,7 @@ if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"
   sed -i -e 's/#08e8de/#4fb2f7/g' -e 's/rgba(47,191,169,.35)/rgba(79,178,247,.35)/g' \
     config/includes.chroot/etc/skel/.config/gtk-3.0/gtk.css
-  find config/includes.chroot/usr/share/themes/CustomOS -name '*.xpm' -exec \
+  find config/includes.chroot/usr/share/themes/Dhay -name '*.xpm' -exec \
     sed -i 's/#08e8de/#4fb2f7/g; s/#52eee7/#83c9f9/g; s/#06aea6/#3b85b9/g' {} +
   sed -i 's/#08e8de #52eee7 #06aea6/#4fb2f7 #83c9f9 #3b85b9/' \
     config/includes.chroot/etc/skel/.config/customos/theme-colors
@@ -122,8 +122,8 @@ cp ../theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f > /dev/null 2
 mkdir -p config/includes.chroot/usr/share/fonts/truetype/customos
 cp ../theme/fonts/*.ttf config/includes.chroot/usr/share/fonts/truetype/customos/
 # OS name substitution across shipped files
-grep -rl '@OS_NAME@' config/includes.chroot | while read -r f; do
-  sed -i "s/@OS_NAME@/$OS_NAME/g" "$f"
+grep -rl -e '@OS_NAME@' -e '@OS_NAME_AR@' config/includes.chroot | while read -r f; do
+  sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" "$f"
 done || true
 grep -rl '@OS_NAME_AR@' config/includes.chroot | while read -r f; do
   sed -i "s/@OS_NAME_AR@/$OS_NAME_AR/g" "$f"
@@ -182,7 +182,7 @@ if [ "$VARIANT" = "live" ]; then
 else
   sed "s/@OS_NAME@/$OS_NAME/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
 fi
-printf '%s\n' "$OS_NAME (working title)" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
+printf '%s\n' "$OS_NAME" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
 
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   echo "==> Calamares installer files (full variant)"
