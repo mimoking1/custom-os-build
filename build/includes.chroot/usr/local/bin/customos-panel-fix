@@ -53,6 +53,21 @@ if true; then
   fi
 fi
 
+# credit pill panel (panel-2): float above the bar at the right, like the approved mockup
+ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
+/usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only pillbg 2>/dev/null
+if [ -f "$HOME/.config/customos/panel-pill-bg.png" ]; then
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-2/background-style -s 2 --create -t uint 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-2/background-style -s 2 2>/dev/null
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-2/background-image -s "$HOME/.config/customos/panel-pill-bg.png" --create -t string 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-2/background-image -s "$HOME/.config/customos/panel-pill-bg.png" 2>/dev/null
+fi
+DIM=$(xdpyinfo 2>/dev/null | awk '/dimensions:/{print $2}' | head -1)
+if [ -n "$DIM" ]; then
+  W=${DIM%x*}; H=${DIM#*x}
+  PW=$(( W * 28 / 100 )); PH=44
+  PX=$(( W - PW - 16 )); PY=$(( H - 74 - PH + 8 ))
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-2/position -s "p=0;x=$PX;y=$PY" 2>/dev/null && LOG "pill panel at x=$PX y=$PY (${W}x${H})"
+fi
+
 sleep 2
 setsid xfce4-panel >/dev/null 2>&1 &
 LOG "panel started (compositor wait=$i)"

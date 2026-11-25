@@ -312,6 +312,27 @@ def main():
         open(os.path.dirname(css_out) + "/panel-fg", "w").write(fg)
     if a.only in ("all", "panelbg"):
         panel_gradient_png(acc, os.path.dirname(css_out) + "/panel-bg.png")
+    if a.only in ("all", "pillbg"):
+        # rounded translucent pill for the floating credit panel (matches approved mockup pill)
+        PW, PH, RAD = 600, 56, 26
+        SS = 3
+        pill = Image.new("RGBA", (PW * SS, PH * SS), (0, 0, 0, 0))
+        pd = ImageDraw.Draw(pill)
+        for yy in range(PH * SS):
+            t = yy / (PH * SS - 1)
+            r = int(255 * (1 - t) + acc[0] * t)
+            g = int(255 * (1 - t) + acc[1] * t)
+            b = int(255 * (1 - t) + acc[2] * t)
+            al = int(150 * (1 - t) + 120 * t)
+            pd.line([(0, yy), (PW * SS, yy)], fill=(r, g, b, al))
+        mask = Image.new("L", (PW * SS, PH * SS), 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, PW * SS - 1, PH * SS - 1], radius=RAD * SS, fill=255)
+        pill.putalpha(ImageChops.multiply(pill.getchannel("A"), mask))
+        ImageDraw.Draw(pill).rounded_rectangle([1, 1, PW * SS - 2, PH * SS - 2], radius=RAD * SS, outline=(255, 255, 255, 95), width=SS)
+        pill = pill.resize((PW, PH), Image.LANCZOS)
+        out = os.path.join(os.path.dirname(css_out), "panel-pill-bg.png") if a.target == "user" else a.root + "/etc/skel/.config/customos/panel-pill-bg.png"
+        pill.save(out)
+        print("pillbg:", out)
     if a.only in ("all", "wall") and wall_out:
         recolor_wall(Image.open(BASE_WALL), acc).save(wall_out)
 
