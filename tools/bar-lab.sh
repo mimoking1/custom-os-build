@@ -49,13 +49,19 @@ if ! wait_marker "LAB-READY" 1 900; then
 fi
 wait_marker "LAB-SHELL-UP" 1 60 || echo "warn: no LAB-SHELL-UP"
 
-send_block() {  # $1 = shell file to upload+run in the guest
+send_block() {  # $1 = shell file to upload+run in the guest (ACK-paced: tty drops bursts)
   printf 'BEGIN\n' >&9
-  base64 -w0 "$1" | fold -w 900 | while read -r c; do printf 'W %s\n' "$c" >&9; done
+  sleep 0.3
+  while IFS= read -r c; do
+    printf 'W %s\n' "$c" >&9
+    OKWS=$((OKWS+1))
+    wait_marker "OKW" "$OKWS" 30 || { echo "warn: OKW $OKWS missed"; break; }
+  done < <(base64 -w0 "$1" | fold -w 700)
   printf 'RUN\n' >&9
 }
 
 DONES=0
+OKWS=0
 run_cmd_block() {  # $1 = shell file
   send_block "$1"
   DONES=$((DONES+1))
@@ -70,7 +76,7 @@ shot() {  # $1 = name
 
 # walk the plan
 cur=""
-flush() { [ -n "$cur" ] && { run_cmd_block "$cur"; : > "$cur"; }; }
+flush() { [ -n "$cur" ] && [ -s "$cur" ] && run_cmd_block "$cur"; cur=""; }
 while IFS= read -r line; do
   case "$line" in
     ===CMD===)     flush ;;
