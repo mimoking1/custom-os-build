@@ -7,7 +7,9 @@ set -u
 HEX="$1"; FORCE="${2:-}"
 case "$HEX" in \#*) ;; *) HEX="#$HEX" ;; esac
 R=$((16#${HEX:1:2})); G=$((16#${HEX:3:2})); B=$((16#${HEX:5:2}))
-CFG="$HOME/.config/customos"; mkdir -p "$CFG" "$HOME/.local/share/customos" "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+CFG="$HOME/.config/customos"; mkdir -p "$CFG"
+# serialize gtk.css rewrites against panel-fix / concurrent runs (flock)
+exec 9>"$CFG/.theme-apply.lock" 2>/dev/null && flock 9 2>/dev/null || true "$HOME/.local/share/customos" "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
 
 # icons + orb + glass css
 /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only all

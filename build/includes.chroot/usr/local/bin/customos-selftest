@@ -91,6 +91,7 @@ done
 xfconf-query -c xfce4-panel -p /plugins/plugin-10 2>/dev/null | grep -q genmon && R search-in-panel PASS || R search-in-panel FAIL
 xfconf-query -c xfce4-panel -p /plugins/plugin-11 2>/dev/null | grep -q genmon && R newdesktop-in-panel PASS || R newdesktop-in-panel FAIL
 xfconf-query -c xfce4-panel -p /plugins/plugin-12 2>/dev/null | grep -q genmon && R weather-in-panel PASS || R weather-in-panel FAIL
+[ -s /etc/ssl/certs/ca-certificates.crt ] && R ca-certificates PASS || R ca-certificates "FAIL(weather TLS needs roots)"
 thunar >/dev/null 2>&1 &
 sleep 8; SHOT 02-files-open-taskbar-button
 xfce4-popup-whiskermenu >/dev/null 2>&1 &
