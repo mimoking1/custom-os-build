@@ -26,9 +26,9 @@ sed -i 's/^timeout .*/timeout 40/' \
 sed -i 's/^set timeout=.*/set timeout=4/' \
   /usr/share/live/build/bootloaders/grub-efi/grub.cfg 2>/dev/null || true
 # Center the live entries' text on the glass buttons (GRUB themes cannot center item text):
-# 643px buttons, Comfortaa Bold 22 (space 6.45px) -> 32/19 leading spaces
-sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR})"|Grub_live_menu_entry "                                Live system (${_FLAVOUR})"|' /usr/lib/live/build/binary_grub_cfg
-sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR} fail-safe mode)"|Grub_live_menu_entry "                   Live system (${_FLAVOUR} fail-safe mode)"|' /usr/lib/live/build/binary_grub_cfg
+# 643px buttons, Comfortaa Bold 29 (space 8.55px) -> 20/7 leading spaces
+sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR})"|Grub_live_menu_entry "                    Live system (${_FLAVOUR})"|' /usr/lib/live/build/binary_grub_cfg
+sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR} fail-safe mode)"|Grub_live_menu_entry "       Live system (${_FLAVOUR} fail-safe mode)"|' /usr/lib/live/build/binary_grub_cfg
 # debootstrap must know the target suite
 if [ ! -e "/usr/share/debootstrap/scripts/$DEBIAN_SUITE" ]; then
   DB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/d/debootstrap/ | grep -o 'debootstrap_[^"]*_all.deb' | sort -V | tail -1)
@@ -198,7 +198,7 @@ cp -a ../build/bootloaders/grub-pc/config.cfg ../build/bootloaders/grub-pc/theme
 mkdir -p config/bootloaders/grub-pc/live-theme
 cp -a ../build/bootloaders/grub-pc/live-theme/. config/bootloaders/grub-pc/live-theme/
 sed "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" ../theme/boot/grub-bg.svg | rsvg-convert -w 1024 -h 768 -o config/bootloaders/grub-pc/live-theme/background.png
-grub-mkfont -s 22 -n "Comfortaa Bold" -o config/bootloaders/grub-pc/fonts/comfortaa-bold-22.pf2 ../theme/fonts/Comfortaa-Bold.ttf
+grub-mkfont -s 29 -n "Comfortaa Bold" -o config/bootloaders/grub-pc/fonts/comfortaa-bold-29.pf2 ../theme/fonts/Comfortaa-Bold.ttf
 grub-mkfont -s 13 -n "Comfortaa Regular" -o config/bootloaders/grub-pc/fonts/comfortaa-regular-13.pf2 ../theme/fonts/Comfortaa-Regular.ttf
 
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
