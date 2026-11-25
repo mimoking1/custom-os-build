@@ -27,8 +27,6 @@ fonts-noto-core
 fonts-noto-color-emoji
 fonts-hosny-amiri
 locales-all
-ibus
-im-config
 plymouth
 plymouth-themes
 papirus-icon-theme

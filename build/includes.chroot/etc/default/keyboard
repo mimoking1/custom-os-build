@@ -1,0 +1,6 @@
+# Custom OS: US + Arabic layouts, Alt+Shift toggles (xkb; the panel xkb plugin shows the layout)
+XKBMODEL="pc105"
+XKBLAYOUT="us,ara"
+XKBVARIANT=","
+XKBOPTIONS="grp:alt_shift_toggle"
+BACKSPACE="guess"
