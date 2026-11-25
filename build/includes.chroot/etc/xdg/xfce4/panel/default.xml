@@ -47,13 +47,7 @@
       <property name="display-type" type="uint" value="2"/>
       <property name="display-name" type="uint" value="0"/>
     </property>
-    <property name="plugin-9" type="string" value="genmon">
-      <property name="Command" type="string" value="/bin/true"/>
-      <property name="UseLabel" type="bool" value="true"/>
-      <property name="Label" type="string" value="Directed by Mohamed Sayed &#183; &#1605;&#1581;&#1605;&#1583; &#1587;&#1610;&#1583;"/>
-      <property name="UpdatePeriod" type="double" value="86400"/>
-      <property name="SaveTimeout" type="bool" value="false"/>
-    </property>
+    <property name="plugin-9" type="string" value="genmon"/>
     <property name="plugin-7" type="string" value="clock">
       <property name="mode" type="uint" value="2"/>
       <property name="digital-layout" type="uint" value="1"/>

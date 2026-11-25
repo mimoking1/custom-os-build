@@ -116,4 +116,5 @@ amd64-microcode
 xserver-xorg-video-all
 xserver-xorg-input-all
 picom
+python3-xlib
 mesa-utils

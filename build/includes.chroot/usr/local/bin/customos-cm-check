@@ -1,0 +1,13 @@
+#!/bin/sh
+# Exit 0 when a compositor owns the _NET_WM_CM_S0 selection (xprop -root is NOT reliable:
+# picom v10+ does not set a root property; the selection owner is the truth).
+exec python3 -c '
+import sys
+try:
+    from Xlib import display
+    d = display.Display()
+    a = d.intern_atom("_NET_WM_CM_S0")
+    w = d.get_selection_owner(a)
+    sys.exit(0 if w is not None and int(w.id) != 0 else 1)
+except Exception:
+    sys.exit(1)'

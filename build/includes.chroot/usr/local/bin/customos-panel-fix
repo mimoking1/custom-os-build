@@ -13,7 +13,7 @@ xfce4-panel -q 2>/dev/null
 
 i=0
 while [ $i -lt 40 ]; do
-  if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+  if /usr/local/bin/customos-cm-check; then
     LOG "compositor up after ${i}s"
     break
   fi
@@ -25,7 +25,7 @@ if [ $i -ge 40 ]; then
   timeout 10 xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
   pgrep -x picom >/dev/null 2>&1 || picom --backend xrender --no-vsync --no-fading-openclose --daemon --log-level info --log-file /tmp/customos-picom.log 2>/dev/null
   sleep 6
-  if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+  if /usr/local/bin/customos-cm-check; then
     LOG "compositor up via picom fallback"
   else
     LOG "compositor still absent after picom fallback; starting panel anyway (opaque look)"
@@ -33,7 +33,7 @@ if [ $i -ge 40 ]; then
 fi
 
 # no compositor -> alpha renders black; switch the panel to the opaque fallback look
-if ! xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+if ! /usr/local/bin/customos-cm-check; then
   ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
   # native panel IMAGE background: xfce4-panel pushes it to external plugin plugs (CSS cannot cross into plugin processes)
   mkdir -p "$HOME/.config/customos"

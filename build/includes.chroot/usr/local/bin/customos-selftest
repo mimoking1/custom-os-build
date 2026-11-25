@@ -33,7 +33,8 @@ xset s off; xset -dpms; xset s noblank
 # wait for the panel-fix autostart to finish (it owns the panel lifecycle)
 for i in $(seq 1 60); do [ -f /tmp/customos-panel-fix-done ] && break; sleep 2; done
 sleep 6
-R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true)"
+/usr/local/bin/customos-cm-check && R diag-cm-owner "PASS(selection owned)" || R diag-cm-owner "none"
+R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true) (root property, informational only)"
 R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 || true)"
 R disk-free "$(df -h / /tmp 2>/dev/null | tail -n +2 | awk '{printf "%s:%sfree ",$6,$4}')"
 R diag-gl-renderer "$(glxinfo 2>/dev/null | grep -i "OpenGL renderer" | cut -c1-100 || echo glxinfo-missing)"
@@ -43,7 +44,7 @@ SHOT 01-default
 R picom-procs "$(pgrep -cx picom 2>/dev/null || echo 0) picom processes"
 R picom-autolog-head "$(head -2 /tmp/customos-picom.log 2>/dev/null | cut -c1-120 | tr '\n' '|')"
 R picom-autolog-tail "$(tail -3 /tmp/customos-picom.log 2>/dev/null | cut -c1-120 | tr '\n' '|')"
-if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+if /usr/local/bin/customos-cm-check; then
   R picom-cm-claimed "PASS(root property present)"
 else
   if pgrep -x picom >/dev/null; then
@@ -52,7 +53,7 @@ else
     R picom-fg-run "exit=$? (killed daemon, foreground debug)"
     grep -a "ERROR\|FATAL\|error" /tmp/picom-fg.log 2>/dev/null | head -4 | while read l; do R "picom-fg-err" "$(echo "$l" | cut -c1-150)"; done
     tail -4 /tmp/picom-fg.log 2>/dev/null | while read l; do R "picom-fg-tail" "$(echo "$l" | cut -c1-150)"; done
-    if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+    if /usr/local/bin/customos-cm-check; then
       R picom-cm-claimed "PASS(foreground picom claimed; daemon was the problem)"
     else
       R picom-cm-claimed "FAIL(foreground picom also failed)"
@@ -62,7 +63,7 @@ else
     timeout 12 picom --backend xrender --no-vsync --config /dev/null --log-level debug --log-file /tmp/picom-fg.log >/dev/null 2>&1
     R picom-fg-run "exit=$? (foreground debug, config /dev/null)"
     grep -a "ERROR\|FATAL\|another composite" /tmp/picom-fg.log 2>/dev/null | head -4 | while read l; do R "picom-fg-err" "$(echo "$l" | cut -c1-150)"; done
-    xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" && R picom-cm-claimed "PASS(claimed after foreground start)" || R picom-cm-claimed "FAIL(no process, foreground run failed)"
+    /usr/local/bin/customos-cm-check && R picom-cm-claimed "PASS(claimed after foreground start)" || R picom-cm-claimed "FAIL(no process, foreground run failed)"
     pgrep -x picom >/dev/null || nohup picom --backend xrender --no-vsync --daemon --log-level info --log-file /tmp/customos-picom.log >/dev/null 2>&1
   fi
 fi
