@@ -15,7 +15,7 @@ try:
 except Exception:
     sys.exit(1)
 win_top = sh - 74
-guess = (sw - 432) // 2 + 36
+guess = (sw - 548) // 2 + 36
 try:
     tree = subprocess.check_output(["xwininfo", "-root", "-tree"], text=True, stderr=subprocess.DEVNULL)
 except Exception:

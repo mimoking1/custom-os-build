@@ -86,8 +86,7 @@ R panel-tree "$(xwininfo -root -tree 2>/dev/null | grep -aE 'xfce4-panel|plugin|
 fc-list | grep -qi "Noto Kufi Arabic" && R kufi-font PASS || R kufi-font FAIL
 fc-list | grep -qi "Comfortaa" && R comfortaa-font PASS || R comfortaa-font FAIL
 
-# bar widgets: search field, New Desktop button, weather (user request; all genmon, zero idle cost)
-[ -f /usr/share/pixmaps/customos/search-field.png ] && [ -x /usr/local/bin/customos-search-widget ] && R search-widget PASS || R search-widget FAIL
+# bar widgets: New Desktop button, weather (user request; genmon, zero idle cost); search lives in the Start menu (user request 2026-11-25)
 command -v xfce4-appfinder >/dev/null && R search-appfinder PASS || R search-appfinder FAIL
 [ -f /usr/share/pixmaps/customos/new-desktop.png ] && [ -x /usr/local/bin/customos-new-desktop ] && command -v wmctrl >/dev/null && R newdesktop-widget PASS || R newdesktop-widget FAIL
 WOUT=$(/usr/local/bin/customos-weather-widget 2>/dev/null) && [ -n "$WOUT" ] && R weather-widget PASS || R weather-widget "FAIL(no output)"
@@ -95,7 +94,8 @@ for wi in clear-day clear-night partly cloudy fog rain snow thunder; do
   [ -f "/usr/share/pixmaps/customos/weather-$wi.png" ] || R weather-icons "FAIL(missing $wi)"
 done
 [ -f /usr/share/pixmaps/customos/weather-partly.png ] && R weather-icons PASS
-xfconf-query -c xfce4-panel -p /plugins/plugin-10 2>/dev/null | grep -q genmon && R search-in-panel PASS || R search-in-panel FAIL
+xfconf-query -c xfce4-panel -p /plugins/plugin-2 2>/dev/null | grep -q whiskermenu && R search-in-startmenu PASS || R search-in-startmenu FAIL
+! xfconf-query -c xfce4-panel -p /plugins/plugin-10 2>/dev/null | grep -q genmon && R search-not-in-bar PASS || R search-not-in-bar FAIL
 xfconf-query -c xfce4-panel -p /plugins/plugin-11 2>/dev/null | grep -q genmon && R newdesktop-in-panel PASS || R newdesktop-in-panel FAIL
 xfconf-query -c xfce4-panel -p /plugins/plugin-12 2>/dev/null | grep -q genmon && R weather-in-panel PASS || R weather-in-panel FAIL
 [ -s /etc/ssl/certs/ca-certificates.crt ] && R ca-certificates PASS || R ca-certificates "FAIL(weather TLS needs roots)"

@@ -45,7 +45,7 @@ class Pill(Gtk.Window):
 
     def on_realize(self, *_):
         mon = self.get_screen().get_monitor_geometry(0)
-        self.move(mon.width - self.w - 35, mon.height - 77 - self.h)  # bar is 74px tall: bottom edge kisses the bar top (mockup)
+        self.move(mon.width - self.w - 35, mon.height - 55 - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
         win = self.get_window()
         if win is not None:
             win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through

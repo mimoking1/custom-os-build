@@ -300,7 +300,7 @@ def panel_notch_css(acc, notch_url):
     lines = []
     for ln in base.splitlines():
         if ln.strip().startswith("background-image: linear-gradient"):
-            ln = "  background-image: url(\"%s\"); background-size: 100% 100%;" % notch_url
+            ln = f'  background-image: url("{notch_url}"); background-size: 100% 100%;' 
         lines.append(ln)
     return "\n".join(lines), fg
 
