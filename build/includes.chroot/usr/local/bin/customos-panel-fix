@@ -22,9 +22,9 @@ while [ $i -lt 40 ]; do
 done
 if [ $i -ge 40 ]; then
   LOG "compositor NOT up after 40s; trying xfwm4 compositor re-toggle"
-  xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
+  timeout 10 xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
   sleep 2
-  xfconf-query -c xfwm4 -p /general/use_compositing -s true 2>/dev/null
+  timeout 10 xfconf-query -c xfwm4 -p /general/use_compositing -s true 2>/dev/null
   sleep 5
   if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
     LOG "compositor up after re-toggle"
@@ -40,8 +40,8 @@ if ! xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
   mkdir -p "$HOME/.config/customos"
   /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panelbg 2>/dev/null
   if [ -f "$HOME/.config/customos/panel-bg.png" ]; then
-    xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 2 --create -t uint 2>/dev/null || xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 2 2>/dev/null
-    xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg.png" --create -t string 2>/dev/null || xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg.png" 2>/dev/null
+    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 2 --create -t uint 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 2 2>/dev/null
+    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg.png" --create -t string 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg.png" 2>/dev/null
     LOG "native panel bg image set"
   fi
   /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panel 2>/dev/null

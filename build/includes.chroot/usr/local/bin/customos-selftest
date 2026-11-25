@@ -38,6 +38,7 @@ R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&
 R diag-gl-renderer "$(glxinfo 2>/dev/null | grep -i "OpenGL renderer" | cut -c1-100 || echo glxinfo-missing)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
+pgrep -x xfce4-panel >/dev/null && R panel-process PASS || R panel-process "FAIL(panel not running at first shot)"
 R firmware-files "$(ls /lib/firmware 2>/dev/null | wc -l)"
 R firmware-loaded "$(sudo dmesg | grep -ci 'firmware' || true)"
 R wallpaper-now "$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>&1 || true)"
@@ -78,9 +79,9 @@ CUR=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/las
 /usr/local/bin/theme-color-apply "#8b5cf6" --force-wallpaper >/dev/null 2>&1
 sleep 10; SHOT 08-purple-forced-theme-wallpaper
 # Arabic clock
-/usr/local/bin/customos-clock-language ar
+timeout 20 /usr/local/bin/customos-clock-language ar
 sleep 8; SHOT 09-clock-arabic
-/usr/local/bin/customos-clock-language en
+timeout 20 /usr/local/bin/customos-clock-language en
 sleep 6; SHOT 10-clock-english
 # theme color window
 theme-color >/dev/null 2>&1 &
