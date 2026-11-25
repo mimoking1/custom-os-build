@@ -5,14 +5,14 @@ desktop-color: "#0a9d96"
 
 + boot_menu {
   left = 17%
-  top = 51%
+  top = 48%
   width = 66%
-  height = 25%
+  height = 26%
   item_font = "Comfortaa Bold Regular 29"
   item_color = "#14384a"
   selected_item_color = "#0b2836"
-  item_height = 23
-  item_spacing = 41
+  item_height = 38
+  item_spacing = 33
   icon_width = 0
   icon_height = 0
   item_icon_space = 0
