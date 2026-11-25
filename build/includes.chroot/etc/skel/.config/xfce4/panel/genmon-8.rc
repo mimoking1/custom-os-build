@@ -1,4 +1,4 @@
 Command=/usr/local/bin/customos-layout-widget
 UseLabel=0
 Text= 
-UpdatePeriod=1
+UpdatePeriod=1000

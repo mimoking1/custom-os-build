@@ -1,4 +1,4 @@
 Command=/usr/local/bin/customos-newdesktop-widget
 UseLabel=0
 Text= 
-UpdatePeriod=86400
+UpdatePeriod=86400000

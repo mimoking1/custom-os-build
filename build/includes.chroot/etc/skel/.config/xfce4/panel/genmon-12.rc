@@ -1,4 +1,4 @@
 Command=/usr/local/bin/customos-weather-widget
 UseLabel=1
 Text= 
-UpdatePeriod=600
+UpdatePeriod=600000
