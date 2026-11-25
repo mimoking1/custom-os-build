@@ -12,7 +12,7 @@ else
   ACCEL="-accel tcg,thread=multi"; TIMES="20 90 240 420"
 fi
 ${QEMU_BIN:-qemu-system-x86_64} ${QEMU_CPU:+-cpu $QEMU_CPU} \
-  $ACCEL -m 3072 -smp 2 \
+  $ACCEL -m 6144 -smp 2 \
   -cdrom "$ISO" -boot d \
   -display none -vga virtio \
   -monitor unix:"$MON",server,nowait \
