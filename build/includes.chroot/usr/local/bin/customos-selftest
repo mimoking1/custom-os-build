@@ -256,4 +256,13 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   pkill -f Tahmeel.exe
 else R wine-cmd "FAIL(no wine)"; fi
 S "SELFTEST-DONE"
+
+# CI bar lab: only when the host passed -fw_cfg name=opt/customos/lab. Normal boots
+# (and normal users) never have that file, so this is inert outside the lab workflow.
+if sudo test -r /sys/firmware/qemu_fw_cfg/by_name/opt/customos/lab/raw; then
+  S "LAB-READY"
+  sudo systemctl stop serial-getty@ttyS0.service 2>/dev/null
+  sudo chmod 666 /dev/ttyS0 2>/dev/null
+  /usr/local/bin/customos-lab-shell
+fi
 exit 0

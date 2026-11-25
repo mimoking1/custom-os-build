@@ -1,0 +1,22 @@
+#!/bin/bash
+# CI bar lab: tiny serial command protocol, only ever started by customos-selftest
+# when QEMU was booted with -fw_cfg name=opt/customos/lab (the bar-lab workflow).
+# Protocol over /dev/ttyS0 (text lines):
+#   BEGIN          -> truncate /tmp/lab-cmd.sh
+#   W <b64chunk>   -> append decoded chunk to /tmp/lab-cmd.sh
+#   RUN            -> bash /tmp/lab-cmd.sh, then print LAB-CMD-DONE <exit>
+#   PING           -> print LAB-PONG
+# The host screendumps via the QEMU monitor between commands.
+stty -F /dev/ttyS0 -echo 2>/dev/null
+exec 3<>/dev/ttyS0   # keep the tty open for the whole session: no input loss between reads
+echo "LAB-SHELL-UP" > /dev/ttyS0
+while IFS= read -r -t 900 -u 3 line; do
+  line="${line%$'\r'}"
+  case "$line" in
+    BEGIN) : > /tmp/lab-cmd.sh ;;
+    W\ *) printf '%s' "${line#W }" | base64 -d >> /tmp/lab-cmd.sh 2>/dev/null ;;
+    RUN) bash /tmp/lab-cmd.sh > /dev/ttyS0 2>&1; echo "LAB-CMD-DONE $?" > /dev/ttyS0 ;;
+    PING) echo "LAB-PONG" > /dev/ttyS0 ;;
+  esac
+done
+echo "LAB-SHELL-TIMEOUT" > /dev/ttyS0

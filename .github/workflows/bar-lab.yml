@@ -1,0 +1,57 @@
+name: bar-lab
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'live or full'
+        required: true
+        default: live
+      plan:
+        description: 'Patch plan: ===CMD=== guest shell blocks, ===SHOT name=== screendumps'
+        required: true
+permissions:
+  contents: write
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+          df -h /
+      - name: Install KVM
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil imagemagick
+          sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
+          sudo chmod 666 /dev/kvm || true
+          ls -la /dev/kvm
+      - name: Build MSI self-test package
+        run: |
+          sudo apt-get install -y -qq wixl || true
+          mkdir -p build/includes.chroot/usr/share/customos/tests
+          wixl -v -a x64 build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi || true
+      - name: Build ISO
+        run: sudo ./build/build-iso.sh variants/${{ inputs.variant }}.conf
+      - name: Write plan
+        env:
+          PLAN: ${{ inputs.plan }}
+        run: printf '%s\n' "$PLAN" > /tmp/plan.txt
+      - name: Run bar lab
+        run: ./tools/bar-lab.sh "$(ls out/*.iso | head -1)" out/bar-lab /tmp/plan.txt
+      - name: Publish evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --notes "x" --latest=false
+          for f in out/bar-lab/*.png; do
+            [ -e "$f" ] || continue
+            n="barlab-${GITHUB_RUN_ID}-$(basename "$f")"
+            cp "$f" "/tmp/$n"
+            gh release upload ci-evidence "/tmp/$n" --clobber </dev/null || true
+          done
+          cp out/bar-lab/ser.log "/tmp/barlab-${GITHUB_RUN_ID}-ser.log" 2>/dev/null || true
+          gh release upload ci-evidence "/tmp/barlab-${GITHUB_RUN_ID}-ser.log" --clobber </dev/null || true
