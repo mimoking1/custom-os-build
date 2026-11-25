@@ -116,3 +116,4 @@ amd64-microcode
 xserver-xorg-video-all
 xserver-xorg-input-all
 picom
+mesa-utils
