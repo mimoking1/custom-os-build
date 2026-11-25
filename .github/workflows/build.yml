@@ -75,10 +75,16 @@ jobs:
           path: |
             out/*.iso
             out/SHA256SUMS.txt
+          retention-days: 1
+      - name: Upload evidence (small)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.variant }}-evidence
+          path: |
             out/boot-test/*.png
             out/boot-test/serial.log
             out/boot-test/selftest-results.txt
-          retention-days: 30
+          retention-days: 1
 
       - name: Publish public release (assets < 2GiB)
         run: |

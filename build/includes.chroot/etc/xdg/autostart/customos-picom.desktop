@@ -2,6 +2,6 @@
 Type=Application
 Name=CustomOS compositor (picom)
 Comment=Software compositor so the glass taskbar renders on machines where xfwm4 compositing fails
-Exec=sh -c 'xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" || picom --backend xrender --daemon'
+Exec=sh -c 'xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id" || picom --backend xrender --daemon --log-level warn --log-file /tmp/customos-picom.log'
 OnlyShowIn=XFCE;
 X-XFCE-Autostart-Phase=Initialization
