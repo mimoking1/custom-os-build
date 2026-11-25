@@ -3,12 +3,12 @@
   <Product Id="*" Name="CustomOS Test" Language="1033" Version="1.0.0.0"
            Manufacturer="CustomOS" UpgradeCode="3f4f2a10-6b0d-4b0e-9f2a-111122223333">
     <Package Description="CustomOS MSI self-test package" Comments="CI only"
-             InstallerVersion="200" Compressed="yes"/>
+             InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
     <Media Id="1" Cabinet="test.cab" EmbedCab="yes"/>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="CustomOSTestDir" Name="CustomOSTest">
-          <Component Id="TestFileComp" Guid="9a1b2c3d-4e5f-4a6b-8c7d-000011112222">
+          <Component Id="TestFileComp" Guid="9a1b2c3d-4e5f-4a6b-8c7d-000011112222" Win64="yes">
             <File Id="TestTxt" Name="test.txt" Source="build/test-msi/test.txt" KeyPath="yes"/>
           </Component>
         </Directory>

@@ -218,9 +218,9 @@ window#XfcePanelWindow {{
   background-image: {grad};
   background-color: {rgb(mid2)};
   background-clip: border-box;
-  border-style: solid; border-color: transparent;
-  border-width: 22px 12px 8px 12px;
-  border-radius: 22px;
+  border-style: none;
+  border-width: 0;
+  border-radius: 0;
   box-shadow: none; text-shadow: none;
 }}
 #XfcePanelWindow .background, #XfcePanelWindow .xfce4-panel, #XfcePanelWindow * {{
@@ -251,12 +251,32 @@ window#XfcePanelWindow {{
 
 def hexs(c): return "#%02x%02x%02x" % tuple(c)
 
+def panel_gradient_png(acc, path, height=74):
+    """1px-wide vertical gradient matching the panel CSS stops; used as the panel's
+    native image background so external plugin plugs get painted too."""
+    top = [int(.5*acc[i]+.5*140) for i in range(3)]
+    mid2 = [int(.55*acc[i]+.45*c) for i,c in enumerate((20,125,215))]
+    lo2 = [int(.35*acc[i]+.65*c) for i,c in enumerate((0,60,150))]
+    top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
+    stops = [(0.0, top), (0.18, top2), (0.42, mid2), (1.0, lo2)]
+    im = Image.new("RGB", (1, height))
+    for y in range(height):
+        t = y / max(1, height - 1)
+        col = stops[-1][1]
+        for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
+            if p0 <= t <= p1:
+                k = 0 if p1 == p0 else (t - p0) / (p1 - p0)
+                col = tuple(int(round(mix(c0, c1, k)[i])) for i in range(3))
+                break
+        im.putpixel((0, y), col)
+    im.save(path)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hex")
     ap.add_argument("--target", default="user")
     ap.add_argument("--root", default="")
-    ap.add_argument("--only", default="all")  # all | icons | wall | panel
+    ap.add_argument("--only", default="all")  # all | icons | wall | panel | panelbg
     ap.add_argument("--wall-out")
     ap.add_argument("--default-live-wallpaper")
     ap.add_argument("--src")
@@ -290,6 +310,8 @@ def main():
         open(css_out, "w").write(css)
         open(os.path.dirname(css_out) + "/panel-fallback.css", "w").write(panel_fallback_css(acc))
         open(os.path.dirname(css_out) + "/panel-fg", "w").write(fg)
+    if a.only in ("all", "panelbg"):
+        panel_gradient_png(acc, os.path.dirname(css_out) + "/panel-bg.png")
     if a.only in ("all", "wall") and wall_out:
         recolor_wall(Image.open(BASE_WALL), acc).save(wall_out)
 
