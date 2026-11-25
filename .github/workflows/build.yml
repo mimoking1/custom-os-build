@@ -69,6 +69,7 @@ jobs:
           ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
 
       - name: Upload ISO + evidence
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.variant }}-iso
@@ -77,6 +78,7 @@ jobs:
             out/SHA256SUMS.txt
           retention-days: 1
       - name: Upload evidence (small)
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.variant }}-evidence
