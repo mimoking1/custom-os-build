@@ -22,7 +22,7 @@ jobs:
           V="${{ github.event.inputs.variant }}"
           if [ "$V" = "live" ]; then BG_TOP="#1b6fc4"; BG_BOT="#63cdf5"; OS_NAME="Glow Live"; else BG_TOP="#0a9d96"; BG_BOT="#08e8de"; OS_NAME="Glow"; fi
           OS_NAME_AR="ضي"
-          mkdir -p /tmp/fc && cp theme/fonts/*.ttf /tmp/fc/ && mkdir -p "$HOME/.local/share/fonts" && cp theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f >/dev/null 2>&1 || true
+          mkdir -p "$HOME/.local/share/fonts" && cp theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f >/dev/null 2>&1 || true
           ISO=/tmp/iso/boot/grub
           mkdir -p "$ISO/fonts" "$ISO/live-theme"
           cp build/bootloaders/grub-pc/live-theme/*.png "$ISO/live-theme/" || true
@@ -31,21 +31,20 @@ jobs:
           grub-mkfont -s 13 -n "Comfortaa Regular" -o "$ISO/fonts/comfortaa-regular-13.pf2" theme/fonts/Comfortaa-Regular.ttf
           ls -la "$ISO/fonts" "$ISO/live-theme" | head -30
           cp build/bootloaders/grub-pc/config.cfg "$ISO/config.cfg"
-          cat > "$ISO/grub.cfg" <<'CFG'
-source /boot/grub/config.cfg
-# font diagnostics on the gfx console BEFORE the theme takes over
-insmod gfxterm
-terminal_output gfxterm
-echo "=== LSFONTS ==="
-lsfonts
-echo "=== END LSFONTS ==="
-sleep 6
-set theme=/boot/grub/live-theme/theme.txt
-export theme
-menuentry "                    Live system (amd64)" { true }
-menuentry "       Live system (amd64 fail-safe mode)" { true }
-submenu "                                           Utilities" { menuentry "memtest" { true } }
-CFG
+          printf '%s\n' \
+            'source /boot/grub/config.cfg' \
+            'insmod gfxterm' \
+            'terminal_output gfxterm' \
+            'echo "=== LSFONTS ==="' \
+            'lsfonts' \
+            'echo "=== END LSFONTS ==="' \
+            'sleep 6' \
+            'set theme=/boot/grub/live-theme/theme.txt' \
+            'export theme' \
+            'menuentry "                    Live system (amd64)" { true }' \
+            'menuentry "       Live system (amd64 fail-safe mode)" { true }' \
+            'submenu "                                           Utilities" { menuentry "memtest" { true } }' \
+            > "$ISO/grub.cfg"
           grub-mkrescue -o /tmp/grub-test.iso /tmp/iso 2>&1 | tail -3
           ls -la /tmp/grub-test.iso
       - name: Boot and screendump
