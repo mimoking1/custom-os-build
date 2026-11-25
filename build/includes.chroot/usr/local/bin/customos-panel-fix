@@ -36,6 +36,14 @@ fi
 # no compositor -> alpha renders black; switch the panel to the opaque fallback look
 if ! xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
   ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
+  # native solid background: xfce4-panel paints external plugin plugs with this color (CSS cannot cross into plugin processes)
+  HX=$(echo "$ACCENT" | tr -d '#')
+  R8=$((16#${HX:0:2})); G8=$((16#${HX:2:2})); B8=$((16#${HX:4:2}))
+  RF=$(awk "BEGIN{printf \"%.4f\",$R8/255}"); GF=$(awk "BEGIN{printf \"%.4f\",$G8/255}"); BF=$(awk "BEGIN{printf \"%.4f\",$B8/255}")
+  xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 1 --create -t uint 2>/dev/null || xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 1 2>/dev/null
+  xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba -t double -t double -t double -t double -s "$RF" -s "$GF" -s "$BF" -s 1.0 --create 2>/dev/null \
+    || xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba -s "$RF" -s "$GF" -s "$BF" -s 1.0 2>/dev/null
+  LOG "native panel bg color set ($ACCENT)"
   /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panel 2>/dev/null
   if [ -f "$HOME/.config/customos/panel-fallback.css" ] && \
      ! grep -q "customos panel fallback" "$HOME/.config/gtk-3.0/gtk.css" 2>/dev/null; then

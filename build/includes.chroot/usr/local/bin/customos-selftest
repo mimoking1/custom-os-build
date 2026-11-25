@@ -104,6 +104,7 @@ pgrep -f "brave|chromium" >/dev/null && R browser-running PASS || { R browser-ru
 pkill -f "brave|chromium"; sleep 2
 # Wine
 if command -v wine >/dev/null; then
+  R wine-version "$(wine --version 2>/dev/null); dpkg: $(dpkg -l wine wine64 2>/dev/null | awk '/^ii/{print $3}' | paste -sd,)"
   OUT=$(timeout 150 wine cmd /c "echo wine-ok" 2>&1 | tail -3)
   echo "$OUT" | grep -q wine-ok && R wine-cmd PASS || R wine-cmd "FAIL($OUT)"
   wineserver -w 2>/dev/null; R wine-prefix-settled after-wineserver-w
@@ -119,6 +120,7 @@ if command -v wine >/dev/null; then
   INST="$HOME/.wine/drive_c/Program Files/CustomOSTest/test.txt"
   rm -rf "$HOME/.wine/drive_c/Program Files/CustomOSTest" "$HOME/.wine/drive_c/msi-install.log"
   WMSI=$(winepath -w "$MSI" 2>/dev/null)
+  R msi-package "file=$(stat -c%s "$MSI" 2>/dev/null || echo MISSING) bytes, wmsi=$WMSI"
   timeout 240 wine msiexec /i "$WMSI" /qn /L*V 'C:\msi-install.log' >/tmp/msi.log 2>&1; EC=$?
   if [ -f "$INST" ] && grep -q customos-msi-test-marker "$INST"; then
     R wine-msiexec "PASS(real install, exit $EC)"
@@ -127,6 +129,9 @@ if command -v wine >/dev/null; then
     grep -n "return value 3" "$HOME/.wine/drive_c/msi-install.log" 2>/dev/null | head -2 | while read l; do R "msi-fatal" "$(echo "$l" | cut -c1-140)"; done
     grep -iE "error|fail" "$HOME/.wine/drive_c/msi-install.log" 2>/dev/null | tail -4 | while read l; do R "msi-vlog" "$(echo "$l" | cut -c1-140)"; done
     head -6 /tmp/msi.log | while read l; do R "msi-log" "$(echo "$l" | cut -c1-140)"; done
+    timeout 120 env WINEDEBUG=+msi wine msiexec /i "$WMSI" /qn >/tmp/msi-dbg.log 2>&1
+    grep -i "msi" /tmp/msi-dbg.log | head -4 | while read l; do R "msi-dbg" "$(echo "$l" | cut -c1-140)"; done
+    tail -4 /tmp/msi-dbg.log | while read l; do R "msi-dbg-tail" "$(echo "$l" | cut -c1-140)"; done
   fi
   [ "$(xdg-mime query default application/x-msi)" = customos-wine-open.desktop ] && R mime-msi PASS || R mime-msi FAIL
   [ "$(xdg-mime query default application/x-ms-dos-executable)" = customos-wine-open.desktop ] && R mime-exe PASS || R mime-exe FAIL
@@ -149,7 +154,10 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
     ls -la /opt/tahmeel/app 2>&1 | head -12 | while read l; do R "tahmeel-dir" "$(echo "$l" | cut -c1-140)"; done
     ( cd /opt/tahmeel/app && timeout 45 env WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-fg.log 2>&1
     R tahmeel-fg-exit "$?"
+    head -8 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg-head" "$(echo "$l" | cut -c1-140)"; done
     tail -12 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
+    ( cd /opt/tahmeel/app && timeout 30 env WINEDEBUG=+loaddll WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-dll.log 2>&1
+    grep -i "winex11\|win32u\|nodrv" /tmp/tahmeel-dll.log | head -6 | while read l; do R "tahmeel-dll" "$(echo "$l" | cut -c1-140)"; done
   }
   sleep 20; SHOT 14-tahmeel-wine-later
   pkill -f Tahmeel.exe
