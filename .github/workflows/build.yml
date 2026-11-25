@@ -74,6 +74,13 @@ jobs:
           if [[ "${{ matrix.variant }}" == *32 ]]; then export QEMU_BIN=qemu-system-i386 QEMU_CPU=qemu32,+pae; fi
           ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
 
+      - name: Verify selftest completed
+        run: |
+          if ! grep -q "SELFTEST-DONE" out/boot-test/selftest-results.txt 2>/dev/null; then
+            echo "::error::Selftest did not reach SELFTEST-DONE - evidence truncated, build counts as UNTESTED."
+            exit 1
+          fi
+
       - name: Publish evidence to rolling release (bypasses artifact quota)
         if: always()
         env:

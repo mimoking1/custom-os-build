@@ -193,6 +193,7 @@ window#XfcePanelWindow {{
 }}
 .xfce4-panel label {{ padding-top: 12px; }}
 .xfce4-panel button {{ padding: 0 4px; margin: 0; min-height: 0; }}
+#clock-button {{ padding: 0 34px 0 6px; }}
 #XfcePanelWindow button:hover, #XfcePanelWindow button:checked {{
   background-color: rgba(255,255,255,.22); border-radius: 12px;
 }}
@@ -240,6 +241,7 @@ window#XfcePanelWindow {{
 }}
 #XfcePanelWindow .xfce4-panel label {{ padding-top: 12px; }}
 #XfcePanelWindow .xfce4-panel button {{ padding: 0 4px; margin: 0; min-height: 0; }}
+#XfcePanelWindow #clock-button {{ padding: 0 34px 0 6px; }}
 #XfcePanelWindow .xfce4-panel button:hover, #XfcePanelWindow .xfce4-panel button:checked {{
   background-color: rgba(255,255,255,.22); border-radius: 12px;
 }}

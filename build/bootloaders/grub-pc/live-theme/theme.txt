@@ -3,12 +3,12 @@ title-text: ""
 desktop-image: "background.png"
 desktop-color: "#0a9d96"
 
-boot_menu {
++ boot_menu {
   left = 18.55%
   top = 50.39%
   width = 62.79%
   height = 24.48%
-  item_font = "Comfortaa Bold 22"
+  item_font = "Comfortaa Bold"
   item_color = "#14384a"
   selected_item_color = "#0b2836"
   item_height = 52
@@ -17,8 +17,8 @@ boot_menu {
   icon_height = 0
   item_icon_space = 0
   item_text_indent = 0
-  item_pixmap_style = "button_normal.png"
-  selected_item_pixmap_style = "button_selected.png"
+  item_pixmap_style = "button_normal"
+  selected_item_pixmap_style = "button_selected"
 }
 
 + label {
@@ -28,7 +28,7 @@ boot_menu {
   top = 87%
   height = 30
   align = "center"
-  font = "Comfortaa Regular 13"
+  font = "Comfortaa Regular"
   color = "#0a3d43"
   text = "Automatic boot in %d seconds..."
 }

@@ -99,9 +99,9 @@ sleep 4; SHOT 03-start-menu-open
 xfce4-popup-whiskermenu >/dev/null 2>&1; sleep 2
 pkill thunar; sleep 1
 # theme color: soft orange, wallpaper follows (default wallpaper)
-/usr/local/bin/theme-color-apply "#e8a05c" >/dev/null 2>&1
+timeout 150 /usr/local/bin/theme-color-apply "#e8a05c" >/dev/null 2>&1 || true
 sleep 12; SHOT 04-theme-orange
-/usr/local/bin/theme-color-apply "#9fdcf0" >/dev/null 2>&1
+timeout 150 /usr/local/bin/theme-color-apply "#9fdcf0" >/dev/null 2>&1 || true
 sleep 12; SHOT 05-theme-icy
 # any image as wallpaper
 python3 - <<'PY'
@@ -116,12 +116,12 @@ sleep 6; SHOT 06-custom-wallpaper
 CUR=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image)
 [ "$CUR" = "/tmp/custom-wall.png" ] && R set-any-wallpaper PASS || R set-any-wallpaper "FAIL($CUR)"
 # theme change must NOT replace the user's own wallpaper
-/usr/local/bin/theme-color-apply "#8b5cf6" >/dev/null 2>&1
+timeout 150 /usr/local/bin/theme-color-apply "#8b5cf6" >/dev/null 2>&1 || true
 sleep 12; SHOT 07-purple-keeps-custom-wallpaper
 CUR=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image)
 [ "$CUR" = "/tmp/custom-wall.png" ] && R theme-keeps-custom-wallpaper PASS || R theme-keeps-custom-wallpaper "FAIL($CUR)"
 # forced theme wallpaper
-/usr/local/bin/theme-color-apply "#8b5cf6" --force-wallpaper >/dev/null 2>&1
+timeout 150 /usr/local/bin/theme-color-apply "#8b5cf6" --force-wallpaper >/dev/null 2>&1
 sleep 10; SHOT 08-purple-forced-theme-wallpaper
 # Arabic clock
 timeout 20 /usr/local/bin/customos-clock-language ar
@@ -132,7 +132,7 @@ sleep 6; SHOT 10-clock-english
 theme-color >/dev/null 2>&1 &
 sleep 6; SHOT 11-theme-color-window
 pkill -f "/usr/local/bin/theme-color$"; pkill -f "python3 /usr/local/bin/theme-color"; sleep 1
-/usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/null 2>&1
+timeout 150 /usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/null 2>&1
 sleep 8
 # @BROWSER_NAME@ + lid playback
 [ -f /usr/share/icons/hicolor/48x48/apps/hilal-browser.png ] && R browser-icon PASS || R browser-icon FAIL

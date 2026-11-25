@@ -48,22 +48,43 @@ if true; then
   /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panel 2>/dev/null
 fi
 
-sleep 2
+# Glass vs opaque, decided ONCE from the FINAL compositor state (user decision: the
+# floating rounded glass bar is the default; the square opaque bar is ONLY the
+# no-compositor fallback). Rewrite just the panel block of gtk.css here (fast);
+# running the full theme-color-apply on the boot path is too slow on weak machines
+# and its lock can stall the CI selftest.
+GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
+if /usr/local/bin/customos-cm-check; then
+  PANELCSS="$HOME/.config/customos/panel.css"; LOOK=glass
+else
+  PANELCSS="$HOME/.config/customos/panel-fallback.css"; LOOK=opaque-fallback
+fi
+if [ -f "$PANELCSS" ]; then
+  mkdir -p "$(dirname "$GTKCSS")"
+  if [ -f "$GTKCSS" ]; then
+    sed -i '/customos panel glass: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS"
+    cat "$PANELCSS" >> "$GTKCSS"
+  else
+    cat "$PANELCSS" > "$GTKCSS"
+  fi
+fi
+LOG "gtk.css panel block = $LOOK (final compositor state)"
+
 setsid xfce4-panel >/dev/null 2>&1 &
 LOG "panel started (compositor wait=$i)"
-
-# Glass vs opaque fallback, decided ONCE from the final compositor state (approved look:
-# the floating rounded glass bar is the default; the square opaque bar is ONLY the
-# no-compositor fallback). theme-color-apply rebuilds gtk.css from scratch and picks the
-# panel css by the live _NET_WM_CM_S0 owner, so the panel style no longer depends on
-# boot ordering between this script and firstlogin.
-ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
-/usr/local/bin/theme-color-apply "$ACCENT" >/dev/null 2>&1 || true
-LOG "gtk.css rebuilt for final compositor state"
-
-sleep 12
-xfce4-panel -r 2>/dev/null
-LOG "panel restarted once more"
+sleep 6
+# If the compositor vanished while the panel was realizing, the panel window has no
+# RGBA visual (alpha paints black). Wait for the compositor and start the panel once
+# more so every window and plugin plug is born with an alpha channel.
+if ! /usr/local/bin/customos-cm-check; then
+  LOG "compositor lost after panel start; waiting for it and restarting panel"
+  j=0
+  while [ $j -lt 30 ]; do /usr/local/bin/customos-cm-check && break; j=$((j+1)); sleep 1; done
+  xfce4-panel -q 2>/dev/null
+  k=0; while pgrep -x xfce4-panel >/dev/null 2>&1 && [ $k -lt 10 ]; do k=$((k+1)); sleep 1; done
+  setsid xfce4-panel >/dev/null 2>&1 &
+  LOG "panel restarted after compositor returned (wait=${j}s)"
+fi
 # systray items: flat (transparent) buttons, not dark squares
 timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false --create -t bool 2>/dev/null \
   || timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false 2>/dev/null
