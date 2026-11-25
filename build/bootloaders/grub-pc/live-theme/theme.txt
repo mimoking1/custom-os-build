@@ -4,9 +4,9 @@ desktop-image: "background.png"
 desktop-color: "#0a9d96"
 
 + boot_menu {
-  left = 19%
+  left = 17%
   top = 50%
-  width = 63%
+  width = 66%
   height = 25%
   item_font = "Comfortaa Bold Regular 29"
   item_color = "#14384a"

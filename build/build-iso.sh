@@ -27,7 +27,7 @@ sed -i 's/^set timeout=.*/set timeout=4/' \
   /usr/share/live/build/bootloaders/grub-efi/grub.cfg 2>/dev/null || true
 # Center the live entries' text on the glass buttons (GRUB themes cannot center item text):
 # 643px buttons, Comfortaa Bold 29 (space 8.55px) -> 20/7 leading spaces
-sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR})"|Grub_live_menu_entry "                Live system (${_FLAVOUR})"|' /usr/lib/live/build/binary_grub_cfg
+sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR})"|Grub_live_menu_entry "                 Live system (${_FLAVOUR})"|' /usr/lib/live/build/binary_grub_cfg
 sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR} fail-safe mode)"|Grub_live_menu_entry "     Live system (${_FLAVOUR} fail-safe mode)"|' /usr/lib/live/build/binary_grub_cfg
 # debootstrap must know the target suite
 if [ ! -e "/usr/share/debootstrap/scripts/$DEBIAN_SUITE" ]; then
