@@ -13,7 +13,7 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq grub-common grub-pc-bin xorriso mtools qemu-system-x86 socat python3-pil librsvg2-bin
+          sudo apt-get install -y -qq grub-common grub-pc-bin xorriso mtools qemu-system-x86 socat python3-pil librsvg2-bin imagemagick
           sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
           sudo chmod 666 /dev/kvm || true
       - name: Assemble minimal GRUB ISO with the real theme
@@ -64,14 +64,8 @@ jobs:
           sleep 2
           echo "screendump $OUT/menu-sel.ppm" | socat - UNIX-CONNECT:"$OUT/mon.sock" || true
           kill $QP 2>/dev/null || true
-          python3 - <<'PY'
-          from PIL import Image
-          import os
-          for f in os.listdir('/tmp/grubshots'):
-              if f.endswith('.ppm'):
-                  Image.open('/tmp/grubshots/'+f).convert('RGB').save('/tmp/grubshots/'+f.replace('.ppm','.png'))
-          print(os.listdir('/tmp/grubshots'))
-PY
+          for f in /tmp/grubshots/*.ppm; do convert "$f" "${f%.ppm}.png"; done
+          ls -la /tmp/grubshots/
       - name: Publish shots to ci-evidence
         if: always()
         env:
