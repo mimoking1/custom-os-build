@@ -47,9 +47,9 @@ jobs:
             'sleep 6' \
             'set theme=/boot/grub/live-theme/theme.txt' \
             'export theme' \
-            'menuentry "                    Live system (amd64)" { true }' \
-            'menuentry "       Live system (amd64 fail-safe mode)" { true }' \
-            'submenu "                               Utilities" { menuentry "memtest" { true } }' \
+            'menuentry "                Live system (amd64)" { true }' \
+            'menuentry "     Live system (amd64 fail-safe mode)" { true }' \
+            'submenu "                          Utilities" { menuentry "memtest" { true } }' \
             > "$ISO/grub.cfg"
           grub-mkrescue -o /tmp/grub-test.iso /tmp/iso 2>&1 | tail -3
           ls -la /tmp/grub-test.iso
