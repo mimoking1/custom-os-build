@@ -1,0 +1,10 @@
+#!/bin/sh
+# New Desktop button action: add a workspace (cap 8) and switch to it.
+N=$(xfconf-query -c xfwm4 -p /general/workspace_count 2>/dev/null || echo 1)
+case "$N" in ''|*[!0-9]*) N=1 ;; esac
+if [ "$N" -lt 8 ]; then
+  xfconf-query -c xfwm4 -p /general/workspace_count -s $((N + 1)) 2>/dev/null
+  wmctrl -s "$N" 2>/dev/null || true   # new desktop = zero-based index N
+else
+  wmctrl -s 7 2>/dev/null || true      # at the cap: just go to the last one
+fi

@@ -1,0 +1,3 @@
+#!/bin/sh
+# genmon: "New Desktop" button (Task View style); click adds a workspace and switches to it.
+printf '%s\n' '<img>/usr/share/pixmaps/customos/new-desktop.png</img><click>/usr/local/bin/customos-new-desktop</click><tool>New desktop</tool>'

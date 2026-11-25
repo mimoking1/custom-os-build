@@ -1,0 +1,4 @@
+#!/bin/sh
+# genmon: Windows-style search field in the bar; click opens the instant app/settings
+# search (xfce4-appfinder: no indexer, no daemon, zero idle cost).
+printf '%s\n' '<img>/usr/share/pixmaps/customos/search-field.png</img><click>xfce4-appfinder</click><tool>Search</tool>'

@@ -1,0 +1,14 @@
+#!/bin/sh
+# genmon weather readout. Never blocks the panel: prints the cache instantly and
+# refreshes it in the background when stale (30 min). Only the very first run on a
+# fresh boot fetches synchronously (10s cap) so the readout appears at once.
+CACHE="$HOME/.cache/customos/weather"
+mkdir -p "$HOME/.cache/customos" 2>/dev/null
+now=$(date +%s)
+mtime=$(stat -c %Y "$CACHE" 2>/dev/null || echo 0)
+if [ ! -s "$CACHE" ]; then
+  timeout 15 /usr/local/bin/customos-weather-fetch >/dev/null 2>&1 || true
+elif [ $((now - mtime)) -gt 1800 ]; then
+  setsid /usr/local/bin/customos-weather-fetch >/dev/null 2>&1 &
+fi
+if [ -s "$CACHE" ]; then cat "$CACHE"; else printf '%s\n' '<txt> </txt>'; fi

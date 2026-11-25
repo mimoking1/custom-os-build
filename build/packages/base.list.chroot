@@ -116,3 +116,5 @@ xserver-xorg-input-all
 picom
 python3-xlib
 mesa-utils
+xfce4-appfinder
+wmctrl
