@@ -35,7 +35,7 @@ CSS
       # the xprop root-property read is not. Glass stays the default; the opaque
       # square bar is only for machines where no compositor could start at all.
       if /usr/local/bin/customos-cm-check 2>/dev/null; then
-        cat "$CFG/panel.css"
+        cat "$CFG/panel-notch.css" 2>/dev/null || cat "$CFG/panel.css"
       else
         cat "$CFG/panel-fallback.css" 2>/dev/null || cat "$CFG/panel.css"
       fi
@@ -65,6 +65,25 @@ if [ "$FORCE" = "--force-wallpaper" ] || { [ "$FOLLOW" = "on" ] && { case "$CUR"
   rm -f "$HOME"/.local/share/customos/wallpaper-theme*.png
   W="$HOME/.local/share/customos/wallpaper-theme-$(date +%s).png"
   /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only wall --wall-out "$W" && /usr/local/bin/customos-set-wallpaper "$W"
+fi
+
+# recessed notch: render against the FINAL wallpaper (glass only)
+if /usr/local/bin/customos-cm-check 2>/dev/null; then
+  SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}'); SW=${SW:-1280}
+  SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}'); SH=${SH:-800}
+  ORBX=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
+  case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 432) / 2 + 36 )) ;; esac
+  WP=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
+  [ -f "$WP" ] || WP=/usr/share/backgrounds/customos/wallpaper-default.png
+  /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only notchbg --notch-x "$ORBX" --screen "${SW}x${SH}" --wall "$WP" >/dev/null 2>&1 || true
+fi
+
+# panel + plugs: flip the background image off/on so every process re-reads it
+# (a same-path rewrite alone leaves plugs showing the previous accent)
+if [ -f "$CFG/panel-bg-notch.png" ] && /usr/local/bin/customos-cm-check 2>/dev/null; then PBG="$CFG/panel-bg-notch.png"; else PBG="$CFG/panel-bg.png"; fi
+if [ -f "$PBG" ]; then
+  xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
+  xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$PBG" 2>/dev/null
 fi
 
 # desktop icons pick up the new files

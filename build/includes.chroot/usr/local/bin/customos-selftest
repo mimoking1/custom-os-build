@@ -73,6 +73,13 @@ pgrep -f customos-credit-pill >/dev/null && R credit-pill-running PASS || R cred
 R firmware-files "$(ls /lib/firmware 2>/dev/null | wc -l)"
 R firmware-loaded "$(sudo dmesg | grep -ci 'firmware' || true)"
 R wallpaper-now "$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>&1 || true)"
+# recessed notch bar (approved look): expect the rendered image in glass mode; log geometry for calibration
+if /usr/local/bin/customos-cm-check 2>/dev/null; then
+  [ -f "$HOME/.config/customos/panel-bg-notch.png" ] && R notch-bg "PASS($(xdpyinfo 2>/dev/null | awk '/dimensions/{print $2}') orbx=$(/usr/local/bin/customos-orb-pos 2>/dev/null))" || R notch-bg "FAIL(glass mode but no notch image)"
+else
+  R notch-bg "SKIP(opaque-fallback mode)"
+fi
+R panel-tree "$(xwininfo -root -tree 2>/dev/null | grep -aE 'xfce4-panel|plugin|wrapper' | head -8 | tr '\n' '|' | cut -c1-400)"
 # which wallpaper / icons / panel files exist
 [ -f /usr/share/icons/hicolor/256x256/apps/customos-pc.png ] && R icons PASS || R icons FAIL
 [ -f /usr/share/pixmaps/customos/orb.png ] && R orb PASS || R orb FAIL

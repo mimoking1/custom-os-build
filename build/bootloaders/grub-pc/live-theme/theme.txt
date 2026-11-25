@@ -4,11 +4,11 @@ desktop-image: "background.png"
 desktop-color: "#0a9d96"
 
 + boot_menu {
-  left = 18.55%
-  top = 50.39%
-  width = 62.79%
-  height = 24.48%
-  item_font = "Comfortaa Bold"
+  left = 19%
+  top = 50%
+  width = 63%
+  height = 25%
+  item_font = "Comfortaa Bold 29"
   item_color = "#14384a"
   selected_item_color = "#0b2836"
   item_height = 52
@@ -28,7 +28,7 @@ desktop-color: "#0a9d96"
   top = 87%
   height = 30
   align = "center"
-  font = "Comfortaa Regular"
+  font = "Comfortaa Regular 13"
   color = "#0a3d43"
   text = "Automatic boot in %d seconds..."
 }

@@ -163,14 +163,36 @@ def make_orb(acc, diam=60, pressed=False):
     return layer.resize((D, D), Image.LANCZOS)
 
 # ---------- css ----------
+def panel_stops(acc):
+    """Bar gradient stops. Cool accents keep the approved blue-leaning mix;
+    warm accents (orange/pink/beige) get accent-derived warm stops (the bar was
+    rendering grey-blue - the user rejected that); near-neutral accents get greys."""
+    top = [int(.5*acc[i]+.5*140) for i in range(3)]
+    if max(acc) - min(acc) < 25:
+        mid2 = [int(.62*c) for c in acc]
+        lo2 = [int(.45*c) for c in acc]
+    elif acc[0] > acc[2] + 30:
+        mid2 = [int(.78*c) for c in acc]
+        lo2 = [int(.56*c) for c in acc]
+    else:
+        mid2 = [int(.55*acc[i]+.45*c) for i,c in enumerate((20,125,215))]
+        lo2 = [int(.35*acc[i]+.65*c) for i,c in enumerate((0,60,150))]
+    top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
+    return top, top2, mid2, lo2
+
+def grad_at(stops, t):
+    pts = [(0.0, stops[0]), (0.18, stops[1]), (0.42, stops[2]), (1.0, stops[3])]
+    for (p0, c0), (p1, c1) in zip(pts, pts[1:]):
+        if p0 <= t <= p1:
+            k = 0 if p1 == p0 else (t-p0)/(p1-p0)
+            return tuple(int(round(c0[i]+(c1[i]-c0[i])*k)) for i in range(3))
+    return pts[-1][1]
+
 def panel_css(acc):
     hi = [int(x) for x in mix(acc, (255, 255, 255), 0.5)]
     lo = [int(x) for x in mix(acc, (0, 0, 0), 0.4)]
     mid = acc
-    top = [int(.5*acc[i]+.5*140) for i in range(3)]
-    mid2 = [int(.55*acc[i]+.45*c) for i,c in enumerate((20,125,215))]
-    lo2 = [int(.35*acc[i]+.65*c) for i,c in enumerate((0,60,150))]
-    top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
+    top, top2, mid2, lo2 = panel_stops(acc)
     lum = 0.299 * acc[0] + 0.587 * acc[1] + 0.114 * acc[2]
     fg = "#0e2f47" if lum > 150 else "#ffffff"
     def rgba(c, a): return "rgba(%d,%d,%d,%.2f)" % (c[0], c[1], c[2], a)
@@ -206,10 +228,7 @@ window#XfcePanelWindow {{
 def panel_fallback_css(acc):
     """No compositor -> alpha renders black. Same look, fully opaque, plugins too."""
     hi = [int(x) for x in mix(acc, (255, 255, 255), 0.5)]
-    mid2 = [int(.55*acc[i]+.45*c) for i,c in enumerate((20,125,215))]
-    lo2 = [int(.35*acc[i]+.65*c) for i,c in enumerate((0,60,150))]
-    top = [int(.5*acc[i]+.5*140) for i in range(3)]
-    top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
+    top, top2, mid2, lo2 = panel_stops(acc)
     lum = 0.299 * acc[0] + 0.587 * acc[1] + 0.114 * acc[2]
     fg = "#0e2f47" if lum > 150 else "#ffffff"
     def rgb(c): return "rgb(%d,%d,%d)" % (c[0], c[1], c[2])
@@ -251,26 +270,50 @@ window#XfcePanelWindow {{
 """
     return css
 
+def panel_notch_png(acc, path, notch_x, screen_w, screen_h, wall_path, panel_h=74):
+    BT, BB, BS = 22, 8, 12           # glass css borders: top/bottom/sides
+    w, h = screen_w - 2 * BS, panel_h - BT - BB
+    stops = panel_stops(acc)
+    S = 4
+    im = Image.new("RGB", (w * S, h * S))
+    d = ImageDraw.Draw(im)
+    for y in range(h * S):
+        d.line([(0, y), (w * S, y)], fill=grad_at(stops, y / max(1, h * S - 1)))
+    wall = Image.open(wall_path).convert("RGB")
+    iw, ih = wall.size
+    s = max(screen_w / iw, screen_h / ih)  # xfdesktop image-style 5 (zoomed: fill + center crop)
+    wall = wall.resize((int(iw * s + 0.5), int(ih * s + 0.5)), Image.LANCZOS)
+    ox, oy = (wall.width - screen_w) // 2, (wall.height - screen_h) // 2
+    cx, cy, r = notch_x - BS, 2, 36        # orb center sits at the bar's top edge
+    win_top = screen_h - panel_h
+    ax, ay = BS + cx - r, win_top + BT + cy - r
+    piece = wall.crop((ax + ox, ay + oy, ax + ox + 2 * r, ay + oy + 2 * r))
+    piece = piece.resize((2 * r * S, 2 * r * S), Image.LANCZOS)
+    m = Image.new("L", (2 * r * S, 2 * r * S), 0)
+    ImageDraw.Draw(m).ellipse([0, 0, 2 * r * S - 1, 2 * r * S - 1], fill=255)
+    im.paste(piece, ((cx - r) * S, (cy - r) * S), m)
+    im.resize((w, h), Image.LANCZOS).save(path)
+
+def panel_notch_css(acc, notch_url):
+    """Glass bar painted from the pre-rendered notched image (approved recess look)."""
+    base, fg = panel_css(acc)
+    lines = []
+    for ln in base.splitlines():
+        if ln.strip().startswith("background-image: linear-gradient"):
+            ln = "  background-image: url(\"%s\"); background-size: 100% 100%;" % notch_url
+        lines.append(ln)
+    return "\n".join(lines), fg
+
+
 def hexs(c): return "#%02x%02x%02x" % tuple(c)
 
 def panel_gradient_png(acc, path, height=74):
     """1px-wide vertical gradient matching the panel CSS stops; used as the panel's
     native image background so external plugin plugs get painted too."""
-    top = [int(.5*acc[i]+.5*140) for i in range(3)]
-    mid2 = [int(.55*acc[i]+.45*c) for i,c in enumerate((20,125,215))]
-    lo2 = [int(.35*acc[i]+.65*c) for i,c in enumerate((0,60,150))]
-    top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
-    stops = [(0.0, top), (0.18, top2), (0.42, mid2), (1.0, lo2)]
+    stops = panel_stops(acc)
     im = Image.new("RGB", (1, height))
     for y in range(height):
-        t = y / max(1, height - 1)
-        col = stops[-1][1]
-        for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
-            if p0 <= t <= p1:
-                k = 0 if p1 == p0 else (t - p0) / (p1 - p0)
-                col = tuple(int(round(mix(c0, c1, k)[i])) for i in range(3))
-                break
-        im.putpixel((0, y), col)
+        im.putpixel((0, y), grad_at(stops, y / max(1, height - 1)))
     im.save(path)
 
 def main():
@@ -282,6 +325,9 @@ def main():
     ap.add_argument("--wall-out")
     ap.add_argument("--default-live-wallpaper")
     ap.add_argument("--src")
+    ap.add_argument("--notch-x", type=int, default=0)
+    ap.add_argument("--screen", default="1280x800")
+    ap.add_argument("--wall", default="")
     a = ap.parse_args()
     if a.default_live_wallpaper:
         im = Image.open(a.src or BASE_WALL)
@@ -312,8 +358,15 @@ def main():
         open(css_out, "w").write(css)
         open(os.path.dirname(css_out) + "/panel-fallback.css", "w").write(panel_fallback_css(acc))
         open(os.path.dirname(css_out) + "/panel-fg", "w").write(fg)
+        ncss, _ = panel_notch_css(acc, "file://" + os.path.dirname(css_out) + "/panel-bg-notch.png")
+        open(os.path.dirname(css_out) + "/panel-notch.css", "w").write(ncss)
     if a.only in ("all", "panelbg"):
         panel_gradient_png(acc, os.path.dirname(css_out) + "/panel-bg.png")
+    if a.only == "notchbg":
+        sw, sh = (int(x) for x in a.screen.split("x"))
+        wall = a.wall or "/usr/share/backgrounds/customos/wallpaper-default.png"
+        panel_notch_png(acc, os.path.dirname(css_out) + "/panel-bg-notch.png", a.notch_x, sw, sh, wall)
+        print("notchbg:", os.path.dirname(css_out) + "/panel-bg-notch.png", a.screen, "orbx", a.notch_x, "wall", wall)
     if a.only in ("all", "pillbg"):
         # rounded translucent pill for the floating credit panel (matches approved mockup pill)
         PW, PH, RAD = 600, 56, 26

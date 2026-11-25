@@ -88,6 +88,29 @@ fi
 # systray items: flat (transparent) buttons, not dark squares
 timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false --create -t bool 2>/dev/null \
   || timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false 2>/dev/null
+# recessed orb notch (approved look): the bar gets a semicircular dip the orb nests in.
+# The dip is filled with the exact wallpaper pixels behind it, so it works on RGB plug
+# windows too (no alpha needed). Glass mode only; the opaque fallback keeps the plain bar.
+if [ "$LOOK" = glass ]; then
+  SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}')
+  SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}')
+  SW=${SW:-1280}; SH=${SH:-800}
+  ORBX=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
+  case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 432) / 2 + 36 )) ;; esac
+  WALLP=$(timeout 10 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
+  [ -f "$WALLP" ] || WALLP=/usr/share/backgrounds/customos/wallpaper-default.png
+  if /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only notchbg --notch-x "$ORBX" --screen "${SW}x${SH}" --wall "$WALLP" 2>/dev/null      && [ -f "$HOME/.config/customos/panel-bg-notch.png" ] && [ -f "$HOME/.config/customos/panel-notch.css" ]; then
+    GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
+    sed -i '/customos panel glass: generated/,$d; /customos panel notch: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS" 2>/dev/null
+    cat "$HOME/.config/customos/panel-notch.css" >> "$GTKCSS"
+    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
+    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg-notch.png" 2>/dev/null
+    LOG "recessed notch bar applied (orbx=$ORBX screen=${SW}x${SH})"
+  else
+    LOG "notch render failed; keeping plain glass bar"
+  fi
+fi
+
 # floating rounded credit pill (matches approved mockup); relaunch after panel so it maps on top
 pkill -f customos-credit-pill 2>/dev/null
 setsid /usr/local/bin/customos-credit-pill >/dev/null 2>&1 &

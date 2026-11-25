@@ -197,7 +197,9 @@ mkdir -p config/bootloaders/grub-pc/fonts
 cp -a ../build/bootloaders/grub-pc/config.cfg ../build/bootloaders/grub-pc/theme.cfg ../build/bootloaders/grub-pc/grub.cfg config/bootloaders/grub-pc/
 mkdir -p config/bootloaders/grub-pc/live-theme
 cp -a ../build/bootloaders/grub-pc/live-theme/. config/bootloaders/grub-pc/live-theme/
-sed "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" ../theme/boot/grub-bg.svg | rsvg-convert -w 1024 -h 768 -o config/bootloaders/grub-pc/live-theme/background.png
+# Boot menu background: recorded assignment FULL/installed = teal, LIVE = sky-blue
+if [ "$VARIANT" = "live" ]; then BG_TOP="#1b6fc4"; BG_BOT="#63cdf5"; else BG_TOP="#0a9d96"; BG_BOT="#08e8de"; fi
+sed -e "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" -e "s/@BG_TOP@/$BG_TOP/g; s/@BG_BOT@/$BG_BOT/g" ../theme/boot/grub-bg.svg | rsvg-convert -w 1024 -h 768 -o config/bootloaders/grub-pc/live-theme/background.png
 grub-mkfont -s 29 -n "Comfortaa Bold" -o config/bootloaders/grub-pc/fonts/comfortaa-bold-29.pf2 ../theme/fonts/Comfortaa-Bold.ttf
 grub-mkfont -s 13 -n "Comfortaa Regular" -o config/bootloaders/grub-pc/fonts/comfortaa-regular-13.pf2 ../theme/fonts/Comfortaa-Regular.ttf
 
