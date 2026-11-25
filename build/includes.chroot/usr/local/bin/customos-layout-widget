@@ -1,0 +1,8 @@
+#!/bin/sh
+# genmon: keyboard layout indicator (dark-blue square icon + current layout), click toggles us <-> ara.
+cur=$(setxkbmap -query 2>/dev/null | awk '/^layout/ {print $2}' | cut -d, -f1)
+case "$cur" in
+  ara*) txt=ara ;;
+  *)    txt=us ;;
+esac
+printf '%s\n' "<img>/usr/share/pixmaps/customos/kb-layout.png</img><txt> $txt </txt><click>/usr/local/bin/customos-layout-toggle</click><tool>Keyboard layout ($txt) - click to switch</tool>"

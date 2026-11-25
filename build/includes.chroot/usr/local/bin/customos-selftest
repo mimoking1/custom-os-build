@@ -98,6 +98,8 @@ xfconf-query -c xfce4-panel -p /plugins/plugin-2 2>/dev/null | grep -q whiskerme
 ! xfconf-query -c xfce4-panel -p /plugins/plugin-10 2>/dev/null | grep -q genmon && R search-not-in-bar PASS || R search-not-in-bar FAIL
 xfconf-query -c xfce4-panel -p /plugins/plugin-11 2>/dev/null | grep -q genmon && R newdesktop-in-panel PASS || R newdesktop-in-panel FAIL
 xfconf-query -c xfce4-panel -p /plugins/plugin-12 2>/dev/null | grep -q genmon && R weather-in-panel PASS || R weather-in-panel FAIL
+[ -f /usr/share/pixmaps/customos/kb-layout.png ] && [ -x /usr/local/bin/customos-layout-widget ] && R layout-widget PASS || R layout-widget FAIL
+xfconf-query -c xfce4-panel -p /plugins/plugin-8 2>/dev/null | grep -q genmon && R layout-in-panel PASS || R layout-in-panel FAIL
 [ -s /etc/ssl/certs/ca-certificates.crt ] && R ca-certificates PASS || R ca-certificates "FAIL(weather TLS needs roots)"
 thunar >/dev/null 2>&1 &
 sleep 8; SHOT 02-files-open-taskbar-button

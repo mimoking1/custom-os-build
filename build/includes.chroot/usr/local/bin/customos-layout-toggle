@@ -1,0 +1,8 @@
+#!/bin/sh
+# Toggle keyboard layout us <-> ara, keeping the group-switch options from the boot config.
+cur=$(setxkbmap -query 2>/dev/null | awk '/^layout/ {print $2}' | cut -d, -f1)
+if [ "$cur" = "ara" ]; then
+  setxkbmap -layout us,ara -option grp:win_space_toggle,grp:alt_shift_toggle
+else
+  setxkbmap -layout ara,us -option grp:win_space_toggle,grp:alt_shift_toggle
+fi

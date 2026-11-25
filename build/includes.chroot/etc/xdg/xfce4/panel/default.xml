@@ -55,9 +55,10 @@
       <property name="label" type="string" value=" "/>
       <property name="period" type="int" value="600"/>
     </property>
-    <property name="plugin-8" type="string" value="xkb">
-      <property name="display-type" type="uint" value="2"/>
-      <property name="display-name" type="uint" value="0"/>
+    <property name="plugin-8" type="string" value="genmon">
+      <property name="command" type="string" value="/usr/local/bin/customos-layout-widget"/>
+      <property name="enable-label" type="bool" value="false"/>
+      <property name="period" type="int" value="1"/>
     </property>
     <property name="plugin-7" type="string" value="clock">
       <property name="mode" type="uint" value="2"/>

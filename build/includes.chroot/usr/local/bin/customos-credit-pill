@@ -8,7 +8,8 @@ import os, math, cairo, gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, Pango, PangoCairo
 
-TEXT = "Directed by Mohamed Sayed \u00b7 \u0645\u062d\u0645\u062f \u0633\u064a\u062f"
+MARKUP = ("<span font_family='Comfortaa' weight='bold' size='12pt'>Directed by Mohamed Sayed</span>"
+          " <span font_family='Noto Kufi Arabic' size='8pt'>\u0645\u062d\u0645\u062f \u0633\u064a\u062f</span>")
 H = 27
 PADX = 14
 
@@ -32,9 +33,8 @@ class Pill(Gtk.Window):
         if vis is not None:
             self.set_visual(vis)
         self.acc = accent_rgb()
-        self.font = Pango.FontDescription("Comfortaa 11")
-        lay = self.create_pango_layout(TEXT)
-        lay.set_font_description(self.font)
+        lay = self.create_pango_layout("")
+        lay.set_markup(MARKUP)
         tw, th = lay.get_pixel_size()
         self.tw = tw
         self.w = tw + 2 * PADX
@@ -68,11 +68,11 @@ class Pill(Gtk.Window):
         cr.set_source_rgba(1, 1, 1, 0.45)
         cr.set_line_width(1)
         cr.stroke()
-        lay = self.create_pango_layout(TEXT)
-        lay.set_font_description(self.font)
+        lay = self.create_pango_layout("")
+        lay.set_markup(MARKUP)
         _tw, th = lay.get_pixel_size()
         cr.move_to((self.w - self.tw) / 2, (self.h - th) / 2)
-        cr.set_source_rgba(0.04, 0.10, 0.25, 0.95)
+        cr.set_source_rgba(1, 1, 1, 0.97)  # white text, as in the approved reference
         PangoCairo.show_layout(cr, lay)
         return False
 
