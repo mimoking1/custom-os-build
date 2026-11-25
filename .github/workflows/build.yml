@@ -52,6 +52,13 @@ jobs:
           sudo chmod 666 /dev/kvm || true
           ls -la /dev/kvm
 
+      - name: Build MSI self-test package
+        run: |
+          sudo apt-get install -y -qq msitools
+          mkdir -p build/includes.chroot/usr/share/customos/tests
+          wixl -v build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi
+          ls -la build/includes.chroot/usr/share/customos/tests/
+
       - name: Build ISO (${{ matrix.variant }})
         run: sudo ./build/build-iso.sh variants/${{ matrix.variant }}.conf
 

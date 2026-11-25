@@ -102,10 +102,18 @@ if command -v wine >/dev/null; then
     R wine-bat "FAIL($B)"
     head -6 /tmp/bat.log | while read l; do R "bat-log" "$(echo "$l" | cut -c1-140)"; done
   }
-  timeout 20 wine msiexec /? >/tmp/msi.log 2>&1; EC=$?
-  if [ $EC -eq 124 ]; then R wine-msiexec "PASS(modal dialog stayed up)"
-  elif [ $EC -le 1 ]; then R wine-msiexec PASS
-  else R wine-msiexec "FAIL(exit $EC)"; head -6 /tmp/msi.log | while read l; do R "msi-log" "$(echo "$l" | cut -c1-140)"; done
+  MSI=/usr/share/customos/tests/customos-test.msi
+  INST="$HOME/.wine/drive_c/Program Files/CustomOSTest/test.txt"
+  rm -rf "$HOME/.wine/drive_c/Program Files/CustomOSTest" "$HOME/.wine/drive_c/msi-install.log"
+  WMSI=$(winepath -w "$MSI" 2>/dev/null)
+  timeout 240 wine msiexec /i "$WMSI" /qn /L*V 'C:\msi-install.log' >/tmp/msi.log 2>&1; EC=$?
+  if [ -f "$INST" ] && grep -q customos-msi-test-marker "$INST"; then
+    R wine-msiexec "PASS(real install, exit $EC)"
+  else
+    R wine-msiexec "FAIL(exit $EC, installed file missing)"
+    grep -n "return value 3" "$HOME/.wine/drive_c/msi-install.log" 2>/dev/null | head -2 | while read l; do R "msi-fatal" "$(echo "$l" | cut -c1-140)"; done
+    grep -iE "error|fail" "$HOME/.wine/drive_c/msi-install.log" 2>/dev/null | tail -4 | while read l; do R "msi-vlog" "$(echo "$l" | cut -c1-140)"; done
+    head -6 /tmp/msi.log | while read l; do R "msi-log" "$(echo "$l" | cut -c1-140)"; done
   fi
   [ "$(xdg-mime query default application/x-msi)" = customos-wine-open.desktop ] && R mime-msi PASS || R mime-msi FAIL
   [ "$(xdg-mime query default application/x-ms-dos-executable)" = customos-wine-open.desktop ] && R mime-exe PASS || R mime-exe FAIL
