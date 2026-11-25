@@ -37,6 +37,7 @@ sleep 6
 R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true) (root property, informational only)"
 R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 || true)"
 R disk-free "$(df -h / /tmp 2>/dev/null | tail -n +2 | awk '{printf "%s:%sfree ",$6,$4}')"
+R mem-idle "$(free -m | awk '/^Mem:/{printf "total=%dM used=%dM avail=%dM",$2,$3,$7}')"
 R diag-gl-renderer "$(glxinfo 2>/dev/null | grep -i "OpenGL renderer" | cut -c1-100 || echo glxinfo-missing)"
 R diag-xext "Composite/Damage/XFixes present: $(xdpyinfo 2>/dev/null | grep -ciE "^ *(Composite|DAMAGE|XFIXES|RENDER)") of 4 (RENDER counts twice-safe)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
