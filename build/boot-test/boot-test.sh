@@ -22,7 +22,8 @@ ${QEMU_BIN:-qemu-system-x86_64} ${QEMU_CPU:+-cpu $QEMU_CPU} \
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
 QPID=$!
 # capture the branded boot menu first, then auto-select the default entry
-sleep 4
+# (GRUB shows its menu ~1-2s in and auto-boots after 4s: shoot early)
+sleep 3
 echo "screendump $OUT/shot-04s-menu.ppm" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'screendump %s\n' "$OUT/shot-04s-menu.ppm" | nc -U "$MON"
 sleep 4
 echo "sendkey ret" | socat - UNIX-CONNECT:"$MON" 2>/dev/null || printf 'sendkey ret

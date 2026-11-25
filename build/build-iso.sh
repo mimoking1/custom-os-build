@@ -10,7 +10,7 @@ rm -rf "$WORK"; mkdir -p "$WORK"; cd "$WORK"
 echo "==> Installing live-build tooling"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq live-build debootstrap xorriso squashfs-tools syslinux-efi \
+apt-get install -y -qq live-build debootstrap xorriso squashfs-tools syslinux-efi grub-common grub-pc-bin grub-efi-amd64-bin mtools \
     isolinux syslinux-common librsvg2-bin python3 fonts-noto-core fonts-hosny-amiri \
     curl ca-certificates debian-archive-keyring python3-pil > /dev/null
 # Ubuntu's live-build package is too old for our config (no --bootloaders/--image-name).
@@ -25,6 +25,10 @@ sed -i 's/^timeout .*/timeout 40/' \
   /usr/share/live/build/bootloaders/syslinux/syslinux.cfg 2>/dev/null || true
 sed -i 's/^set timeout=.*/set timeout=4/' \
   /usr/share/live/build/bootloaders/grub-efi/grub.cfg 2>/dev/null || true
+# Center the live entries' text on the glass buttons (GRUB themes cannot center item text):
+# 643px buttons, Comfortaa Bold 22 (space 6.45px) -> 32/19 leading spaces
+sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR})"|Grub_live_menu_entry "                                Live system (${_FLAVOUR})"|' /usr/lib/live/build/binary_grub_cfg
+sed -i 's|Grub_live_menu_entry "Live system (${_FLAVOUR} fail-safe mode)"|Grub_live_menu_entry "                   Live system (${_FLAVOUR} fail-safe mode)"|' /usr/lib/live/build/binary_grub_cfg
 # debootstrap must know the target suite
 if [ ! -e "/usr/share/debootstrap/scripts/$DEBIAN_SUITE" ]; then
   DB_DEB=$(curl -s https://deb.debian.org/debian/pool/main/d/debootstrap/ | grep -o 'debootstrap_[^"]*_all.deb' | sort -V | tail -1)
@@ -36,7 +40,7 @@ BOOTAPPEND="boot=live components quiet splash console=ttyS0 locales=en_US.UTF-8 
 if [ "$VARIANT" = "live" ]; then
   BOOTAPPEND="$BOOTAPPEND persistence persistence-label=persistence"
 fi
-if [ "$ARCH" = "i386" ]; then KFLAVOUR="686-pae"; BOOTLOADERS="syslinux"; else KFLAVOUR="amd64"; BOOTLOADERS="syslinux,grub-efi"; fi
+if [ "$ARCH" = "i386" ]; then KFLAVOUR="686-pae"; BOOTLOADERS="syslinux"; else KFLAVOUR="amd64"; BOOTLOADERS="grub-pc,grub-efi"; fi
 echo "==> lb config ($VARIANT, $DEBIAN_SUITE/$ARCH)"
 lb config \
   --distribution "$DEBIAN_SUITE" \
@@ -183,6 +187,19 @@ else
   sed "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" ../theme/boot/splash.svg | rsvg-convert -w 640 -h 480 -o config/includes.binary/isolinux/splash.png
 fi
 printf '%s\n' "$OS_NAME_AR - $OS_NAME" "Directed by Mohamed Sayed · محمد سيد" "Free and open-source software." "Moon imagery: NASA (public domain)." > config/includes.binary/CREDITS.txt
+
+echo "==> GRUB graphical boot theme (approved mockup look)"
+# fonts must be visible to rsvg-convert for the title text
+mkdir -p /usr/share/fonts/truetype/customos
+cp ../theme/fonts/Comfortaa-Regular.ttf ../theme/fonts/Comfortaa-Bold.ttf ../theme/fonts/NotoKufiArabic-Bold.ttf /usr/share/fonts/truetype/customos/ 2>/dev/null || true
+fc-cache -f > /dev/null 2>&1 || true
+mkdir -p config/bootloaders/grub-pc/fonts
+cp -a ../build/bootloaders/grub-pc/config.cfg ../build/bootloaders/grub-pc/theme.cfg ../build/bootloaders/grub-pc/grub.cfg config/bootloaders/grub-pc/
+mkdir -p config/bootloaders/grub-pc/live-theme
+cp -a ../build/bootloaders/grub-pc/live-theme/. config/bootloaders/grub-pc/live-theme/
+sed "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" ../theme/boot/grub-bg.svg | rsvg-convert -w 1024 -h 768 -o config/bootloaders/grub-pc/live-theme/background.png
+grub-mkfont -s 22 -n "Comfortaa Bold" -o config/bootloaders/grub-pc/fonts/comfortaa-bold-22.pf2 ../theme/fonts/Comfortaa-Bold.ttf
+grub-mkfont -s 13 -n "Comfortaa Regular" -o config/bootloaders/grub-pc/fonts/comfortaa-regular-13.pf2 ../theme/fonts/Comfortaa-Regular.ttf
 
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   echo "==> Calamares installer files (full variant)"
