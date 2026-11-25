@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""customos-credit-pill: floating rounded glass credit pill above the taskbar,
+matching the approved mockup (rounded pill, right side, bottom edge overlapping
+the bar's top edge slightly). Drawn as an override-redirect RGBA window so the
+corners are truly rounded under picom; a panel plugin cannot do this because
+external plugin plugs paint their background opaquely."""
+import os, math, cairo, gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, Gdk, Pango, PangoCairo
+
+TEXT = "Directed by Mohamed Sayed \u00b7 \u0645\u062d\u0645\u062f \u0633\u064a\u062f"
+H = 27
+PADX = 14
+
+
+def accent_rgb():
+    try:
+        s = open(os.path.expanduser("~/.config/customos/accent")).read().strip().lstrip("#")
+        return tuple(int(s[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+    except Exception:
+        return (0x4f / 255.0, 0xb2 / 255.0, 0xf7 / 255.0)
+
+
+class Pill(Gtk.Window):
+    def __init__(self):
+        super().__init__(type=Gtk.WindowType.POPUP)  # override-redirect: above the bar, no tasklist entry
+        self.set_decorated(False)
+        self.set_app_paintable(True)
+        self.set_accept_focus(False)
+        scr = self.get_screen()
+        vis = scr.get_rgba_visual()
+        if vis is not None:
+            self.set_visual(vis)
+        self.acc = accent_rgb()
+        self.font = Pango.FontDescription("Comfortaa 11")
+        lay = self.create_pango_layout(TEXT)
+        lay.set_font_description(self.font)
+        tw, th = lay.get_pixel_size()
+        self.tw = tw
+        self.w = tw + 2 * PADX
+        self.h = H
+        self.set_size_request(self.w, self.h)
+        self.connect("draw", self.on_draw)
+        self.connect("realize", self.on_realize)
+
+    def on_realize(self, *_):
+        mon = self.get_screen().get_monitor_geometry(0)
+        self.move(mon.width - self.w - 15, mon.height - 45 - self.h)
+        win = self.get_window()
+        if win is not None:
+            win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through
+
+    def on_draw(self, _w, cr):
+        r = self.h / 2.0
+        cr.new_sub_path()
+        cr.arc(self.w - r, r, r, -math.pi / 2, math.pi / 2)
+        cr.arc(self.w - r, self.h - r, r, 0, math.pi / 2)
+        cr.arc(r, self.h - r, r, math.pi / 2, math.pi)
+        cr.arc(r, r, r, math.pi, 3 * math.pi / 2)
+        cr.close_path()
+        a = self.acc
+        g = cairo.LinearGradient(0, 0, 0, self.h)
+        g.add_color_stop_rgba(0.0, min(1, a[0] + 0.55), min(1, a[1] + 0.55), min(1, a[2] + 0.50), 0.62)
+        g.add_color_stop_rgba(0.5, a[0], a[1], a[2], 0.58)
+        g.add_color_stop_rgba(1.0, a[0] * 0.70, a[1] * 0.70, a[2] * 0.85, 0.62)
+        cr.set_source(g)
+        cr.fill_preserve()
+        cr.set_source_rgba(1, 1, 1, 0.45)
+        cr.set_line_width(1)
+        cr.stroke()
+        lay = self.create_pango_layout(TEXT)
+        lay.set_font_description(self.font)
+        _tw, th = lay.get_pixel_size()
+        cr.move_to((self.w - self.tw) / 2, (self.h - th) / 2)
+        cr.set_source_rgba(0.04, 0.10, 0.25, 0.95)
+        PangoCairo.show_layout(cr, lay)
+        return False
+
+
+Pill().show_all()
+Gtk.main()

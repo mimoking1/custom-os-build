@@ -68,6 +68,7 @@ else
   fi
 fi
 pgrep -x xfce4-panel >/dev/null && R panel-process PASS || R panel-process "FAIL(panel not running at first shot)"
+pgrep -f customos-credit-pill >/dev/null && R credit-pill-running PASS || R credit-pill-running FAIL
 R firmware-files "$(ls /lib/firmware 2>/dev/null | wc -l)"
 R firmware-loaded "$(sudo dmesg | grep -ci 'firmware' || true)"
 R wallpaper-now "$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>&1 || true)"
