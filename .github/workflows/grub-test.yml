@@ -5,6 +5,9 @@ on:
       variant:
         description: 'live or full (background colors)'
         default: 'live'
+permissions:
+  contents: write
+
 jobs:
   grubshot:
     runs-on: ubuntu-latest
