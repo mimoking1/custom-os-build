@@ -167,17 +167,28 @@ def panel_stops(acc):
     """Bar gradient stops. Cool accents keep the approved blue-leaning mix;
     warm accents (orange/pink/beige) get accent-derived warm stops (the bar was
     rendering grey-blue - the user rejected that); near-neutral accents get greys."""
-    top = [int(.5*acc[i]+.5*140) for i in range(3)]
     if max(acc) - min(acc) < 25:
+        top = [int(.5*acc[i]+.5*140) for i in range(3)]
         mid2 = [int(.62*c) for c in acc]
         lo2 = [int(.45*c) for c in acc]
+        top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
     elif acc[0] > acc[2] + 30:
+        top = [int(.5*acc[i]+.5*140) for i in range(3)]
         mid2 = [int(.78*c) for c in acc]
         lo2 = [int(.56*c) for c in acc]
+        top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
     else:
-        mid2 = [int(.55*acc[i]+.45*c) for i,c in enumerate((20,125,215))]
-        lo2 = [int(.35*acc[i]+.65*c) for i,c in enumerate((0,60,150))]
-    top2 = [int(.6*top[i]+.4*mid2[i]) for i in range(3)]
+        # cool: EXACT approved sky-bar profile (user reference 2026-11-25, "no gray cast"),
+        # hue-generalized: same S/V shape relative to the accent, accent's hue.
+        import colorsys
+        h, sa, v = colorsys.rgb_to_hsv(acc[0]/255, acc[1]/255, acc[2]/255)
+        def mk(sf, vf):
+            r, g, b = colorsys.hsv_to_rgb(h, min(1.0, sa*sf), min(1.0, v*vf))
+            return [int(round(c*255)) for c in (r, g, b)]
+        top = mk(0.77, 0.765)    # (90,146,189) on sky
+        top2 = mk(0.81, 0.72)    # (80,141,178)
+        mid2 = mk(0.92, 0.813)   # (75,152,201)
+        lo2 = mk(1.31, 0.68)     # (18,102,168)
     return top, top2, mid2, lo2
 
 def grad_at(stops, t):
@@ -213,7 +224,7 @@ window#XfcePanelWindow {{
   color: {fg}; text-shadow: none; box-shadow: none;
   background-image: none; background-color: transparent; border-color: transparent;
 }}
-.xfce4-panel label {{ padding-top: 12px; }}
+.xfce4-panel label {{ padding-top: 34px; }}
 .xfce4-panel button {{ padding: 0 4px; margin: 0; min-height: 0; }}
 #clock-button {{ padding: 0 34px 0 6px; }}
 #XfcePanelWindow button:hover, #XfcePanelWindow button:checked {{
@@ -258,7 +269,7 @@ window#XfcePanelWindow {{
   color: {fg}; text-shadow: none; box-shadow: none;
   background-image: none; background-color: transparent; border-color: transparent;
 }}
-#XfcePanelWindow .xfce4-panel label {{ padding-top: 12px; }}
+#XfcePanelWindow .xfce4-panel label {{ padding-top: 34px; }}
 #XfcePanelWindow .xfce4-panel button {{ padding: 0 4px; margin: 0; min-height: 0; }}
 #XfcePanelWindow #clock-button {{ padding: 0 34px 0 6px; }}
 #XfcePanelWindow .xfce4-panel button:hover, #XfcePanelWindow .xfce4-panel button:checked {{
