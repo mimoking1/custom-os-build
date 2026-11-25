@@ -9,10 +9,23 @@ sudo modprobe 9pnet_virtio 2>/dev/null
 mkdir -p /tmp/hostshot
 sudo mount -t 9p -o trans=virtio,version=9p2000.L hostshare /tmp/hostshot 2>/dev/null \
   && S "SELFTEST-RESULT hostshare=mounted" || S "SELFTEST-RESULT hostshare=FAILED"
+# X access repair: screenshots via sudo and wine windows need a working cookie
+export DISPLAY="${DISPLAY:-:0}"
+S "SELFTEST-RESULT x-env=user:$(id -un),DISPLAY=$DISPLAY,XAUTHORITY=${XAUTHORITY:-unset}"
+if ! xdpyinfo >/dev/null 2>&1; then
+  for f in "$HOME/.Xauthority" "/run/user/$(id -u)/.Xauthority" "/var/run/lightdm/root/$DISPLAY"; do
+    [ -n "$f" ] && [ -r "$f" ] && export XAUTHORITY="$f" && break
+  done
+  xdpyinfo >/dev/null 2>&1 || {
+    sudo cat "/var/run/lightdm/root/$DISPLAY" > /tmp/.xauth-ci 2>/dev/null && chmod 644 /tmp/.xauth-ci && export XAUTHORITY=/tmp/.xauth-ci
+  }
+fi
+xdpyinfo >/dev/null 2>&1 && S "SELFTEST-RESULT x-access=PASS($XAUTHORITY)" || S "SELFTEST-RESULT x-access=FAIL"
+
 SHOT() {
   S "SELFTEST-SHOT $1"
   [ -d /tmp/hostshot ] && mountpoint -q /tmp/hostshot \
-    && sudo sh -c "xwd -root -silent > /tmp/hostshot/ig-$1.xwd 2>/dev/null" || true
+    && sudo env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" xwd -root -silent -out /tmp/hostshot/ig-$1.xwd 2>/dev/null || true
   sleep 6
 }
 R() { S "SELFTEST-RESULT $1=$2"; }
