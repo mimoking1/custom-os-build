@@ -35,6 +35,7 @@ for i in $(seq 1 60); do [ -f /tmp/customos-panel-fix-done ] && break; sleep 2; 
 sleep 6
 R diag-compositor "$(xprop -root _NET_WM_CM_S0 2>&1 || true)"
 R diag-compositing-conf "$(xfconf-query -c xfwm4 -p /general/use_compositing 2>&1 || true)"
+R diag-gl-renderer "$(glxinfo 2>/dev/null | grep -i "OpenGL renderer" | cut -c1-100 || echo glxinfo-missing)"
 S "SELFTEST-START $(cat /etc/hostname) $(date +%T)"
 SHOT 01-default
 R firmware-files "$(ls /lib/firmware 2>/dev/null | wc -l)"
@@ -126,17 +127,21 @@ if command -v wine >/dev/null; then
   WMSI=$(winepath -w "$MSI" 2>/dev/null)
   R msi-package "file=$(stat -c%s "$MSI" 2>/dev/null || echo MISSING) bytes, wmsi=$WMSI"
   timeout 240 wine msiexec /i "$WMSI" /qn ALLUSERS=1 /l*v 'Z:\tmp\msi-install.log' >/tmp/msi.log 2>&1; EC=$?
+  wineserver -w 2>/dev/null
+  case $EC in 1603) ECS="1603 fatal-install";; 3010) ECS="3010 success-reboot-required";; 0) ECS="0";; *) ECS="$EC";; esac
   INST=""
   for d in "$PFX/Program Files/CustomOSTest" "$PFX/Program Files (x86)/CustomOSTest"; do
     [ -f "$d/test.txt" ] && grep -q customos-msi-test-marker "$d/test.txt" && INST="$d/test.txt"
   done
   UNIN=$(timeout 60 wine reg query 'HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall' /s /f CustomOSTest 2>/dev/null | head -2)
+  [ -z "$UNIN" ] && UNIN=$(timeout 60 wine reg query 'HKLM\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall' /s /f CustomOSTest 2>/dev/null | head -2)
+  [ -s /tmp/msi-install.log ] && R msi-verbose-log "PASS($(wc -l < /tmp/msi-install.log) lines)" || R msi-verbose-log "FAIL(no log written)"
   if [ -n "$INST" ]; then
-    R wine-msiexec "PASS(real install at $INST, exit $EC)"
+    R wine-msiexec "PASS(real install at $INST, exit $ECS)"
   elif [ -n "$UNIN" ]; then
-    R wine-msiexec "PASS(registered in Uninstall key, exit $EC)"
+    R wine-msiexec "PASS(registered in Uninstall key, exit $ECS)"
   else
-    R wine-msiexec "FAIL(exit $EC, file absent in both Program Files, no Uninstall key)"
+    R wine-msiexec "FAIL(exit $ECS, file absent in both Program Files, no Uninstall key)"
     grep -n "return value 3" /tmp/msi-install.log 2>/dev/null | head -2 | while read l; do R "msi-fatal" "$(echo "$l" | cut -c1-140)"; done
     grep -iE "error|fail|cannot" /tmp/msi-install.log 2>/dev/null | tail -4 | while read l; do R "msi-vlog" "$(echo "$l" | cut -c1-140)"; done
     head -4 /tmp/msi.log | while read l; do R "msi-log" "$(echo "$l" | cut -c1-140)"; done
@@ -162,8 +167,13 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || {
     R tahmeel-running FAIL
     ls -la /opt/tahmeel/app 2>&1 | head -12 | while read l; do R "tahmeel-dir" "$(echo "$l" | cut -c1-140)"; done
-    ( cd /opt/tahmeel/app && timeout 45 env WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu --in-process-gpu --disable-gpu-sandbox --disable-direct-composition ) >/tmp/tahmeel-fg.log 2>&1
-    R tahmeel-fg-exit "$?"
+    wineserver -k 2>/dev/null; sleep 2
+    rm -rf /tmp/tpA /tmp/tpB
+    ( cd /opt/tahmeel/app && timeout 90 env WINEPREFIX=/tmp/tpA WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-armA.log 2>&1
+    R tahmeel-armA "exit=$? (fresh prefix, original flags)"
+    ( cd /opt/tahmeel/app && timeout 90 env WINEPREFIX=/tmp/tpB WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu --in-process-gpu --disable-gpu-sandbox --disable-direct-composition ) >/tmp/tahmeel-fg.log 2>&1
+    R tahmeel-fg-exit "$? (fresh prefix, extra flags)"
+    head -4 /tmp/tahmeel-armA.log | while read l; do R "tahmeel-armA-head" "$(echo "$l" | cut -c1-140)"; done
     head -8 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg-head" "$(echo "$l" | cut -c1-140)"; done
     tail -12 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
     ( cd /opt/tahmeel/app && timeout 30 env WINEDEBUG=+loaddll WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-dll.log 2>&1

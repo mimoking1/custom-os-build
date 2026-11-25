@@ -57,7 +57,7 @@ jobs:
           sudo apt-get install -y -qq msitools wixl || sudo apt-get install -y -qq wixl
           mkdir -p build/includes.chroot/usr/share/customos/tests
           wixl -v -a x64 build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi
-          msiinfo extract build/includes.chroot/usr/share/customos/tests/customos-test.msi SummaryInformation | head -5 || true
+          msiinfo extract build/includes.chroot/usr/share/customos/tests/customos-test.msi SummaryInformation | head -5; msiinfo tables build/includes.chroot/usr/share/customos/tests/customos-test.msi | tr "\n" " "; msiinfo export build/includes.chroot/usr/share/customos/tests/customos-test.msi File 2>/dev/null | grep -i test.txt | head -3 || true
           ls -la build/includes.chroot/usr/share/customos/tests/
 
       - name: Build ISO (${{ matrix.variant }})
