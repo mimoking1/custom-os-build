@@ -68,6 +68,21 @@ jobs:
           if [[ "${{ matrix.variant }}" == *32 ]]; then export QEMU_BIN=qemu-system-i386 QEMU_CPU=qemu32,+pae; fi
           ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
 
+      - name: Publish evidence to rolling release (bypasses artifact quota)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view ci-evidence >/dev/null 2>&1 ||             gh release create ci-evidence --title "CI evidence (rolling)" --notes "Automated evidence upload. Assets prefixed by run id; only the latest run is kept." --latest=false
+          # keep only this run's assets
+          gh release view ci-evidence --json assets --jq '.assets[].name' | while read a; do
+            case "$a" in ${GITHUB_RUN_ID}-*) ;; *) gh release delete-asset ci-evidence "$a" -y || true;; esac
+          done
+          for f in out/boot-test/*.png out/boot-test/serial.log out/boot-test/selftest-results.txt out/SHA256SUMS.txt; do
+            [ -f "$f" ] || continue
+            gh release upload ci-evidence "$f#${GITHUB_RUN_ID}-$(basename "$f")" --clobber || true
+          done
+
       - name: Upload ISO + evidence
         continue-on-error: true
         uses: actions/upload-artifact@v4
