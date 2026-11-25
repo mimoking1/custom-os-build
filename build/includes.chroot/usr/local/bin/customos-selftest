@@ -177,6 +177,12 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
     ( cd /opt/tahmeel/app && timeout 90 env WINEPREFIX=$HOME/.wine-testB WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu --in-process-gpu --disable-gpu-sandbox --disable-direct-composition --disable-gpu-compositing --disable-features=CalculateNativeWinOcclusion,Vulkan ) >/tmp/tahmeel-fg.log 2>&1
     R tahmeel-fg-exit "$? (fresh prefix, extra flags)"
     head -4 /tmp/tahmeel-armA.log | while read l; do R "tahmeel-armA-head" "$(echo "$l" | cut -c1-140)"; done
+    tail -6 /tmp/tahmeel-armA.log | while read l; do R "tahmeel-armA-tail" "$(echo "$l" | cut -c1-140)"; done
+    tail -6 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg-tail" "$(echo "$l" | cut -c1-140)"; done
+    ( timeout 120 env TAHMEEL_TRACE=1 /usr/local/bin/customos-tahmeel ) >/dev/null 2>&1
+    R tahmeel-trace-run "exit=$? (launcher dedicated prefix, +err+seh+loaddll+driver)"
+    grep -aEi "FATAL|err:|seh|exception|CreateWindow|hwnd_util|InitializeSandbox|CheckWindowCreated" /tmp/tahmeel-trace.log 2>/dev/null | head -25 | while read l; do R "tahmeel-trace" "$(echo "$l" | cut -c1-160)"; done
+    tail -8 /tmp/tahmeel-trace.log 2>/dev/null | while read l; do R "tahmeel-trace-tail" "$(echo "$l" | cut -c1-160)"; done
     head -8 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg-head" "$(echo "$l" | cut -c1-140)"; done
     tail -12 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
     ( cd /opt/tahmeel/app && timeout 30 env WINEDEBUG=+loaddll WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-dll.log 2>&1
