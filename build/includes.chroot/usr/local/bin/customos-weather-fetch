@@ -30,5 +30,5 @@ case "$CODE" in
   95|96|99)     ICON=thunder; LBL=Thunder ;;
   *)            ICON=partly;  LBL="" ;;
 esac
-printf '<img>/usr/share/pixmaps/customos/weather-%s.png</img><txt>%s° %s</txt><tool>%s° %s</tool>\n' \
+printf '<img>/usr/share/pixmaps/customos/weather-%s.png</img><txt> <span font_family='"'"'Comfortaa'"'"' weight='"'"'bold'"'"' size='"'"'13pt'"'"'>%s° %s</span></txt><tool>%s° %s</tool>\n' \
   "$ICON" "$T" "$LBL" "$T" "$LBL" > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"

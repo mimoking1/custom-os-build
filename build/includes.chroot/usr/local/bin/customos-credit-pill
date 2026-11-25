@@ -8,8 +8,8 @@ import os, math, cairo, gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, Pango, PangoCairo
 
-MARKUP = ("<span font_family='Comfortaa' weight='bold' size='12pt'>Directed by Mohamed Sayed</span>"
-          " <span font_family='Noto Kufi Arabic' size='8pt'>\u0645\u062d\u0645\u062f \u0633\u064a\u062f</span>")
+MARKUP = ("<span font_family='Comfortaa' weight='bold' size='11pt'>Directed by Mohamed Sayed</span>"
+          " <span font_family='Noto Kufi Arabic' size='10pt'>\u0645\u062d\u0645\u062f \u0633\u064a\u062f</span>")
 H = 27
 PADX = 14
 
