@@ -43,6 +43,25 @@ notebook tab { padding: 4px 6px; }
 """
 
 
+def tahmeel_alive():
+    try:
+        import urllib.request
+        return urllib.request.urlopen("http://127.0.0.1:48917/ping", timeout=0.4).status == 200
+    except Exception as e:
+        return getattr(e, "code", 0) in (200, 204, 404, 405) and getattr(e, "code", 0) != 0 and False
+
+
+def tahmeel_add(payload):
+    try:
+        import urllib.request
+        rq = urllib.request.Request("http://127.0.0.1:48917/add", data=json.dumps(payload).encode(),
+                                    headers={"content-type": "application/json"})
+        return urllib.request.urlopen(rq, timeout=3).status == 200
+    except Exception as e:
+        print("tahmeel:", e, file=sys.stderr)
+        return False
+
+
 def normalize(text):
     t = text.strip()
     if not t:
@@ -282,6 +301,26 @@ class Window(Gtk.Window):
         store.save("hilali-block", data, None, saved)
 
     def on_download(self, ctx, dl):
+        uri = dl.get_request().get_uri() if dl.get_request() else ""
+        if uri.startswith("http") and tahmeel_alive():
+            view = dl.get_web_view()
+            ref = view.get_uri() if view else ""
+            cm = self.ctx.get_cookie_manager()
+
+            def got(cmgr, res):
+                try:
+                    cookies = cmgr.get_cookies_finish(res)
+                    ck = "; ".join("%s=%s" % (c.get_name(), c.get_value()) for c in cookies)
+                except Exception:
+                    ck = ""
+                ua = view.get_settings().get_user_agent() if view else ""
+                if tahmeel_add({"url": uri, "referrer": ref, "userAgent": ua, "cookie": ck, "source": "capture"}):
+                    return
+                # Tahmeel refused: fall back to a plain download is not possible (cancelled), retry via the engine
+                self.ctx.download_uri(uri)
+            dl.cancel()
+            cm.get_cookies(uri, None, got)
+            return
         dl.connect("decide-destination", self.decide_dest)
 
     def decide_dest(self, dl, name):
