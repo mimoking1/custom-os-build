@@ -104,10 +104,9 @@ def tahmeel_add(payload):
 
 
 DARK_JS = r"""(function(){try{
-if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)return;
 var out='';
 function scan(rs){for(var j=0;j<rs.length;j++){var r=rs[j];
- if(r.media&&/prefers-color-scheme:\\s*dark/.test(r.media.mediaText)){for(var k=0;k<r.cssRules.length;k++)out+=r.cssRules[k].cssText+'\\n';}
+ if(r.media&&/prefers-color-scheme:\s*dark/.test(r.media.mediaText)){for(var k=0;k<r.cssRules.length;k++)out+=r.cssRules[k].cssText+'\n';}
  else if(r.cssRules&&r.media){scan(r.cssRules);}}}
 for(var i=0;i<document.styleSheets.length;i++){try{scan(document.styleSheets[i].cssRules)}catch(e){}}
 var st=document.createElement('style');
