@@ -66,6 +66,10 @@ jobs:
           msiinfo extract build/includes.chroot/usr/share/customos/tests/customos-test.msi SummaryInformation | head -5; msiinfo tables build/includes.chroot/usr/share/customos/tests/customos-test.msi | tr "\n" " "; msiinfo export build/includes.chroot/usr/share/customos/tests/customos-test.msi File 2>/dev/null | grep -i test.txt | head -3 || true
           ls -la build/includes.chroot/usr/share/customos/tests/
 
+      - name: Fetch private payload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tools/fetch-private.sh
       - name: Build ISO (${{ matrix.variant }})
         run: sudo ./build/build-iso.sh variants/${{ matrix.variant }}.conf
 

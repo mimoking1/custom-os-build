@@ -88,15 +88,23 @@ tar -xf /tmp/arcanum-blue.tar.xz -C config/includes.chroot/usr/share/icons
 mv "config/includes.chroot/usr/share/icons/Arcanum - Blue" config/includes.chroot/usr/share/icons/Arcanum-Blue
 sed -i 's/^Name=.*/Name=Arcanum-Blue/; s/^Inherits=.*/Inherits=Papirus-Dark,Adwaita,hicolor/' config/includes.chroot/usr/share/icons/Arcanum-Blue/index.theme
 rm -f /tmp/arcanum-blue.tar.xz
-# Tahmeel: unpack the NSIS payload at build time; Wine runs the app directly (no flaky install)
-echo "==> Tahmeel: extract app payload for direct Wine launch"
-apt-get install -y -qq p7zip-full > /dev/null
+# Tahmeel: native Linux build (Electron, no Wine) from the private payload, sha256-pinned
+echo "==> Tahmeel: native Linux build"
+PRIV=../build/private
+[ -s "$PRIV/tahmeel-linux-x64.tar.xz" ] || { echo "Tahmeel native payload missing"; exit 1; }
+echo "2a2206fd9efb02ca06a1dd89cf844db12b7c76ebafa6bceab17b1d76003ccbb0  $PRIV/tahmeel-linux-x64.tar.xz" | sha256sum -c -
+echo "d4f02bb37a643b4a1dfbeff3371ea005340b94f29dd57c843f4432aee0e0ccb8  $PRIV/hilal-integration.tar.gz" | sha256sum -c -
 TAH=config/includes.chroot/opt/tahmeel
-mkdir -p "$TAH/app"
-7z x -y -o"$TAH/app" "$TAH/Tahmeel-Setup.exe" > /dev/null
-rm -rf "$TAH/app/\$PLUGINSDIR"
-rm -f "$TAH"/Tahmeel-Setup.exe
-[ -s "$TAH/app/Tahmeel.exe" ] || { echo "Tahmeel payload missing after extraction"; exit 1; }
+mkdir -p "$TAH" /tmp/tah-int
+tar -xJf "$PRIV/tahmeel-linux-x64.tar.xz" -C "$TAH" --strip-components=1
+tar -xzf "$PRIV/hilal-integration.tar.gz" -C /tmp/tah-int
+[ -x "$TAH/tahmeel-launch" ] || { echo "tahmeel-launch missing after extraction"; exit 1; }
+mkdir -p "$TAH/extension" config/includes.chroot/etc/brave/policies/managed config/includes.chroot/etc/xdg/autostart config/includes.chroot/usr/share/applications
+cp /tmp/tah-int/pkg/tahmeel.crx /tmp/tah-int/pkg/update.xml /tmp/tah-int/pkg/tahmeel.xpi "$TAH/extension/"
+cp /tmp/tah-int/pkg/brave-policy-tahmeel.json config/includes.chroot/etc/brave/policies/managed/
+cp /tmp/tah-int/pkg/tahmeel-autostart.desktop config/includes.chroot/etc/xdg/autostart/
+cp /tmp/tah-int/pkg/tahmeel.desktop config/includes.chroot/usr/share/applications/customos-tahmeel.desktop
+chmod 755 "$TAH/tahmeel-launch"
 . ../build/browser-name.conf
 mkdir -p config/includes.chroot/usr/share/customos
 cp ../build/browser-name.conf config/includes.chroot/usr/share/customos/browser.conf

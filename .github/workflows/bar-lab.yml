@@ -33,6 +33,10 @@ jobs:
           sudo apt-get install -y -qq wixl || true
           mkdir -p build/includes.chroot/usr/share/customos/tests
           wixl -v -a x64 build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi || true
+      - name: Fetch private payload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tools/fetch-private.sh
       - name: Build ISO
         run: sudo ./build/build-iso.sh variants/${{ inputs.variant }}.conf
       - name: Write plan

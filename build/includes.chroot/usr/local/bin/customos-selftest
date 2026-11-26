@@ -212,45 +212,16 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   wine notepad >/dev/null 2>&1 &
   sleep 12; SHOT 12-wine-notepad
   pkill -f notepad
-  ( /usr/local/bin/customos-tahmeel >/tmp/tahmeel.log 2>&1 & )
-  for i in 1 2 3 4 5 6; do sleep 40; R "tahmeel-poll$((i*40))s" "$(pgrep -cfi tahmeel 2>/dev/null || echo 0) procs"; done
-  SHOT 13-tahmeel-wine
-  [ -s /opt/tahmeel/app/Tahmeel.exe ] && R tahmeel-installed "PASS(payload $(stat -c%s /opt/tahmeel/app/Tahmeel.exe) bytes)" || R tahmeel-installed FAIL
-  ps aux | grep '[p]icom' | head -2 | cut -c1-140 | while read l; do S "picom-ps $l"; done
-  ls -l /tmp/customos-picom.log 2>/dev/null | while read l; do S "picom-logfile $l"; done; tail -3 /tmp/customos-picom.log 2>/dev/null | while read l; do S "picom-log $l"; done
-  ps aux | grep -i '[t]ahmeel' | head -3 | cut -c1-150 | while read l; do S "tahmeel-ps $l"; done; tail -5 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done
-  pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || {
-    R tahmeel-running FAIL
-    ls -la /opt/tahmeel/app 2>&1 | head -12 | while read l; do R "tahmeel-dir" "$(echo "$l" | cut -c1-140)"; done
-    wineserver -k 2>/dev/null; sleep 2
-    ulimit -n 65536 2>/dev/null || true
-    R disk-free-pre-arms "$(df -h / | tail -1 | awk '{print $6":"$4" free"}')"
-    rm -rf $HOME/.wine-testA $HOME/.wine-testB $HOME/.wine-testC
-    ( timeout 90 env WINEPREFIX=$HOME/.wine-testA WINEDLLOVERRIDES="mscoree,mshtml=" wine notepad ) >/tmp/ctl-notepad.log 2>&1 &
-    sleep 15; pgrep -fi notepad >/dev/null && R tahmeel-ctl-notepad "PASS(fresh prefix opens GUI)" || R tahmeel-ctl-notepad "FAIL(fresh prefix, $(head -2 /tmp/ctl-notepad.log | cut -c1-100 | tr '\n' ' '))"
-    pkill -fi notepad 2>/dev/null; wineserver -k 2>/dev/null; sleep 2
-    ( cd /opt/tahmeel/app && timeout 90 env WINEPREFIX=$HOME/.wine-testA WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-armA.log 2>&1
-    R tahmeel-armA "exit=$? (prefix from notepad control, original flags)"
-    ( env -u DISPLAY WINEPREFIX=$HOME/.wine-testB wineboot -u >/dev/null 2>&1; wineserver -w 2>/dev/null; cd /opt/tahmeel/app && timeout 90 env WINEPREFIX=$HOME/.wine-testB WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu --in-process-gpu --disable-gpu-sandbox --disable-direct-composition --disable-gpu-compositing --disable-features=CalculateNativeWinOcclusion,Vulkan ) >/tmp/tahmeel-fg.log 2>&1
-    R tahmeel-fg-exit "$? (fresh prefix, extra flags)"
-    head -4 /tmp/tahmeel-armA.log | while read l; do R "tahmeel-armA-head" "$(echo "$l" | cut -c1-140)"; done
-    tail -6 /tmp/tahmeel-armA.log | while read l; do R "tahmeel-armA-tail" "$(echo "$l" | cut -c1-140)"; done
-    tail -6 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg-tail" "$(echo "$l" | cut -c1-140)"; done
-    ( env -u DISPLAY WINEPREFIX=$HOME/.wine-testC wineboot -u >/dev/null 2>&1; wineserver -w 2>/dev/null; cd /opt/tahmeel/app && timeout 90 env WINEPREFIX=$HOME/.wine-testC WINEDEBUG=err+seh WINEDLLOVERRIDES="mscoree,mshtml=" wine explorer /desktop=t,1280x800 ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-armC.log 2>&1
-    R tahmeel-armC "exit=$? (fresh prefix, wine virtual desktop)"
-    head -4 /tmp/tahmeel-armC.log | while read l; do R "tahmeel-armC-head" "$(echo "$l" | cut -c1-140)"; done
-    tail -4 /tmp/tahmeel-armC.log | while read l; do R "tahmeel-armC-tail" "$(echo "$l" | cut -c1-140)"; done
-    ( timeout 120 env TAHMEEL_TRACE=1 ELECTRON_ENABLE_LOGGING=1 ELECTRON_ENABLE_STACK_DUMPING=1 /usr/local/bin/customos-tahmeel --enable-logging=stderr --v=1 ) >/dev/null 2>&1
-    R tahmeel-trace-run "exit=$? (launcher dedicated prefix, +err+seh+loaddll+driver)"
-    grep -aEi "FATAL|err:|seh|exception|CreateWindow|hwnd_util|InitializeSandbox|CheckWindowCreated|GPU process|ContextResult|GL_INITIALIZATION|gpu_process|vulkan|angle|swiftshader" /tmp/tahmeel-trace.log 2>/dev/null | head -30 | while read l; do R "tahmeel-trace" "$(echo "$l" | cut -c1-160)"; done
-    tail -8 /tmp/tahmeel-trace.log 2>/dev/null | while read l; do R "tahmeel-trace-tail" "$(echo "$l" | cut -c1-160)"; done
-    head -8 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg-head" "$(echo "$l" | cut -c1-140)"; done
-    tail -12 /tmp/tahmeel-fg.log | while read l; do R "tahmeel-fg" "$(echo "$l" | cut -c1-140)"; done
-    ( cd /opt/tahmeel/app && timeout 30 env WINEDEBUG=+loaddll WINEDLLOVERRIDES="mscoree,mshtml=" wine ./Tahmeel.exe --no-sandbox --disable-gpu ) >/tmp/tahmeel-dll.log 2>&1
-    grep -i "winex11\|win32u\|nodrv" /tmp/tahmeel-dll.log | head -6 | while read l; do R "tahmeel-dll" "$(echo "$l" | cut -c1-140)"; done
-  }
-  sleep 20; SHOT 14-tahmeel-wine-later
-  pkill -f Tahmeel.exe
+  ( /opt/tahmeel/tahmeel-launch >/tmp/tahmeel.log 2>&1 & )
+  for i in 1 2 3 4 5 6; do sleep 10; R "tahmeel-poll$((i*10))s" "$(pgrep -cfi tahmeel 2>/dev/null || echo 0) procs bridge=$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:48917/ 2>/dev/null)"; done
+  SHOT 13-tahmeel-native
+  [ -x /opt/tahmeel/tahmeel-launch ] && R tahmeel-installed PASS || R tahmeel-installed FAIL
+  pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || { R tahmeel-running FAIL; tail -8 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done; }
+  BR=$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:48917/ 2>/dev/null); [ -n "$BR" ] && [ "$BR" != 000 ] && R tahmeel-bridge "PASS(http $BR)" || R tahmeel-bridge "FAIL(no answer on 127.0.0.1:48917)"
+  [ -f /etc/brave/policies/managed/brave-policy-tahmeel.json ] && R tahmeel-brave-policy-file PASS || R tahmeel-brave-policy-file FAIL
+  [ -f /opt/tahmeel/extension/tahmeel.crx ] && R tahmeel-crx PASS || R tahmeel-crx FAIL
+  sleep 10; SHOT 14-tahmeel-native-later
+  pkill -f tahmeel
 else R wine-cmd "FAIL(no wine)"; fi
 S "SELFTEST-DONE"
 

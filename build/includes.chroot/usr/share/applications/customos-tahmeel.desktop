@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Tahmeel
-Name[ar]=تحميل
-Exec=/usr/local/bin/customos-tahmeel
-Icon=folder-download
-Categories=Network;
