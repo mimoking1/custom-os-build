@@ -44,11 +44,15 @@ notebook tab { padding: 4px 6px; }
 
 
 def tahmeel_alive():
+    """Bridge is alive if anything answers on the port (even an HTTP error)."""
+    import urllib.request, urllib.error
     try:
-        import urllib.request
-        return urllib.request.urlopen("http://127.0.0.1:48917/ping", timeout=0.4).status == 200
-    except Exception as e:
-        return getattr(e, "code", 0) in (200, 204, 404, 405) and getattr(e, "code", 0) != 0 and False
+        urllib.request.urlopen("http://127.0.0.1:48917/ping", timeout=0.5)
+        return True
+    except urllib.error.HTTPError:
+        return True
+    except Exception:
+        return False
 
 
 def tahmeel_add(payload):
