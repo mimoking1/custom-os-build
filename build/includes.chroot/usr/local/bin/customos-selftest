@@ -142,19 +142,15 @@ timeout 150 /usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/n
 sleep 8
 # @BROWSER_NAME@ + lid playback
 [ -f /usr/share/icons/hicolor/48x48/apps/hilal-browser.png ] && R browser-icon PASS || R browser-icon FAIL
-if command -v brave-browser >/dev/null; then BR=brave; elif command -v chromium >/dev/null; then BR=chromium; else BR=none; fi
-[ "$BR" != none ] && R browser-installed "PASS($BR)" || R browser-installed FAIL
-for J in /etc/brave/policies/managed/hilalbrowser.json /etc/chromium/policies/managed/hilalbrowser.json /usr/lib/firefox-esr/distribution/policies.json; do
-  [ -f "$J" ] && { python3 -c "import json,sys;json.load(open(sys.argv[1]))" "$J" && R "policy-$(basename $(dirname $J))" PASS || R "policy-$(basename $(dirname $J))" FAIL; }
-done
+command -v hilali >/dev/null && R browser-installed "PASS(hilali)" || R browser-installed FAIL
+for B in brave-browser chromium firefox-esr; do command -v $B >/dev/null && R "browser-extra-$B" "FAIL(should not be installed)"; done
+python3 -c "import gi;gi.require_version('WebKit2','4.1')" 2>/dev/null && R webkit-typelib PASS || R webkit-typelib FAIL
 [ -f /etc/systemd/logind.conf.d/50-customos-lid.conf ] && R lid-conf PASS || R lid-conf FAIL
 grep -q "hilal-browser" /etc/skel/.config/mimeapps.list && R default-browser PASS || R default-browser FAIL
 rm -f "$HOME/.config/customos/browser32-warned"
-hilal-browser --no-first-run --disable-gpu about:blank >/tmp/browser.log 2>&1 &
-sleep 6; SHOT 13a-hilal-browser-start
-pkill zenity; sleep 12; SHOT 13b-hilal-browser-window
-pgrep -f "brave|chromium" >/dev/null && R browser-running PASS || { R browser-running FAIL; tail -6 /tmp/browser.log | while read l; do R "browser-log" "$(echo "$l" | cut -c1-140)"; done; }
-pkill -f "brave|chromium"; sleep 2
+( setsid hilal-browser >/tmp/browser.log 2>&1 & ); sleep 14; SHOT 13a-hilali-start
+pgrep -f "/usr/local/bin/hilali" >/dev/null && R browser-running PASS || { R browser-running FAIL; tail -6 /tmp/browser.log | while read l; do R "browser-log" "$(echo "$l" | cut -c1-140)"; done; }
+pkill -f "/usr/local/bin/hilali"; sleep 2
 # Wine
 if command -v wine >/dev/null; then
   R wine-version "$(wine --version 2>/dev/null); dpkg: $(dpkg -l wine wine64 2>/dev/null | awk '/^ii/{print $3}' | paste -sd,)"
@@ -218,17 +214,14 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   [ -x /opt/tahmeel/tahmeel-launch ] && R tahmeel-installed PASS || R tahmeel-installed FAIL
   pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || { R tahmeel-running FAIL; tail -8 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done; }
   BR=$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:48917/ 2>/dev/null); [ -n "$BR" ] && [ "$BR" != 000 ] && R tahmeel-bridge "PASS(http $BR)" || R tahmeel-bridge "FAIL(no answer on 127.0.0.1:48917)"
-  [ -f /etc/brave/policies/managed/brave-policy-tahmeel.json ] && R tahmeel-brave-policy-file PASS || R tahmeel-brave-policy-file FAIL
   [ -f /opt/tahmeel/extension/tahmeel.crx ] && R tahmeel-crx PASS || R tahmeel-crx FAIL
-  if command -v brave-browser >/dev/null 2>&1; then
-    pkill -f brave; sleep 3; ( setsid brave-browser --password-store=basic --no-first-run >/dev/null 2>&1 & ); sleep 25
-    BP="$HOME/.config/BraveSoftware/Brave-Browser"
-    ls "$BP/Default/Extensions/" 2>/dev/null | grep -q hccklbcdobhmhkkcmpllgkfemhdlpchk && R tahmeel-extension-installed "PASS(extension dir present in Brave profile)" || R tahmeel-extension-installed "FAIL($(ls $BP/Default/Extensions 2>&1 | head -3 | tr '\n' ' '))"
-    grep -aq hccklbcdobhmhkkcmpllgkfemhdlpchk "$BP/Default/Preferences" "$BP/Default/Secure Preferences" 2>/dev/null && R tahmeel-extension-in-prefs PASS || R tahmeel-extension-in-prefs FAIL
-    ( setsid brave-browser --password-store=basic --no-first-run --app=brave://policy >/dev/null 2>&1 & ); sleep 12; SHOT 13c-brave-policy
-    ( setsid brave-browser --password-store=basic --no-first-run --app=brave://extensions >/dev/null 2>&1 & ); sleep 10; SHOT 13d-brave-extensions
-    pkill -f brave-browser; sleep 2
-  fi
+  # hilali -> Tahmeel hand-off: a download link opened in hilali must reach the bridge
+  mkdir -p /tmp/ht/files; head -c 2000000 /dev/urandom > /tmp/ht/files/handoff.bin
+  ( cd /tmp/ht && setsid python3 -m http.server 8099 --bind 127.0.0.1 >/tmp/ht/srv.log 2>&1 & ); sleep 1
+  ( setsid hilali http://127.0.0.1:8099/files/handoff.bin >/tmp/hilali-dl.log 2>&1 & ); sleep 15
+  SHOT 13e-tahmeel-after-hilali-download
+  grep -q "handoff.bin" /tmp/ht/srv.log && R hilali-download-requested PASS || R hilali-download-requested FAIL
+  pkill -f "/usr/local/bin/hilali"; pkill -f "http.server 8099"; sleep 2
   sleep 10; SHOT 14-tahmeel-native-later
   pkill -f tahmeel
 else R wine-cmd "FAIL(no wine)"; fi

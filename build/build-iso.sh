@@ -69,7 +69,6 @@ fi
 if [ "${LITE:-no}" = "yes" ]; then
   # no supported 32-bit Firefox; Chromium is installed by the hilal-browser hook
   sed -i -E '/^firefox-esr/d' config/package-lists/base.list.chroot
-  LITE_RM_FF=yes
 fi
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   cp ../build/packages/installer.list.chroot config/package-lists/
@@ -104,10 +103,9 @@ mkdir -p "$TAH" /tmp/tah-int
 tar -xJf "$PRIV/tahmeel-linux-x64.tar.xz" -C "$TAH" --strip-components=1
 tar -xzf "$PRIV/hilal-integration.tar.gz" -C /tmp/tah-int
 [ -x "$TAH/tahmeel-launch" ] || { echo "tahmeel-launch missing after extraction"; exit 1; }
-mkdir -p "$TAH/extension" config/includes.chroot/etc/brave/policies/managed config/includes.chroot/etc/xdg/autostart config/includes.chroot/usr/share/applications
+mkdir -p "$TAH/extension" config/includes.chroot/etc/xdg/autostart config/includes.chroot/usr/share/applications
 cp /tmp/tah-int/pkg/tahmeel.crx /tmp/tah-int/pkg/update.xml /tmp/tah-int/pkg/tahmeel.xpi "$TAH/extension/"
 chmod 0644 "$TAH"/extension/*; chmod 0755 "$TAH/extension"
-cp /tmp/tah-int/pkg/brave-policy-tahmeel.json config/includes.chroot/etc/brave/policies/managed/
 cp /tmp/tah-int/pkg/tahmeel-autostart.desktop config/includes.chroot/etc/xdg/autostart/
 cp /tmp/tah-int/pkg/tahmeel.desktop config/includes.chroot/usr/share/applications/customos-tahmeel.desktop
 chmod 755 "$TAH/tahmeel-launch"
@@ -128,7 +126,6 @@ for f in glob.glob(sys.argv[1] + "/*.jpg") + glob.glob(sys.argv[1] + "/*.png"):
         im.convert("RGB").resize((1920, 1080), Image.LANCZOS).save(f, quality=92) if f.endswith(".jpg") else im.resize((1920, 1080), Image.LANCZOS).save(f)
 PY
 fi
-[ "${LITE_RM_FF:-no}" = yes ] && rm -f config/includes.chroot/usr/share/applications/hilal-browser-firefox.desktop
 # Live variant: light-blue default theme (user request); full keeps aqua
 if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"
