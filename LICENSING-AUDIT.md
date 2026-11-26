@@ -33,3 +33,12 @@ Checked: packages, enabled services and timers, listening and established socket
 - Journal errors at boot are minor (portal pipewire client.conf, obexd evolution registry).
 
 ## RESULTS (filled from final-build evidence)
+Final candidate: run 45908678140, head b18a82a, both editions, real boots in QEMU.
+- Selftest: 58 PASS / 0 FAIL on Siraj and on Siraj Live.
+- ISO size: Siraj 3,432,777,653 B; Siraj Live 3,432,930,620 B (about 3.43 GB each, no extra compression).
+- Idle RAM at selftest: Siraj used 2656 MB / available 3275 MB; Live used 2680 MB / available 3251 MB (live overlay counted).
+- Failed units: 0 on both.
+- Stability (shorter than the 20-30 min goal, lab step time limit): 5 rounds of file manager + hilali + Wine notepad, free RAM flat, then no failed units, empty coredump directory, no segfault/OOM in dmesg or journal. Full edition proven; live edition: see report.
+- Wine real apps: 7-Zip 26.06 and Notepad++ 8.9.9.1 installed and ran under Wine 10 on the full edition (lab 45895610838).
+- Not proven: KDE Connect pairing and scrcpy with a real phone (no phone in the VM).
+- Photo approval: the user approved the wallpapers in conversation (relayed by the main agent); this file is not itself evidence of that approval.
