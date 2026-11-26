@@ -16,7 +16,7 @@ while IFS= read -r -t 900 -u 3 line; do
     BEGIN) : > /tmp/lab-cmd.sh ;;
     W\ *) printf '%s' "${line#W }" | base64 -d >> /tmp/lab-cmd.sh 2>/dev/null; echo "OKW" > /dev/ttyS0 ;;
     SUM) md5sum /tmp/lab-cmd.sh | awk '{print "LAB-MD5 " $1}' > /dev/ttyS0 ;;
-    RUN) bash /tmp/lab-cmd.sh > /dev/ttyS0 2>&1; echo "LAB-CMD-DONE $?" > /dev/ttyS0 ;;
+    RUN) timeout 100 bash /tmp/lab-cmd.sh > /dev/ttyS0 2>&1 < /dev/null; echo "LAB-CMD-DONE $?" > /dev/ttyS0 ;;
     PING) echo "LAB-PONG" > /dev/ttyS0 ;;
   esac
 done

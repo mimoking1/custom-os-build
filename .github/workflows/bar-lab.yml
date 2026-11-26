@@ -40,7 +40,7 @@ jobs:
           PLAN: ${{ inputs.plan }}
         run: printf '%s\n' "$PLAN" > /tmp/plan.txt
       - name: Run bar lab
-        timeout-minutes: 25
+        timeout-minutes: 35
         run: ./tools/bar-lab.sh "$(ls out/*.iso | head -1)" out/bar-lab /tmp/plan.txt
       - name: Publish evidence
         if: always()
@@ -48,6 +48,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --notes "x" --latest=false
+          for f in out/bar-lab/*.ppm; do [ -e "$f" ] && convert "$f" "${f%.ppm}.png" || true; done
           for f in out/bar-lab/*.png; do
             [ -e "$f" ] || continue
             n="barlab-${GITHUB_RUN_ID}-$(basename "$f")"
