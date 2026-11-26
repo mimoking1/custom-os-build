@@ -36,15 +36,11 @@ made in the same spirit.
 - Comfortaa (rounded display font, boot artwork title): SIL Open Font License 1.1, https://github.com/googlefonts/comfortaa
 
 ## Wallpaper gallery (build/includes.chroot/usr/share/backgrounds/customos/gallery)
-- 3d-*.png: four 3D renders (lossless) generated for this project.
-- No real photographs are shipped (all photo wallpapers were removed 2026-11-26 at the user's request). The gallery holds only the four in-house 3D renders.
-
-## Android (optional)
-Android support uses Waydroid (GPL-3.0), installed on demand from its own repository, vanilla image by default.
-The "Android: add Google Play" menu item (customos-android gapps) is OFF by default: it only runs if the user clicks it and confirms a dialog
-that says the Play stack downloads from Google's servers under Google's terms. No Google software is shipped in the ISO.
-
-## Icon themes
-- Arcanum (Blue), by StormRosenaa, GPL-3.0, https://codeberg.org/StormRosenaa/Arcanum. Default system icon theme (apps, file types, places). Fetched at ISO build time and pinned by sha256; it inherits Papirus-Dark for anything it lacks.
-- Papirus (GPL-3.0) as fallback via Debian package papirus-icon-theme.
-- 3dicons by realvjy (CC0), recolored: desktop icons only (customos-* names).
+- 3d-*.png (4) and 3d-*.jpg (6 Blender renders): generated for this project, ours.
+- 16 photographs, added 2026-11-26 at the user's explicit request and approval. They are NOT in this
+  public repo. The build fetches them from a private release and ships them inside the ISO only.
+  Source: Pexels, free licence https://www.pexels.com/license/ (no attribution required; no resale or
+  redistribution as stock/wallpaper packs; kept out of the public repo for that reason).
+  Pexels photo IDs: Mecca 11895059, 34246982, 40483736; Madinah 38498727, 27628044, 35241863;
+  Jerusalem 11696756, 26615654, 17814827; horses 14704404, 18169927, 18169954, 40155303, 37786209,
+  26712207; Quran (open Quran, green and gold binding) 20784677. Cropped to 3840x2160 (16:9) only.
