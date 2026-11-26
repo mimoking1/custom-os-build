@@ -110,7 +110,7 @@ def trim(im, t=10):
 
 def make_orb(acc, diam=60, pressed=False):
     S = 6
-    pad = 6
+    pad = 1
     D = diam + 2 * pad
     big = diam * S
     orb = Image.new("L", (big, big), 0)

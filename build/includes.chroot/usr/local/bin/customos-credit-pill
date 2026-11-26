@@ -50,7 +50,13 @@ class Pill(Gtk.Window):
             bar = int(subprocess.check_output(["xfconf-query", "-c", "xfce4-panel", "-p", "/panels/panel-1/size"], text=True, timeout=5).strip())
         except Exception:
             bar = 48
-        self.move(mon.width - self.w - 35, mon.height - bar - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
+        top = mon.height - bar  # fallback
+        try:  # real top edge of the bar = bottom of the work area (panel strut)
+            wa = subprocess.check_output(["xprop", "-root", "_NET_WORKAREA"], text=True, timeout=5).split("=")[1].split(",")
+            top = int(wa[1]) + int(wa[3])
+        except Exception:
+            pass
+        self.move(mon.width - self.w - 35, top - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
         win = self.get_window()
         if win is not None:
             win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through

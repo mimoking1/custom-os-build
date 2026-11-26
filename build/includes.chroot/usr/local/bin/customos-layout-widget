@@ -5,4 +5,4 @@ case "$cur" in
   ara*) txt=ara ;;
   *)    txt=us ;;
 esac
-printf '%s\n' "<img>/usr/share/pixmaps/customos/kb-layout.png</img><txt> <span font_family='Comfortaa' weight='bold' size='9pt' rise='-4096'>$txt</span> </txt><click>/usr/local/bin/customos-layout-toggle</click><tool>Keyboard layout ($txt) - click to switch</tool>"
+printf '%s\n' "<img>/usr/share/pixmaps/customos/kb-layout.png</img><txt> <span font_family='Comfortaa' weight='bold' size='13pt'>$txt</span> </txt><click>/usr/local/bin/customos-layout-toggle</click><tool>Keyboard layout ($txt) - click to switch</tool>"
