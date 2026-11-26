@@ -37,7 +37,7 @@ window#XfcePanelWindow { background-image: linear-gradient(to bottom, rgba(255,2
 CSS
 else
 cat >> "$GTKCSS" <<CSS
-window#XfcePanelWindow { box-shadow: inset 0 2px 0 rgba(255,255,255,.55), inset 0 14px 14px -8px rgba(255,255,255,.30), inset 0 -8px 10px -6px rgba(0,0,0,.18); }
+window#XfcePanelWindow { box-shadow: none; }
 CSS
 fi
 timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/length -n -t uint -s 98 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/length -s 98
