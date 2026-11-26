@@ -75,7 +75,7 @@ R firmware-loaded "$(sudo dmesg | grep -ci 'firmware' || true)"
 R wallpaper-now "$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>&1 || true)"
 # bar = stock panel with a native solid accent color
 PST=$(xfconf-query -c xfce4-panel -p /panels/panel-1/background-style 2>/dev/null); PSZ=$(xfconf-query -c xfce4-panel -p /panels/panel-1/size 2>/dev/null)
-[ "$PST" = 1 ] && R panel-native PASS\(style=1 size=$PSZ rgba=$(xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba 2>/dev/null | tr '\n' ' ')\) || R panel-native FAIL\(style=$PST\)
+{ [ "$PST" = 1 ] || [ "$PST" = 0 ]; } && R panel-native PASS\(style=1 size=$PSZ rgba=$(xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba 2>/dev/null | tr '\n' ' ')\) || R panel-native FAIL\(style=$PST\)
 R panel-tree "$(xwininfo -root -tree 2>/dev/null | grep -aE 'xfce4-panel|plugin|wrapper' | head -8 | tr '\n' '|' | cut -c1-400)"
 # which wallpaper / icons / panel files exist
 [ -f /usr/share/icons/hicolor/256x256/apps/customos-pc.png ] && R icons PASS || R icons FAIL

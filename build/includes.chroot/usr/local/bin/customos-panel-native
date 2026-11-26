@@ -18,6 +18,21 @@ if [ -z "$RGB" ]; then
   RGB=$(awk -v r=$R -v g=$G -v b=$B 'BEGIN{printf "%.3f %.3f %.3f", r/255, g/255, b/255}')
 fi
 set -- $RGB
+# PILL MODE (user reference 2:10pm): inset bar with fully rounded ends and a glossy gradient.
+# Needs a compositor for the transparent corners; without one keep the flat solid bar.
+if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+  PILL=$(awk -v r=$1 -v g=$2 -v b=$3 'function c(x){x=int(x*255+0.5);if(x>255)x=255;return x}
+    BEGIN{printf "rgba(%d,%d,%d,0.96) 0%%, rgba(%d,%d,%d,0.96) 48%%, rgba(%d,%d,%d,0.96) 100%%",
+      c(r+(1-r)*0.55),c(g+(1-g)*0.55),c(b+(1-b)*0.55), c(r+(1-r)*0.12),c(g+(1-g)*0.12),c(b+(1-b)*0.12), c(r*0.82),c(g*0.82),c(b*0.82)}')
+  cat >> "$GTKCSS" <<CSS
+window#XfcePanelWindow { background-image: linear-gradient(to bottom, $PILL); background-color: transparent; border-radius: 24px; box-shadow: none; }
+#XfcePanelWindow .background, #XfcePanelWindow .xfce4-panel, #XfcePanelWindow * { background-image: none; background-color: transparent; border-width: 0; border-radius: 0; box-shadow: none; }
+CSS
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -n -t uint -s 0 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 0
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/length -n -t uint -s 98 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/length -s 98
+  exit 0
+fi
+timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/length -s 100 2>/dev/null
 timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -n -t uint -s 1 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 1
 timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -n -t string -s "" 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
 timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-rgba --create --force-array -t double -s "$1" -t double -s "$2" -t double -s "$3" -t double -s 1.0 2>/dev/null \
