@@ -221,8 +221,12 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   [ -f /etc/brave/policies/managed/brave-policy-tahmeel.json ] && R tahmeel-brave-policy-file PASS || R tahmeel-brave-policy-file FAIL
   [ -f /opt/tahmeel/extension/tahmeel.crx ] && R tahmeel-crx PASS || R tahmeel-crx FAIL
   if command -v brave-browser >/dev/null 2>&1; then
-    pkill -f brave; sleep 3; ( setsid brave-browser --password-store=basic --no-first-run --new-window brave://policy >/dev/null 2>&1 & ); sleep 12; SHOT 13c-brave-policy
-    ( setsid brave-browser --password-store=basic --no-first-run --new-window brave://extensions >/dev/null 2>&1 & ); sleep 10; SHOT 13d-brave-extensions
+    pkill -f brave; sleep 3; ( setsid brave-browser --password-store=basic --no-first-run >/dev/null 2>&1 & ); sleep 25
+    BP="$HOME/.config/BraveSoftware/Brave-Browser"
+    ls "$BP/Default/Extensions/" 2>/dev/null | grep -q hccklbcdobhmhkkcmpllgkfemhdlpchk && R tahmeel-extension-installed "PASS(extension dir present in Brave profile)" || R tahmeel-extension-installed "FAIL($(ls $BP/Default/Extensions 2>&1 | head -3 | tr '\n' ' '))"
+    grep -aq hccklbcdobhmhkkcmpllgkfemhdlpchk "$BP/Default/Preferences" "$BP/Default/Secure Preferences" 2>/dev/null && R tahmeel-extension-in-prefs PASS || R tahmeel-extension-in-prefs FAIL
+    ( setsid brave-browser --password-store=basic --no-first-run --app=brave://policy >/dev/null 2>&1 & ); sleep 12; SHOT 13c-brave-policy
+    ( setsid brave-browser --password-store=basic --no-first-run --app=brave://extensions >/dev/null 2>&1 & ); sleep 10; SHOT 13d-brave-extensions
     pkill -f brave-browser; sleep 2
   fi
   sleep 10; SHOT 14-tahmeel-native-later
