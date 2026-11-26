@@ -28,6 +28,7 @@ if [ "$ARCH" = "amd64" ]; then
   "MetricsReportingEnabled": false,
   "DefaultBrowserSettingEnabled": false,
   "HomepageLocation": "file:///usr/share/customos/home/browser-home.html",
+  "NewTabPageLocation": "file:///usr/share/customos/home/browser-home.html",
   "HomepageIsNewTabPage": false,
   "RestoreOnStartup": 4,
   "RestoreOnStartupURLs": ["file:///usr/share/customos/home/browser-home.html"]
@@ -65,6 +66,7 @@ else
   "HttpsOnlyMode": "force_enabled",
   "BlockThirdPartyCookies": true,
   "HomepageLocation": "file:///usr/share/customos/home/browser-home.html",
+  "NewTabPageLocation": "file:///usr/share/customos/home/browser-home.html",
   "HomepageIsNewTabPage": false,
   "RestoreOnStartup": 4,
   "RestoreOnStartupURLs": ["file:///usr/share/customos/home/browser-home.html"],
