@@ -1,4 +1,4 @@
-# ضي - Glow boot theme (matches the approved boot-menu mockup, 1024x768)
+# سراج - Siraj boot theme (matches the approved boot-menu mockup, 1024x768)
 title-text: ""
 desktop-image: "background.png"
 desktop-color: "#0a9d96"

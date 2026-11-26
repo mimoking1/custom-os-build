@@ -23,8 +23,8 @@ jobs:
         run: |
           set -x
           V="${{ github.event.inputs.variant }}"
-          if [ "$V" = "live" ]; then BG_TOP="#1b6fc4"; BG_BOT="#63cdf5"; OS_NAME="Glow Live"; else BG_TOP="#0a9d96"; BG_BOT="#08e8de"; OS_NAME="Glow"; fi
-          OS_NAME_AR="ضي"
+          if [ "$V" = "live" ]; then BG_TOP="#1b6fc4"; BG_BOT="#63cdf5"; OS_NAME="Siraj Live"; else BG_TOP="#0a9d96"; BG_BOT="#08e8de"; OS_NAME="Siraj"; fi
+          OS_NAME_AR="سراج"
           mkdir -p "$HOME/.local/share/fonts" && cp theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f >/dev/null 2>&1 || true
           ISO=/tmp/iso/boot/grub
           mkdir -p "$ISO/fonts" "$ISO/live-theme"

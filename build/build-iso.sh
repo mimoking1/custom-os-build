@@ -131,7 +131,7 @@ if [ "$VARIANT" = "live" ]; then
   echo "==> Live variant: applying light-blue default theme"
   sed -i -e 's/#08e8de/#4fb2f7/g' -e 's/rgba(47,191,169,.35)/rgba(79,178,247,.35)/g' \
     config/includes.chroot/etc/skel/.config/gtk-3.0/gtk.css
-  find config/includes.chroot/usr/share/themes/Glow -name '*.xpm' -exec \
+  find config/includes.chroot/usr/share/themes/Siraj -name '*.xpm' -exec \
     sed -i 's/#08e8de/#4fb2f7/g; s/#52eee7/#83c9f9/g; s/#06aea6/#3b85b9/g' {} +
   sed -i 's/#08e8de #52eee7 #06aea6/#4fb2f7 #83c9f9 #3b85b9/' \
     config/includes.chroot/etc/skel/.config/customos/theme-colors
