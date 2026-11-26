@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Wine (proxy) + native test of Tahmeel v5. Shots and logs go to /tmp/wt-out.
 O=/tmp/wt-out; mkdir -p $O
-export DISPLAY=:99 WINEPREFIX=/tmp/wp WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml="
+export DISPLAY=:99 WINEPREFIX=$HOME/wp WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml="
 Xvfb :99 -screen 0 1280x800x24 >/dev/null 2>&1 &
 sleep 3
 shot(){ import -window root "$O/$1.png" 2>>$O/errors.log; }
