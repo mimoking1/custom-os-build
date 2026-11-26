@@ -64,6 +64,13 @@ ENGINES = {"DuckDuckGo": "https://duckduckgo.com/?q=%s", "Google": "https://www.
            "Bing": "https://www.bing.com/search?q=%s", "Startpage": "https://www.startpage.com/do/search?q=%s"}
 
 
+def dbg(*a):
+    try:
+        open("/tmp/hilali-debug.log", "a").write(" ".join(str(x) for x in a) + "\n")
+    except Exception:
+        pass
+
+
 def tahmeel_alive():
     """Bridge is alive if anything answers on the port (even an HTTP error)."""
     import urllib.request, urllib.error
@@ -210,7 +217,43 @@ class Tab:
         except Exception:
             return True
 
+    def handoff(self, uri):
+        """Send a download to Tahmeel. Returns True if Tahmeel took it."""
+        dbg("handoff", uri, "alive=", tahmeel_alive())
+        if not (uri.startswith("http") and tahmeel_alive()):
+            return False
+        ref = self.view.get_uri() or ""
+        ua = self.view.get_settings().get_user_agent() or ""
+        ck = ""
+        try:
+            cm = self.win.ctx.get_cookie_manager()
+            def got(cmgr, res):
+                c2 = ""
+                try:
+                    c2 = "; ".join("%s=%s" % (c.get_name(), c.get_value()) for c in cmgr.get_cookies_finish(res))
+                except Exception as e:
+                    dbg("cookies", e)
+                ok = tahmeel_add({"url": uri, "referrer": ref, "userAgent": ua, "cookie": c2, "source": "capture"})
+                dbg("tahmeel_add", ok)
+            cm.get_cookies(uri, None, got)
+        except Exception as e:
+            dbg("handoff-cookies-failed", e)
+            ok = tahmeel_add({"url": uri, "referrer": ref, "userAgent": ua, "cookie": ck, "source": "capture"})
+            dbg("tahmeel_add-nocookie", ok)
+        return True
+
     def on_policy(self, view, decision, dtype):
+        if dtype == WebKit2.PolicyDecisionType.RESPONSE:
+            try:
+                resp = decision.get_response()
+                uri = resp.get_uri() or ""
+                dbg("response", uri, resp.get_mime_type(), "supported=", decision.is_mime_type_supported())
+                if not decision.is_mime_type_supported() and self.handoff(uri):
+                    decision.ignore()
+                    return True
+            except Exception as e:
+                dbg("response-policy-error", e)
+            return False
         if dtype == WebKit2.PolicyDecisionType.NAVIGATION_ACTION:
             req = decision.get_navigation_action().get_request()
             uri = req.get_uri() or ""
@@ -360,24 +403,11 @@ class Window(Gtk.Window):
 
     def on_download(self, ctx, dl):
         uri = dl.get_request().get_uri() if dl.get_request() else ""
-        if uri.startswith("http") and tahmeel_alive():
-            view = dl.get_web_view()
-            ref = view.get_uri() if view else ""
-            cm = self.ctx.get_cookie_manager()
-
-            def got(cmgr, res):
-                try:
-                    cookies = cmgr.get_cookies_finish(res)
-                    ck = "; ".join("%s=%s" % (c.get_name(), c.get_value()) for c in cookies)
-                except Exception:
-                    ck = ""
-                ua = view.get_settings().get_user_agent() if view else ""
-                if tahmeel_add({"url": uri, "referrer": ref, "userAgent": ua, "cookie": ck, "source": "capture"}):
-                    return
-                # Tahmeel refused: fall back to a plain download is not possible (cancelled), retry via the engine
-                self.ctx.download_uri(uri)
+        dbg("download-started", uri)
+        t = self.current()
+        if t is not None and uri.startswith("http") and tahmeel_alive():
             dl.cancel()
-            cm.get_cookies(uri, None, got)
+            t.handoff(uri)
             return
         dl.connect("decide-destination", self.decide_dest)
 
