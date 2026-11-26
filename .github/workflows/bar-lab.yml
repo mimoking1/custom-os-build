@@ -40,6 +40,7 @@ jobs:
           PLAN: ${{ inputs.plan }}
         run: printf '%s\n' "$PLAN" > /tmp/plan.txt
       - name: Run bar lab
+        timeout-minutes: 25
         run: ./tools/bar-lab.sh "$(ls out/*.iso | head -1)" out/bar-lab /tmp/plan.txt
       - name: Publish evidence
         if: always()
