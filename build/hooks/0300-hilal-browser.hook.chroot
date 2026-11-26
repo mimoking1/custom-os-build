@@ -33,11 +33,6 @@ if [ "$ARCH" = "amd64" ]; then
   "RestoreOnStartupURLs": ["file:///usr/share/customos/home/browser-home.html"]
 }
 JSON
-  # Brave updates through apt; let unattended-upgrades take them too
-  mkdir -p /etc/apt/apt.conf.d
-  cat > /etc/apt/apt.conf.d/52customos-brave-updates <<'CONF'
-Unattended-Upgrade::Origins-Pattern { "site=brave-browser-apt-release.s3.brave.com"; };
-CONF
   # Firefox ESR + full uBlock Origin (MV2, best YouTube ad blocking)
   D=/usr/lib/firefox-esr/distribution; mkdir -p "$D"
   cat > "$D/policies.json" <<'JSON'
@@ -74,8 +69,7 @@ else
   "RestoreOnStartup": 4,
   "RestoreOnStartupURLs": ["file:///usr/share/customos/home/browser-home.html"],
   "MetricsReportingEnabled": false,
-  "DefaultBrowserSettingEnabled": false,
-  "ExtensionInstallForcelist": ["ddkjiahejlhfcafbddmgiahcphecmpfh;https://clients2.google.com/service/update2/crx"]
+  "DefaultBrowserSettingEnabled": false
 }
 JSON
 fi

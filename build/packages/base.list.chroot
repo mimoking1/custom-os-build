@@ -40,7 +40,7 @@ xfce4-whiskermenu-plugin
 xfce4-xkb-plugin
 parole
 thunar-archive-plugin
-unrar
+unar
 zip
 unzip
 simplescreenrecorder
@@ -63,7 +63,6 @@ libavcodec-extra
 fonts-noto-extra
 zram-tools
 earlyoom
-unattended-upgrades
 flatpak
 xdg-desktop-portal-gtk
 # graphical app store (Flathub is preconfigured)

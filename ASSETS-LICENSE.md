@@ -37,4 +37,14 @@ made in the same spirit.
 
 ## Wallpaper gallery (build/includes.chroot/usr/share/backgrounds/customos/gallery)
 - 3d-*.png: four 3D renders (lossless) generated for this project.
-- photo-*.jpg: five photos (Nabawi mosque x3, Dome of the Rock, Quran), reported as CC0 by the wallpaper task; source pages are held by the wallpaper task and should be added here before public release.
+- photo-*.jpg: four photos, each re-sourced 2026-11-26 from Wikimedia Commons with the license checked on the file page
+  (center-cropped to 16:9 and resized to 3840x2160, otherwise unmodified):
+  - photo-nabawi-greendome-medium.jpg: "Medium shot of the Green Dome at The Prophet's Mosque (Al Masjid-e-Nabawi)" by TheHadiRahim, CC0.
+    https://commons.wikimedia.org/wiki/File:Medium_shot_of_the_Green_Dome_at_The_Prophet%27s_Mosque_(Al_Masjid-e-Nabawi).jpg
+  - photo-nabawi-greendome-wide.jpg: "Wide shot of the Green Dome at The Prophet's Mosque (Al Masjid-e-Nabawi)" by TheHadiRahim, CC0.
+    https://commons.wikimedia.org/wiki/File:Wide_shot_of_the_Green_Dome_at_The_Prophet%27s_Mosque_(Al_Masjid-e-Nabawi).jpg
+  - photo-dome-of-the-rock.jpg: "Jerusalem Dome of the rock BW 14" by Berthold Werner, public domain (released by the author).
+    https://commons.wikimedia.org/wiki/File:Jerusalem_Dome_of_the_rock_BW_14.JPG
+  - photo-quran.jpg: "Holy Quran at the Hazratbal shrine" by Zuck28, CC0.
+    https://commons.wikimedia.org/wiki/File:Holy_Quran_at_the_Hazratbal_shrine.jpg
+  The old fifth photo (photo-nabawi-birdseye.jpg) had no recorded source and was removed.

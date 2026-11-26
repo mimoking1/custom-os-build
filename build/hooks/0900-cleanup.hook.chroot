@@ -18,3 +18,7 @@ find /usr/share -name '*.pyc' -delete 2>/dev/null
 find /usr -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null
 rm -f /var/lib/systemd/random-seed
 exit 0
+# no automatic updates: disable every apt timer and the update notifier
+systemctl disable apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+systemctl mask apt-daily.service apt-daily-upgrade.service apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+rm -f /etc/xdg/autostart/gnome-software-service.desktop /etc/xdg/autostart/update-notifier*.desktop 2>/dev/null || true
