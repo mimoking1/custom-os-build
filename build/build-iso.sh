@@ -172,6 +172,9 @@ export CUSTOMOS_BASE_WALL="$CHR/usr/share/backgrounds/customos/wallpaper-horizon
 export CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png"
 python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --hex "$ACC" --target system --root "$CHR" --only all
 CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png" python3 ../build/includes.chroot/usr/local/bin/customos-browser-icon --hex "$ACC" --root "$CHR"
+FAV=$(find "$CHR/usr/share/icons/hicolor" -name hilal-browser.png | sort -V | tail -1); [ -n "$FAV" ] && python3 -c "import base64,sys;print(\"data:image/png;base64,\"+base64.b64encode(open(sys.argv[1],\"rb\").read()).decode())" "$FAV" > /tmp/favicon.txt && python3 - "$CHR/usr/share/customos/home/browser-home.html" <<'PY'
+import sys;p=sys.argv[1];s=open(p).read().replace("@FAVICON@",open("/tmp/favicon.txt").read().strip());open(p,"w").write(s)
+PY
 cat "$CHR/etc/skel/.config/customos/panel.css" >> "$CHR/etc/skel/.config/gtk-3.0/gtk.css"
 if [ "$VARIANT" = "live" ]; then
   python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --default-live-wallpaper "$CHR/usr/share/backgrounds/customos/wallpaper-default.png"

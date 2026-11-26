@@ -1,0 +1,386 @@
+#!/usr/bin/env python3
+"""hilali: a light, private web browser (WebKitGTK engine, our own shell).
+Ad/tracker blocking (content-blocker rules), HTTPS-first, third-party cookie
+blocking, private windows, Arabic/RTL UI. No telemetry, no accounts."""
+import os, sys, json, re, urllib.parse
+import gi
+gi.require_version("Gtk", "3.0")
+try:
+    gi.require_version("WebKit2", "4.1")
+except ValueError:
+    gi.require_version("WebKit2", "4.0")
+from gi.repository import Gtk, Gdk, GLib, Gio, WebKit2, Pango
+
+APP = "Hilali"
+NAME_AR = "هلالي"
+HOME = os.environ.get("HILALI_HOME_URL", "file:///usr/share/customos/home/browser-home.html")
+DATA = os.path.join(GLib.get_user_data_dir(), "hilali")
+CONF = os.path.join(GLib.get_user_config_dir(), "hilali")
+RULES_SYS = "/usr/share/hilali/blocklist.json"
+SEARCH = "https://duckduckgo.com/?q=%s"
+_TP = ["doubleclick\\.net", "googlesyndication\\.com", "google-analytics\\.com", "googletagmanager\\.com",
+       "googleadservices\\.com", "adservice\\.google", "connect\\.facebook\\.net", "scorecardresearch\\.com",
+       "taboola\\.com", "outbrain\\.com", "adnxs\\.com", "criteo\\.(com|net)"]
+_PATH = ["/ads/", "/adserver/", "/pagead/", "/banners/", "/adframe", "/advert"]
+BUILTIN_RULES = (
+    [{"trigger": {"url-filter": p, "load-type": ["third-party"]}, "action": {"type": "block"}} for p in _TP[:9]]
+    + [{"trigger": {"url-filter": "criteo\\.com", "load-type": ["third-party"]}, "action": {"type": "block"}},
+       {"trigger": {"url-filter": "criteo\\.net", "load-type": ["third-party"]}, "action": {"type": "block"}}]
+    + [{"trigger": {"url-filter": p}, "action": {"type": "block"}} for p in _PATH]
+    + [{"trigger": {"url-filter": ".*"}, "action": {"type": "css-display-none",
+        "selector": ".ad-banner, .adsbygoogle, [id^='google_ads'], [id^='div-gpt-ad'], .sponsored-ad, ins.adsbygoogle"}}]
+)
+
+CSS = b"""
+window.hilali-private { background: #1b1030; }
+.hilali-bar { background: #4fb2f7; padding: 5px 8px; }
+.hilali-private .hilali-bar { background: #5b3a9e; }
+.hilali-bar entry { border-radius: 16px; padding: 5px 14px; min-height: 22px; }
+.hilali-bar button { border-radius: 14px; background: rgba(255,255,255,0.25); border: none; box-shadow: none; padding: 3px 8px; min-height: 22px; color: #06324f; }
+.hilali-bar button:hover { background: rgba(255,255,255,0.5); }
+.hilali-shield { font-weight: bold; }
+notebook tab { padding: 4px 6px; }
+"""
+
+
+def normalize(text):
+    t = text.strip()
+    if not t:
+        return HOME
+    if re.match(r"^[a-z][a-z0-9+.-]*://", t, re.I) or t.startswith("file:") or t.startswith("about:"):
+        return t
+    if " " not in t and ("." in t or t.startswith("localhost")) and not t.endswith("."):
+        return "https://" + t
+    return SEARCH % urllib.parse.quote_plus(t)
+
+
+def is_local(host):
+    return (not host) or host in ("localhost", "127.0.0.1", "::1") or host.endswith(".local") or re.match(r"^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)", host) is not None
+
+
+class Tab:
+    def __init__(self, win, uri=None):
+        self.win = win
+        self.blocked = 0
+        self.upgraded = set()
+        self.view = WebKit2.WebView(web_context=win.ctx, user_content_manager=win.ucm)
+        s = self.view.get_settings()
+        s.set_property("enable-developer-extras", False)
+        s.set_property("enable-write-console-messages-to-stdout", False)
+        s.set_property("enable-back-forward-navigation-gestures", True)
+        s.set_property("enable-webrtc", True)
+        s.set_property("enable-site-specific-quirks", True)
+        self.view.connect("notify::title", self.on_title)
+        self.view.connect("notify::uri", self.on_uri)
+        self.view.connect("notify::estimated-load-progress", self.on_progress)
+        self.view.connect("decide-policy", self.on_policy)
+        self.view.connect("load-failed", self.on_load_failed)
+        self.view.connect("load-changed", self.on_load_changed)
+        self.view.connect("resource-load-started", self.on_resource)
+        self.view.connect("create", self.on_create)
+        self.label = Gtk.Label(label=NAME_AR)
+        self.label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.label.set_width_chars(16)
+        self.label.set_max_width_chars(16)
+        close = Gtk.Button.new_from_icon_name("window-close-symbolic", Gtk.IconSize.MENU)
+        close.set_relief(Gtk.ReliefStyle.NONE)
+        close.connect("clicked", lambda *_: win.close_tab(self))
+        box = Gtk.Box(spacing=4)
+        box.pack_start(self.label, True, True, 0)
+        box.pack_start(close, False, False, 0)
+        box.show_all()
+        self.tab_box = box
+        self.view.show()
+        self.view.load_uri(normalize(uri) if uri else HOME)
+
+    def on_create(self, view, nav):
+        t = self.win.new_tab()
+        return t.view
+
+    def on_title(self, *_):
+        t = self.view.get_title() or NAME_AR
+        self.label.set_text(t)
+        if self.win.current() is self:
+            self.win.set_title(t + " - " + NAME_AR)
+
+    def on_uri(self, *_):
+        if self.win.current() is self:
+            self.win.entry.set_text(self.view.get_uri() or "")
+
+    def on_progress(self, *_):
+        if self.win.current() is self:
+            self.win.progress.set_fraction(self.view.get_estimated_load_progress() if self.view.is_loading() else 0)
+
+    def on_load_changed(self, view, ev):
+        if ev == WebKit2.LoadEvent.STARTED:
+            self.blocked = 0
+            self.win.update_shield()
+        if ev == WebKit2.LoadEvent.FINISHED:
+            self.win.progress.set_fraction(0)
+            self.win.update_nav()
+            self.count_blocked()
+            GLib.timeout_add(3000, lambda: (self.count_blocked(), False)[1])
+
+    def on_resource(self, view, resource, request):
+        pass
+
+    def count_blocked(self):
+        """The engine does not report blocked requests, so count page resources and
+        elements that match our own rules (same rules the engine enforces)."""
+        sel = self.win.hide_selector
+        js = ("(function(){var u=[];document.querySelectorAll('[src],[href],[data-src]').forEach(function(e){"
+              "var v=e.getAttribute('src')||e.getAttribute('data-src')||e.getAttribute('href');if(v&&e.tagName!='A')u.push(e.src||e.href||v)});"
+              "var h=0;try{h=document.querySelectorAll(%s).length}catch(x){}"
+              "return JSON.stringify({u:u,h:h})})()" % json.dumps(sel))
+        def done(v, res):
+            try:
+                val = v.run_javascript_finish(res).get_js_value().to_string()
+                d = json.loads(val)
+                n = d.get("h", 0)
+                for u in d.get("u", []):
+                    if any(rx.search(u) and (not tp or self.third_party(u)) for rx, tp in self.win.rx_rules):
+                        n += 1
+                self.blocked = n
+                self.win.update_shield(self)
+            except Exception as e:
+                print("count:", e, file=sys.stderr)
+        self.view.run_javascript(js, None, done)
+
+    def third_party(self, u):
+        try:
+            a = urllib.parse.urlparse(u).hostname or ""
+            b = urllib.parse.urlparse(self.view.get_uri() or "").hostname or ""
+            return a != b
+        except Exception:
+            return True
+
+    def on_policy(self, view, decision, dtype):
+        if dtype == WebKit2.PolicyDecisionType.NAVIGATION_ACTION:
+            req = decision.get_navigation_action().get_request()
+            uri = req.get_uri() or ""
+            if decision.get_navigation_action().is_user_gesture() or True:
+                if uri.startswith("http://"):
+                    p = urllib.parse.urlparse(uri)
+                    if not is_local(p.hostname) and uri not in self.upgraded and self.win.https_first:
+                        self.upgraded.add(uri)
+                        decision.ignore()
+                        GLib.idle_add(lambda: self.view.load_uri("https://" + uri[7:]) and False)
+                        return True
+        return False
+
+    def on_load_failed(self, view, ev, uri, err):
+        if uri.startswith("https://") and ("http://" + uri[8:]) in self.upgraded:
+            # https-first upgrade failed: fall back to the original http page once
+            self.upgraded.discard("http://" + uri[8:])
+            GLib.idle_add(lambda: self.view.load_uri("http://" + uri[8:]) and False)
+            return True
+        return False
+
+
+class Window(Gtk.Window):
+    def __init__(self, app, private=False):
+        super().__init__(title=APP)
+        self.app = app
+        self.private = private
+        self.https_first = True
+        self.set_default_size(1100, 720)
+        self.set_icon_name("hilal-browser")
+        self.set_wmclass("hilali", "Hilali")
+        if private:
+            self.get_style_context().add_class("hilali-private")
+        # engine context: private = ephemeral (nothing written to disk)
+        if private:
+            self.ctx = WebKit2.WebContext.new_ephemeral()
+        else:
+            os.makedirs(DATA, exist_ok=True)
+            dm = WebKit2.WebsiteDataManager(base_data_directory=DATA, base_cache_directory=os.path.join(DATA, "cache"))
+            self.ctx = WebKit2.WebContext.new_with_website_data_manager(dm)
+        self.ctx.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
+        try:
+            self.ctx.get_cookie_manager().set_accept_policy(WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY)
+        except Exception:
+            pass
+        self.ctx.connect("download-started", self.on_download)
+        self.ucm = WebKit2.UserContentManager()
+        self.load_rules()
+
+        vb = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.add(vb)
+        bar = Gtk.Box(spacing=6)
+        bar.get_style_context().add_class("hilali-bar")
+        self.back = self._btn("go-previous-symbolic", lambda *_: self.current().view.go_back())
+        self.fwd = self._btn("go-next-symbolic", lambda *_: self.current().view.go_forward())
+        self.reload = self._btn("view-refresh-symbolic", lambda *_: self.current().view.reload())
+        home = self._btn("go-home-symbolic", lambda *_: self.current().view.load_uri(HOME))
+        for b in (self.back, self.fwd, self.reload, home):
+            bar.pack_start(b, False, False, 0)
+        self.entry = Gtk.Entry()
+        self.entry.set_placeholder_text("بحث أو عنوان / Search or address")
+        self.entry.connect("activate", lambda e: self.current().view.load_uri(normalize(e.get_text())))
+        bar.pack_start(self.entry, True, True, 0)
+        self.shield = Gtk.Button(label="\u0645\u062d\u0645\u064a 0")
+        self.shield.get_style_context().add_class("hilali-shield")
+        self.shield.set_tooltip_text("Blocked ads and trackers on this page")
+        bar.pack_start(self.shield, False, False, 0)
+        newtab = self._btn("tab-new-symbolic", lambda *_: self.new_tab())
+        bar.pack_start(newtab, False, False, 0)
+        menu = Gtk.MenuButton()
+        menu.set_image(Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.MENU))
+        m = Gtk.Menu()
+        for label, cb in (("نافذة خاصة / Private window", lambda *_: self.app.open_window(True)),
+                          ("نافذة جديدة / New window", lambda *_: self.app.open_window(False)),
+                          ("حول هلالي / About", lambda *_: self.about())):
+            it = Gtk.MenuItem(label=label); it.connect("activate", cb); m.append(it)
+        m.show_all(); menu.set_popup(m)
+        bar.pack_start(menu, False, False, 0)
+        vb.pack_start(bar, False, False, 0)
+        self.progress = Gtk.ProgressBar()
+        self.progress.set_size_request(-1, 2)
+        vb.pack_start(self.progress, False, False, 0)
+        self.nb = Gtk.Notebook()
+        self.nb.set_scrollable(True)
+        self.nb.connect("switch-page", self.on_switch)
+        vb.pack_start(self.nb, True, True, 0)
+        self.tabs = []
+        self.connect("key-press-event", self.on_key)
+        self.connect("destroy", lambda *_: self.app.window_closed(self))
+
+    def _btn(self, icon, cb):
+        b = Gtk.Button.new_from_icon_name(icon, Gtk.IconSize.MENU)
+        b.connect("clicked", cb)
+        return b
+
+    def load_rules(self):
+        rules = BUILTIN_RULES
+        try:
+            if os.path.exists(RULES_SYS):
+                rules = json.load(open(RULES_SYS)) + BUILTIN_RULES[-1:]
+        except Exception as e:
+            print("rules:", e, file=sys.stderr)
+        self.rx_rules = []
+        self.hide_selector = ".ad-banner"
+        for r in rules:
+            try:
+                t, a = r["trigger"], r["action"]
+                if a["type"] == "block":
+                    self.rx_rules.append((re.compile(t["url-filter"]), "third-party" in t.get("load-type", [])))
+                elif a["type"] == "css-display-none" and r is rules[-1]:
+                    self.hide_selector = a["selector"]
+            except Exception:
+                pass
+        store = WebKit2.UserContentFilterStore.new(os.path.join(CONF, "filters"))
+        data = GLib.Bytes.new(json.dumps(rules).encode())
+
+        def saved(st, res):
+            try:
+                f = st.save_finish(res)
+                self.ucm.add_filter(f)
+                # reload pages so the rules apply to what already started
+            except Exception as e:
+                print("filter save failed:", e, file=sys.stderr)
+        os.makedirs(CONF, exist_ok=True)
+        store.save("hilali-block", data, None, saved)
+
+    def on_download(self, ctx, dl):
+        dl.connect("decide-destination", self.decide_dest)
+
+    def decide_dest(self, dl, name):
+        d = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD) or os.path.expanduser("~")
+        dl.set_destination("file://" + os.path.join(d, name or "download"))
+        return True
+
+    def current(self):
+        i = self.nb.get_current_page()
+        return self.tabs[i] if 0 <= i < len(self.tabs) else None
+
+    def new_tab(self, uri=None):
+        t = Tab(self, uri)
+        self.tabs.append(t)
+        self.nb.append_page(t.view, t.tab_box)
+        self.nb.set_tab_reorderable(t.view, True)
+        self.nb.set_current_page(len(self.tabs) - 1)
+        self.show_all()
+        return t
+
+    def close_tab(self, t):
+        i = self.tabs.index(t)
+        self.tabs.pop(i)
+        self.nb.remove_page(i)
+        if not self.tabs:
+            self.close()
+
+    def on_switch(self, nb, page, idx):
+        if idx < len(self.tabs):
+            t = self.tabs[idx]
+            self.entry.set_text(t.view.get_uri() or "")
+            self.set_title((t.view.get_title() or APP) + " - " + NAME_AR)
+            self.update_shield(t)
+            self.update_nav()
+
+    def update_nav(self):
+        t = self.current()
+        if t:
+            self.back.set_sensitive(t.view.can_go_back())
+            self.fwd.set_sensitive(t.view.can_go_forward())
+
+    def update_shield(self, t=None):
+        t = t or self.current()
+        if t is not None and t is self.current():
+            self.shield.set_label("\u0645\u062d\u0645\u064a %d" % t.blocked)
+
+    def on_key(self, w, ev):
+        ctrl = ev.state & Gdk.ModifierType.CONTROL_MASK
+        k = Gdk.keyval_name(ev.keyval)
+        if ctrl and k == "t": self.new_tab(); return True
+        if ctrl and k == "w": self.close_tab(self.current()); return True
+        if ctrl and k == "l": self.entry.grab_focus(); return True
+        if ctrl and k == "r": self.current().view.reload(); return True
+        if ctrl and (ev.state & Gdk.ModifierType.SHIFT_MASK) and k in ("N", "n"): self.app.open_window(True); return True
+        return False
+
+    def about(self):
+        d = Gtk.AboutDialog(transient_for=self)
+        d.set_program_name(NAME_AR + " / " + APP)
+        d.set_logo_icon_name("hilal-browser")
+        d.set_comments("متصفح خفيف وخاص. WebKitGTK engine. Blocks ads and trackers, upgrades to HTTPS.")
+        d.run(); d.destroy()
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id="org.customos.hilali", flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        self.wins = []
+
+    def open_window(self, private=False, uris=None):
+        w = Window(self, private)
+        self.add_window(w)
+        self.wins.append(w)
+        if uris:
+            for u in uris: w.new_tab(u)
+        else:
+            w.new_tab()
+        w.show_all()
+        return w
+
+    def window_closed(self, w):
+        if w in self.wins: self.wins.remove(w)
+
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        prov = Gtk.CssProvider(); prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        Gtk.Window.set_default_icon_name("hilal-browser")
+
+    def do_command_line(self, cl):
+        args = cl.get_arguments()[1:]
+        private = "--private" in args
+        uris = [a for a in args if not a.startswith("--")]
+        self.open_window(private, uris or None)
+        return 0
+
+    def do_activate(self):
+        pass
+
+
+if __name__ == "__main__":
+    sys.exit(App().run(sys.argv))

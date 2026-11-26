@@ -56,7 +56,7 @@ class Pill(Gtk.Window):
             top = int(wa[1]) + int(wa[3])
         except Exception:
             pass
-        self.move(mon.width - self.w - 35, top - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
+        self.move(mon.width - self.w - 4, top - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
         win = self.get_window()
         if win is not None:
             win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through
