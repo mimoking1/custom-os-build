@@ -221,8 +221,8 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   [ -f /etc/brave/policies/managed/brave-policy-tahmeel.json ] && R tahmeel-brave-policy-file PASS || R tahmeel-brave-policy-file FAIL
   [ -f /opt/tahmeel/extension/tahmeel.crx ] && R tahmeel-crx PASS || R tahmeel-crx FAIL
   if command -v brave-browser >/dev/null 2>&1; then
-    ( setsid brave-browser --password-store=basic brave://policy >/dev/null 2>&1 & ); sleep 12; SHOT 13c-brave-policy
-    ( setsid brave-browser --password-store=basic brave://extensions >/dev/null 2>&1 & ); sleep 10; SHOT 13d-brave-extensions
+    ( setsid brave-browser --password-store=basic --no-first-run brave://policy >/dev/null 2>&1 & ); sleep 12; SHOT 13c-brave-policy
+    ( setsid brave-browser --password-store=basic --no-first-run brave://extensions >/dev/null 2>&1 & ); sleep 10; SHOT 13d-brave-extensions
     pkill -f brave-browser; sleep 2
   fi
   sleep 10; SHOT 14-tahmeel-native-later

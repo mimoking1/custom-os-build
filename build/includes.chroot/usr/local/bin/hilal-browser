@@ -1,6 +1,6 @@
 #!/bin/sh
 # Browser launcher: Brave (64-bit) > Chromium (32-bit) > Firefox ESR.
-if command -v brave-browser >/dev/null 2>&1; then exec brave-browser --password-store=basic "$@"; fi
+if command -v brave-browser >/dev/null 2>&1; then exec brave-browser --password-store=basic --no-first-run "$@"; fi
 . /usr/share/customos/browser.conf 2>/dev/null; BN="${BROWSER_NAME:-Browser}"
 if command -v chromium >/dev/null 2>&1; then
   F="$HOME/.config/customos/browser32-warned"
