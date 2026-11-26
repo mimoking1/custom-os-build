@@ -4,8 +4,8 @@
 @define-color accent_fg_color #ffffff;
 selection { background-color: rgba(47,191,169,.35); }
 *:selected { background-color: rgba(47,191,169,.35); }
-/* file-view content area behind icons: user-picked #7b92ab (3:22pm); sidebar and chrome stay dark */
-iconview, iconview.view, .view:not(treeview) { background-color: #7b92ab; background-image: none; color: #0b1a2a; }
+/* file-view content area behind icons: user-picked #e8eceF (3:22pm); sidebar and chrome stay dark */
+iconview, iconview.view, .view:not(treeview) { background-color: #e8eceF; background-image: none; color: #0b1a2a; }
 iconview:selected, iconview.view:selected, .view:not(treeview):selected { background-color: #4fb2f7; color: #08121c; }
-iconview:hover, .view:not(treeview):hover { background-color: #8aa0b7; }
+iconview:hover, .view:not(treeview):hover { background-color: #dbe2e8; }
 XfdesktopIconView.view, .xfdesktop-icon-view, .xfdesktop-icon-view.view, XfdesktopIconView { background-color: transparent; background-image: none; color: #ffffff; }
