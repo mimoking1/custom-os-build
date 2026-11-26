@@ -56,7 +56,7 @@ def on_apply(btn):
     apply(hexs)
 
 win = Gtk.Window(title="Theme Color · لون السمة")
-win.set_default_size(560, 700)
+win.set_default_size(520, 800)
 win.set_position(Gtk.WindowPosition.CENTER)
 win.connect("destroy", Gtk.main_quit)
 
@@ -68,13 +68,23 @@ head = Gtk.Label()
 head.set_markup('<span size="large" weight="bold">لون السمة · Theme Color</span>')
 box.pack_start(head, False, False, 0)
 
-chooser = Gtk.ColorChooserWidget()
-chooser.set_use_alpha(False)
-chooser.set_property("show-editor", True)   # hex/RGB editor included
+class _Chooser(Gtk.ColorSelection):
+    """GTK classic colour selector: circular hue ring + SV triangle, HSV/RGB sliders and a hex field."""
+    def set_rgba(self, rgba): self.set_current_rgba(rgba)
+    def get_rgba(self): return self.get_current_rgba()
+chooser = _Chooser()
+chooser.set_has_opacity_control(False)
+chooser.set_has_palette(False)
+def _cur():
+    try:
+        h = open(CFG + "/accent").read().strip()
+        if len(h) == 7 and h[0] == "#": return h
+    except OSError: pass
+    return "#08e8de"
 _init = Gdk.RGBA()
-_init.parse("#08e8de")
+_init.parse(_cur())
 chooser.set_rgba(_init)
-box.pack_start(chooser, True, True, 0)
+box.pack_start(chooser, False, False, 0)
 
 apply_btn = Gtk.Button(label="تطبيق اللون المختار من العجلة · Apply wheel color")
 apply_btn.get_style_context().add_class("suggested-action")
