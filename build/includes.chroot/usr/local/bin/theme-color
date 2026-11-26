@@ -53,11 +53,11 @@ def on_apply(btn):
     apply(wheel.get_hex())
 
 win = Gtk.Window(title="Theme Color · لون السمة")
-win.set_default_size(520, 800)
+win.set_default_size(520, 10)
 win.set_position(Gtk.WindowPosition.CENTER)
 win.connect("destroy", Gtk.main_quit)
 
-box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
 box.set_border_width(12)
 win.add(box)
 
@@ -69,7 +69,7 @@ box.pack_start(head, False, False, 0)
 class Wheel(Gtk.DrawingArea):
     """Filled colour disc: hue = angle, saturation = distance from centre (white in the middle),
     fine cell lines; brightness is a slider."""
-    SIZE = 340
+    SIZE = 260
     def __init__(self, on_change):
         super().__init__()
         self.h, self.s, self.v = 0.5, 0.7, 1.0
@@ -183,11 +183,11 @@ wheel = Wheel(on_wheel_change)
 top = Gtk.Box(spacing=10); top.set_halign(Gtk.Align.CENTER)
 top.pack_start(swatch, False, False, 0); top.pack_start(entry, False, False, 0)
 box.pack_start(top, False, False, 0)
-box.pack_start(wheel, False, False, 0)
-bl = Gtk.Box(spacing=8); bl.set_halign(Gtk.Align.CENTER)
-bl.pack_start(Gtk.Label(label="السطوع · Brightness"), False, False, 0)
-bright = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
-bright.set_size_request(220, -1); bright.set_draw_value(False)
+bl = Gtk.Box(spacing=10); bl.set_halign(Gtk.Align.CENTER)
+bl.pack_start(wheel, False, False, 0)
+bright = Gtk.Scale.new_with_range(Gtk.Orientation.VERTICAL, 0, 100, 1)
+bright.set_inverted(True); bright.set_draw_value(False); bright.set_size_request(-1, 220)
+bright.set_tooltip_text("السطوع · Brightness")
 bright.connect("value-changed", lambda sc: wheel.set_v(sc.get_value() / 100.0))
 bl.pack_start(bright, False, False, 0)
 box.pack_start(bl, False, False, 0)
@@ -205,7 +205,7 @@ lab = Gtk.Label()
 lab.set_markup('<span size="small">ألوان جاهزة · Presets</span>')
 box.pack_start(lab, False, False, 0)
 
-grid = Gtk.Grid(column_spacing=8, row_spacing=8)
+grid = Gtk.Grid(column_spacing=8, row_spacing=5)
 grid.set_halign(Gtk.Align.CENTER)
 box.pack_start(grid, False, False, 0)
 
@@ -219,7 +219,7 @@ for i, (name, hexs) in enumerate(PRESETS):
     cls = "preset-%d" % i
     b.get_style_context().add_class(cls)
     rules.append(".%s { background-image: none; background-color: %s; color: %s; "
-                 "border-radius: 10px; padding: 6px 14px; min-width: 96px; "
+                 "border-radius: 10px; padding: 3px 14px; min-width: 96px; min-height: 22px; "
                  "text-shadow: none; box-shadow: none; border-color: #b8c6cf; }" % (cls, hexs, fg))
     b.connect("clicked", on_preset, hexs)
     grid.attach(b, i % 3, i // 3, 1, 1)
