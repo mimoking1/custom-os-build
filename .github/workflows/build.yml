@@ -153,18 +153,4 @@ jobs:
           cp "out/delivery-${{ matrix.variant }}.txt" "/tmp/evidence/${GITHUB_RUN_ID}-delivery-${{ matrix.variant }}.txt"
           cp "out/gofile-admin.txt" "/tmp/evidence/${GITHUB_RUN_ID}-gofile-admin-${{ matrix.variant }}.txt"
           gh release upload ci-evidence "/tmp/evidence/${GITHUB_RUN_ID}-delivery-${{ matrix.variant }}.txt" --clobber </dev/null || true
-          gh release upload ci-evidence "/tmp/evidence/${GITHUB_RUN_ID}-gofile-admin-${{ matrix.variant }}.txt" --clobber </dev/null || true
 
-      - name: Publish public release (assets < 2GiB)
-        run: |
-          ISO=$(ls out/*.iso | head -1)
-          SIZE=$(stat -c%s "$ISO")
-          if [ "$SIZE" -lt 2147483648 ]; then
-            gh release view latest-build >/dev/null 2>&1 || \
-              gh release create latest-build --title "Latest build" --notes "Automated build - newest ISOs"
-            gh release upload latest-build "$ISO" out/SHA256SUMS.txt --clobber
-          else
-            echo "ISO is $(( SIZE / 1048576 )) MiB > 2048 MiB GitHub cap - grab it from Artifacts instead" | tee out/HOSTING-NOTE.txt
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
