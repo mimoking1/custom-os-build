@@ -103,6 +103,35 @@ def tahmeel_add(payload):
         return False
 
 
+DARK_JS = r"""(function(){try{
+var dark=false;
+var m=document.querySelector('meta[name=color-scheme]'); if(m&&/dark/.test(m.content))dark=true;
+if(!dark){for(var i=0;i<document.styleSheets.length&&!dark;i++){try{var rs=document.styleSheets[i].cssRules;for(var j=0;j<rs.length;j++){var r=rs[j];if(r.media&&/prefers-color-scheme:\s*dark/.test(r.media.mediaText)){dark=true;break}}}catch(e){}}}
+if(dark)return;
+var st=document.createElement('style');st.id='hilali-dark';
+st.textContent='html{filter:invert(1) hue-rotate(180deg)!important;background:#fff!important} img,picture,video,canvas,iframe,svg image,[style*="background-image"]{filter:invert(1) hue-rotate(180deg)!important}';
+document.documentElement.appendChild(st);}catch(e){}})();"""
+_SYS_DARK = None
+
+
+def apply_pages_mode(win=None):
+    """Pages: auto (follow system theme), light, dark (prefers-color-scheme dark + inversion fallback)."""
+    global _SYS_DARK
+    gs = Gtk.Settings.get_default()
+    if _SYS_DARK is None:
+        _SYS_DARK = bool(gs.get_property("gtk-application-prefer-dark-theme"))
+    mode = _jload("settings.json", {}).get("pages", "auto")
+    gs.set_property("gtk-application-prefer-dark-theme", True if mode == "dark" else (False if mode == "light" else _SYS_DARK))
+    if win is not None:
+        if getattr(win, "dark_script", None) is not None:
+            try: win.ucm.remove_script(win.dark_script)
+            except Exception: pass
+            win.dark_script = None
+        if mode == "dark":
+            win.dark_script = WebKit2.UserScript.new(DARK_JS, WebKit2.UserContentInjectedFrames.TOP_FRAME, WebKit2.UserScriptInjectionTime.END, None, None)
+            win.ucm.add_script(win.dark_script)
+
+
 def normalize(text):
     t = text.strip()
     if not t:
@@ -329,6 +358,8 @@ class Window(Gtk.Window):
         self.ctx.connect("download-started", self.on_download)
         self.ucm = WebKit2.UserContentManager()
         self.load_rules()
+        self.dark_script = None
+        apply_pages_mode(self)
 
         vb = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.add(vb)
@@ -591,6 +622,12 @@ class Window(Gtk.Window):
             cb.append_text(n)
             if n == st.get("engine", "DuckDuckGo"): cb.set_active(i)
         box.pack_start(cb, False, False, 0)
+        box.pack_start(Gtk.Label(label="صفحات الويب / Web pages", xalign=0), False, False, 0)
+        pm = Gtk.ComboBoxText()
+        for i, (k, n) in enumerate((("auto", "تلقائي / Auto"), ("light", "فاتح / Light"), ("dark", "داكن / Dark"))):
+            pm.append(k, n)
+        pm.set_active_id(st.get("pages", "auto"))
+        box.pack_start(pm, False, False, 0)
         hs = Gtk.CheckButton(label="HTTPS أولاً / HTTPS-first"); hs.set_active(st.get("https", True))
         box.pack_start(hs, False, False, 0)
         box.pack_start(Gtk.Label(label="الصفحة الرئيسية / Home page URL", xalign=0), False, False, 0)
@@ -601,8 +638,12 @@ class Window(Gtk.Window):
         d.add_button("حفظ / Save", Gtk.ResponseType.OK); d.add_button("إلغاء / Cancel", Gtk.ResponseType.CANCEL)
         d.show_all()
         if d.run() == Gtk.ResponseType.OK:
-            st.update({"engine": cb.get_active_text() or "DuckDuckGo", "https": hs.get_active(), "home": he.get_text().strip()})
+            st.update({"engine": cb.get_active_text() or "DuckDuckGo", "https": hs.get_active(), "home": he.get_text().strip(), "pages": pm.get_active_id() or "auto"})
             _jsave("settings.json", st)
+            app = self.get_application()
+            for w in (getattr(app, "wins", None) or [self]): apply_pages_mode(w)
+            try: self.current().view.reload()
+            except Exception: pass
             self.https_first = st["https"]
         d.destroy()
 
