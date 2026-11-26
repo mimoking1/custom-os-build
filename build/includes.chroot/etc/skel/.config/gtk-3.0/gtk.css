@@ -2,6 +2,10 @@
 @define-color accent_color #08e8de;
 @define-color accent_bg_color #08e8de;
 @define-color accent_fg_color #ffffff;
+@define-color theme_selected_bg_color #08e8de;
+@define-color theme_selected_fg_color #08121c;
+@define-color selected_bg_color #08e8de;
+@define-color selected_fg_color #08121c;
 selection { background-color: rgba(47,191,169,.35); }
 *:selected { background-color: rgba(47,191,169,.35); }
 /* file-view content area behind icons: user-picked #e8eceF (3:22pm); sidebar and chrome stay dark */
