@@ -1,0 +1,33 @@
+#!/bin/sh
+# Phone link: KDE Connect (LAN only, no cloud) + scrcpy (USB/Wi-Fi mirroring). Both free software.
+# scrcpy is not in Debian 13 main: try main, then trixie-backports, never fail the build.
+export DEBIAN_FRONTEND=noninteractive
+if ! apt-get install -y --no-install-recommends scrcpy; then
+  echo "deb http://deb.debian.org/debian trixie-backports main" > /etc/apt/sources.list.d/zz-backports.list
+  apt-get update || true
+  apt-get install -y --no-install-recommends -t trixie-backports scrcpy || echo "PHONE-LINK: scrcpy not installed"
+  rm -f /etc/apt/sources.list.d/zz-backports.list
+  apt-get update || true
+fi
+# KDE Connect only runs when the user opens it (no always-on background daemon).
+rm -f /etc/xdg/autostart/org.kde.kdeconnect.daemon.desktop /etc/xdg/autostart/org.kde.kdeconnect.nonplasma.desktop /etc/xdg/autostart/kdeconnect*.desktop
+mkdir -p /usr/share/applications
+cat > /usr/share/applications/customos-phone-link.desktop <<'D'
+[Desktop Entry]
+Type=Application
+Name=Phone Link / ربط الهاتف
+Comment=Pair your phone: files, notifications, clipboard (KDE Connect)
+Exec=kdeconnect-app
+Icon=smartphone
+Categories=Utility;Network;
+D
+cat > /usr/share/applications/customos-phone-mirror.desktop <<'D'
+[Desktop Entry]
+Type=Application
+Name=Phone Screen / شاشة الهاتف
+Comment=Show and control your Android phone screen over USB (scrcpy)
+Exec=scrcpy
+Icon=video-display
+Categories=Utility;
+D
+true
