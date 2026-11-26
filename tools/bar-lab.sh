@@ -55,7 +55,7 @@ send_block() {  # $1 = shell file; ACK-paced chunks + md5 verify, resend on mism
   for try in 1 2 3; do
     printf 'BEGIN\n' >&9
     sleep 0.3
-    while IFS= read -r c; do
+    while IFS= read -r c || [ -n "$c" ]; do
       printf 'W %s\n' "$c" >&9
       OKWS=$((OKWS+1))
       wait_marker "OKW" "$OKWS" 30 || { echo "warn: OKW $OKWS missed"; break; }
