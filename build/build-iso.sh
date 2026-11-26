@@ -103,6 +103,7 @@ tar -xzf "$PRIV/hilal-integration.tar.gz" -C /tmp/tah-int
 [ -x "$TAH/tahmeel-launch" ] || { echo "tahmeel-launch missing after extraction"; exit 1; }
 mkdir -p "$TAH/extension" config/includes.chroot/etc/brave/policies/managed config/includes.chroot/etc/xdg/autostart config/includes.chroot/usr/share/applications
 cp /tmp/tah-int/pkg/tahmeel.crx /tmp/tah-int/pkg/update.xml /tmp/tah-int/pkg/tahmeel.xpi "$TAH/extension/"
+chmod 0644 "$TAH"/extension/*; chmod 0755 "$TAH/extension"
 cp /tmp/tah-int/pkg/brave-policy-tahmeel.json config/includes.chroot/etc/brave/policies/managed/
 cp /tmp/tah-int/pkg/tahmeel-autostart.desktop config/includes.chroot/etc/xdg/autostart/
 cp /tmp/tah-int/pkg/tahmeel.desktop config/includes.chroot/usr/share/applications/customos-tahmeel.desktop
