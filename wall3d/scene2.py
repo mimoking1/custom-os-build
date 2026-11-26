@@ -64,21 +64,21 @@ if name == "dunes":            # warm rose desert, low sun, huge moon-sphere
     t = bpy.data.textures.new("n", "CLOUDS"); t.noise_scale = 9.0; t.noise_depth = 1
     d = f.modifiers.new("d", "DISPLACE"); d.texture = t; d.strength = 3.2; d.mid_level = 0.45
     for p in f.data.polygons: p.use_smooth = True
-    sphere(6, 40, 14, 6, mat("#fff2e6", 0.9, emit=6.0))
+    sphere(8, 45, 8, 5, mat("#fff2e6", 0.9, emit=1.6))
     light("SUN", (0, 0, 10), 3.5, rot=(math.radians(72), 0, math.radians(-70)))
-    cam((0, -14, 4.5), (80, 0, 0), 35, fstop=16, focus=18)
+    cam((0, -14, 3.5), (86, 0, 0), 32, fstop=16, focus=18)
 elif name == "orbit":          # deep violet night, glowing concentric rings, frontal
     world("#0d0a24", 1.0); sc.view_settings.exposure = 0.0
-    sphere(0, 0, 0, 1.6, mat("#ffffff", 0.2, emit=3.5))
+    sphere(0, 0, 0, 1.3, mat("#ffe9c8", 0.2, emit=1.3))
     cols = ["#8b6bff", "#ff6bd6", "#6bd1ff", "#b49cff", "#ff9ae6"]
     for i, c in enumerate(cols):
         R = 2.6 + i * 1.25
         bpy.ops.mesh.primitive_torus_add(major_radius=R, minor_radius=0.06 + 0.02 * i, location=(0, 0, 0), rotation=(math.radians(68 + i * 4), math.radians(i * 7 - 10), math.radians(i * 22)), major_segments=160, minor_segments=24)
-        put(bpy.context.active_object, mat(c, 0.2, emit=6.0))
+        put(bpy.context.active_object, mat(c, 0.2, emit=1.4))
         a = random.random() * 6.28
-        sphere(R * math.cos(a), R * math.sin(a) * 0.35, 0.2, 0.22 + 0.04 * i, mat(c, 0.15, emit=8.0))
+        sphere(R * math.cos(a), R * math.sin(a) * 0.35, 0.2, 0.22 + 0.04 * i, mat(c, 0.15, emit=1.8))
     light("AREA", (0, -8, 6), 500, 8)
-    cam((0, -17, 2), (87, 0, 0), 38, fstop=8, focus=17)
+    cam((0, -26, 2), (87, 0, 0), 38, fstop=8, focus=26)
 elif name == "terraces":       # emerald stepped round podiums, high isometric
     world("#d7f3e3", 1.0); sc.view_settings.exposure = -0.3
     plane("#a8e3c4", 0.6)
@@ -103,7 +103,7 @@ elif name == "towers":         # gold city of beveled blocks, iso orthographic, 
             o.scale = (1.0, 1.0, h); b = o.modifiers.new("b", "BEVEL"); b.width = 0.05; b.segments = 3
             put(o, ms[random.randrange(4)])
     light("SUN", (0, 0, 10), 4.0, rot=(math.radians(50), 0, math.radians(35)))
-    cam((14, -16, 12), (58, 0, 41), ortho=24)
+    cam((14, -16, 12), (58, 0, 41), ortho=32)
 elif name == "pillars":        # slate grid of rounded pillars rising like a wave, low angle
     world("#dde3ea", 1.0); sc.view_settings.exposure = -0.2
     plane("#8f9bab", 0.5)
