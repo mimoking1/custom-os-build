@@ -87,6 +87,8 @@ mkdir -p config/includes.chroot/usr/share/icons
 tar -xf /tmp/arcanum-blue.tar.xz -C config/includes.chroot/usr/share/icons
 mv "config/includes.chroot/usr/share/icons/Arcanum - Blue" config/includes.chroot/usr/share/icons/Arcanum-Blue
 sed -i 's/^Name=.*/Name=Arcanum-Blue/; s/^Inherits=.*/Inherits=Papirus-Dark,Adwaita,hicolor/' config/includes.chroot/usr/share/icons/Arcanum-Blue/index.theme
+# taskbar buttons of file-manager windows must not be a dark tile on the blue bar: let Papirus (colored) supply these app icons
+rm -f config/includes.chroot/usr/share/icons/Arcanum-Blue/apps/scalable/system-file-manager.svg config/includes.chroot/usr/share/icons/Arcanum-Blue/apps/scalable/org.xfce.thunar*.svg config/includes.chroot/usr/share/icons/Arcanum-Blue/apps/scalable/thunar*.svg
 rm -f /tmp/arcanum-blue.tar.xz
 # Tahmeel: native Linux build (Electron, no Wine) from the private payload, sha256-pinned
 echo "==> Tahmeel: native Linux build"
