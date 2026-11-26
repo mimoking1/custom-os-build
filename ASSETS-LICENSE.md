@@ -38,3 +38,8 @@ made in the same spirit.
 ## Wallpaper gallery (build/includes.chroot/usr/share/backgrounds/customos/gallery)
 - 3d-*.png: four 3D renders (lossless) generated for this project.
 - No real photographs are shipped (all photo wallpapers were removed 2026-11-26 at the user's request). The gallery holds only the four in-house 3D renders.
+
+## Android (optional)
+Android support uses Waydroid (GPL-3.0), installed on demand from its own repository, vanilla image by default.
+The "Android: add Google Play" menu item (customos-android gapps) is OFF by default: it only runs if the user clicks it and confirms a dialog
+that says the Play stack downloads from Google's servers under Google's terms. No Google software is shipped in the ISO.

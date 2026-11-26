@@ -15,6 +15,16 @@ case "$1" in
     ping -c1 -W3 1.1.1.1 >/dev/null 2>&1 || { say "يلزم اتصال بالإنترنت (حوالي 1 جيجابايت تنزيل و3 جيجابايت مساحة).\nInternet needed (about 1 GB download, 3 GB free space)."; exit 1; }
     sudo bash -c 'set -e; curl -fsSL https://repo.waydro.id | bash; apt-get install -y waydroid; waydroid init -f; systemctl enable --now waydroid-container' || { say "فشل التثبيت / Install failed"; exit 1; }
     say "تم تثبيت أندرويد (تجريبي). افتح Android من القائمة.\nAndroid installed (experimental)." ;;
+  gapps)
+    # OPTIONAL, off by default: downloads Google's Play stack from Google's servers onto THIS device, on demand.
+    # Nothing from Google is shipped in the system image.
+    zenity --question --no-wrap --width=520 --title="Google Play (optional)" \
+      --ok-label="Download" --cancel-label="Cancel" \
+      --text="سيتم تنزيل خدمات جوجل (متجر Play) من خوادم جوجل مباشرة إلى جهازك، وتخضع لشروط جوجل وليست جزءاً من هذا النظام. العملية اختيارية ويمكنك الإلغاء الآن.\n\nThis downloads Google's Play stack from Google's servers onto your device, under Google's own terms. It is not part of this system. It is optional; you can cancel now." 2>/dev/null || exit 0
+    installed || "$0" install || exit 1
+    ping -c1 -W3 1.1.1.1 >/dev/null 2>&1 || { say "يلزم اتصال بالإنترنت\nInternet needed."; exit 1; }
+    sudo bash -c 'set -e; waydroid session stop || true; waydroid init -s GAPPS -f' || { say "فشل التنزيل / Download failed"; exit 1; }
+    say "تم. افتح Android من القائمة.\nDone. Open Android from the menu." ;;
   apk)
     installed || "$0" install || exit 1
     waydroid show-full-ui >/dev/null 2>&1 &

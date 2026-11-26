@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Android: add Google Play (optional)
+Name[ar]=أندرويد: إضافة خدمات جوجل (اختياري)
+Exec=/usr/local/bin/customos-android gapps
+Icon=phone
+Categories=System;
