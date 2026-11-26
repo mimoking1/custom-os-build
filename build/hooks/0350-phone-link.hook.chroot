@@ -2,12 +2,15 @@
 # Phone link: KDE Connect (LAN only, no cloud) + scrcpy (USB/Wi-Fi mirroring). Both free software.
 # scrcpy is not in Debian 13 main: try main, then trixie-backports, never fail the build.
 export DEBIAN_FRONTEND=noninteractive
-if ! apt-get install -y --no-install-recommends scrcpy; then
-  echo "deb http://deb.debian.org/debian trixie-backports main" > /etc/apt/sources.list.d/zz-backports.list
-  apt-get update || true
-  apt-get install -y --no-install-recommends -t trixie-backports scrcpy || echo "PHONE-LINK: scrcpy not installed"
-  rm -f /etc/apt/sources.list.d/zz-backports.list
-  apt-get update || true
+# scrcpy is not packaged in Debian 13 (main or backports). Use the official upstream release (Apache-2.0), pinned and sha256-checked.
+SCV=v5.0.1; SCH=9f969d30cc574816077edecda65719c1c70b0aee1df1ba5fa00779ac07b8fd6e
+if [ "$(uname -m)" = x86_64 ]; then
+  if curl -fsSL -o /tmp/scrcpy.tgz "https://github.com/Genymobile/scrcpy/releases/download/$SCV/scrcpy-linux-x86_64-$SCV.tar.gz" && echo "$SCH  /tmp/scrcpy.tgz" | sha256sum -c -; then
+    mkdir -p /opt/scrcpy && tar xzf /tmp/scrcpy.tgz -C /opt/scrcpy --strip-components=1
+    ln -sf /opt/scrcpy/scrcpy /usr/local/bin/scrcpy
+    mkdir -p /usr/share/doc/scrcpy-upstream && cp /opt/scrcpy/LICENSE /usr/share/doc/scrcpy-upstream/ 2>/dev/null
+  else echo "PHONE-LINK: scrcpy download failed"; fi
+  rm -f /tmp/scrcpy.tgz
 fi
 # KDE Connect only runs when the user opens it (no always-on background daemon).
 rm -f /etc/xdg/autostart/org.kde.kdeconnect.daemon.desktop /etc/xdg/autostart/org.kde.kdeconnect.nonplasma.desktop /etc/xdg/autostart/kdeconnect*.desktop

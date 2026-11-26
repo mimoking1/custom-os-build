@@ -206,11 +206,11 @@ command -v scrcpy >/dev/null 2>&1 && R scrcpy-installed PASS\($(scrcpy --version
 command -v adb >/dev/null 2>&1 && R adb-installed PASS || R adb-installed FAIL
 [ ! -e /etc/xdg/autostart/org.kde.kdeconnect.daemon.desktop ] && R kdeconnect-no-autostart PASS || R kdeconnect-no-autostart FAIL
 [ -f /usr/share/applications/customos-phone-link.desktop ] && R phone-link-launcher PASS || R phone-link-launcher FAIL
-G=/usr/share/backgrounds/customos/gallery; R gallery-files "$(ls $G | wc -l) total, $(ls $G/wall-*.jpg 2>/dev/null | wc -l) private photos, $(ls $G/3d-* 2>/dev/null | wc -l) 3d"
-[ "$(ls $G/wall-*.jpg 2>/dev/null | wc -l)" -ge 16 ] && R wallpapers-16-photos PASS || R wallpapers-16-photos FAIL
+G=/usr/share/backgrounds/customos/gallery; R gallery-files "$(ls $G | wc -l) total, $(ls $G/*.jpg 2>/dev/null | grep -v '/3d-' | wc -l) photos, $(ls $G/3d-* 2>/dev/null | wc -l) 3d"
+[ "$(ls $G/*.jpg 2>/dev/null | grep -v /3d- | wc -l)" -ge 16 ] && R wallpapers-16-photos PASS || R wallpapers-16-photos FAIL
 python3 -c "
 from PIL import Image;import glob,sys
-bad=[f for f in glob.glob('$G/wall-*.jpg') if Image.open(f).size[0]<3800]
+bad=[f for f in [g for g in glob.glob('$G/*.jpg') if '/3d-' not in g] if Image.open(f).size[0]<3800]
 sys.exit(1 if bad else 0)" && R wallpapers-4k PASS || R wallpapers-4k FAIL
 for u in fwupd-refresh.timer avahi-daemon.service ModemManager.service cups-browsed.service; do [ "$(systemctl is-enabled $u 2>&1)" = masked ] && R mask-$u PASS || R mask-$u FAIL; done
 R idle-ram "$(free -m | awk '/Mem:/{print "used="$3"MB avail="$7"MB"}')"
