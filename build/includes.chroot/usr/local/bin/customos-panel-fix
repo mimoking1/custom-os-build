@@ -1,121 +1,17 @@
 #!/bin/sh
-# External panel plugins (whiskermenu orb, systray, xkb) draw opaque black boxes
-# when their GtkPlug windows are created before the xfwm4 compositor owns the
-# screen. Restarting the panel after login proved not enough, so:
-#   1. kill the too-early panel,
-#   2. wait until the compositor really owns _NET_WM_CM_S0,
-#   3. start the panel fresh so every plug gets an RGBA visual from birth,
-#   4. restart once more a bit later as belt and braces.
-# Diagnostics go to the serial console for the CI boot test.
+# Stock xfce4-panel with a native solid accent color (no baking, no plug hacks).
 LOG() { echo "panel-fix: $*" | sudo tee /dev/ttyS0 >/dev/null 2>&1 || true; }
-
 xfce4-panel -q 2>/dev/null
-
-i=0
-while [ $i -lt 40 ]; do
-  if /usr/local/bin/customos-cm-check; then
-    LOG "compositor up after ${i}s"
-    break
-  fi
-  i=$((i+1))
-  sleep 1
-done
-if [ $i -ge 40 ]; then
-  LOG "compositor NOT up after 40s; starting picom fallback (xfwm4 compositing stays off)"
-  timeout 10 xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
-  pgrep -x picom >/dev/null 2>&1 || picom --backend xrender --no-vsync --no-fading-openclose --daemon --log-level info --log-file /tmp/customos-picom.log 2>/dev/null
-  sleep 6
-  if /usr/local/bin/customos-cm-check; then
-    LOG "compositor up via picom fallback"
-  else
-    LOG "compositor still absent after picom fallback; starting panel anyway (opaque look)"
-  fi
-fi
-
-# native panel IMAGE background ALWAYS: xfce4-panel pushes it into external plugin plugs
-# (whiskermenu/systray/xkb/genmon are GtkPlug processes; CSS alpha cannot cross, they paint
-# their own dark theme bg without it). The approved taskbar look is a static gradient anyway.
-if true; then
-  ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
-  # native panel IMAGE background: xfce4-panel pushes it to external plugin plugs (CSS cannot cross into plugin processes)
-  mkdir -p "$HOME/.config/customos"
-  /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panelbg 2>/dev/null
-  if [ -f "$HOME/.config/customos/panel-bg.png" ]; then
-    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 2 --create -t uint 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-style -s 2 2>/dev/null
-    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg.png" --create -t string 2>/dev/null || timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg.png" 2>/dev/null
-    LOG "native panel bg image set"
-  fi
-  /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only panel 2>/dev/null
-fi
-
-# Glass vs opaque, decided ONCE from the FINAL compositor state (user decision: the
-# floating rounded glass bar is the default; the square opaque bar is ONLY the
-# no-compositor fallback). Rewrite just the panel block of gtk.css here (fast);
-# running the full theme-color-apply on the boot path is too slow on weak machines
-# and its lock can stall the CI selftest.
-GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
-if /usr/local/bin/customos-cm-check; then
-  PANELCSS="$HOME/.config/customos/panel.css"; LOOK=glass
-else
-  PANELCSS="$HOME/.config/customos/panel-fallback.css"; LOOK=opaque-fallback
-fi
-if [ -f "$PANELCSS" ]; then
-  mkdir -p "$(dirname "$GTKCSS")"
-  if [ -f "$GTKCSS" ]; then
-    sed -i '/customos panel glass: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS"
-    cat "$PANELCSS" >> "$GTKCSS"
-  else
-    cat "$PANELCSS" > "$GTKCSS"
-  fi
-fi
-LOG "gtk.css panel block = $LOOK (final compositor state)"
-
+k=0; while pgrep -x xfce4-panel >/dev/null 2>&1 && [ $k -lt 10 ]; do k=$((k+1)); sleep 1; done
+ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
+/usr/local/bin/customos-panel-native "$ACCENT"
+LOG "native panel color applied ($ACCENT)"
 setsid xfce4-panel >/dev/null 2>&1 &
-LOG "panel started (compositor wait=$i)"
-sleep 6
-# If the compositor vanished while the panel was realizing, the panel window has no
-# RGBA visual (alpha paints black). Wait for the compositor and start the panel once
-# more so every window and plugin plug is born with an alpha channel.
-if ! /usr/local/bin/customos-cm-check; then
-  LOG "compositor lost after panel start; waiting for it and restarting panel"
-  j=0
-  while [ $j -lt 30 ]; do /usr/local/bin/customos-cm-check && break; j=$((j+1)); sleep 1; done
-  xfce4-panel -q 2>/dev/null
-  k=0; while pgrep -x xfce4-panel >/dev/null 2>&1 && [ $k -lt 10 ]; do k=$((k+1)); sleep 1; done
-  setsid xfce4-panel >/dev/null 2>&1 &
-  LOG "panel restarted after compositor returned (wait=${j}s)"
-fi
-# systray items: flat (transparent) buttons, not dark squares
+LOG "panel started"
+sleep 5
 timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false --create -t bool 2>/dev/null \
   || timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false 2>/dev/null
-# Opaque full-window bar bake (the robust form of the approved recess look):
-# one 74px-tall image = wallpaper pixels where the bar reads transparent + the
-# accent glass body + the orb dip. No alpha anywhere, so the bar renders
-# identically with or without a compositor (llvmpipe / old hardware / VMs),
-# and external plugs get the same image pushed natively (works on RGB plugs).
-# Re-rendered on accent/wallpaper change by theme-color-apply, so it never goes stale.
-SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}')
-SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}')
-SW=${SW:-1280}; SH=${SH:-800}
-ORBXY=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
-ORBX=$(echo "$ORBXY" | awk '{print $1}')
-ORBY=$(echo "$ORBXY" | awk '{print $2}')
-case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 548) / 2 + 36 )) ;; esac
-case "$ORBY" in ''|*[!0-9]*) ORBY=$(( SH - 30 )) ;; esac
-WALLP=$(timeout 10 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
-[ -f "$WALLP" ] || WALLP=/usr/share/backgrounds/customos/wallpaper-default.png
-if /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only fullbake --notch-x "$ORBX" --orb-y "$ORBY" --screen "${SW}x${SH}" --wall "$WALLP" 2>/dev/null    && [ -f "$HOME/.config/customos/panel-full.png" ] && [ -f "$HOME/.config/customos/panel-full.css" ]; then
-  GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
-  sed -i '/customos panel glass: generated/,$d; /customos panel notch: generated/,$d; /customos panel fullbake: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS" 2>/dev/null
-  cat "$HOME/.config/customos/panel-full.css" >> "$GTKCSS"
-  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
-  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-full.png" 2>/dev/null
-  LOG "fullbake bar applied (orb=$ORBX,$ORBY screen=${SW}x${SH})"
-else
-  LOG "fullbake render failed; keeping interim bar"
-fi
-
-# floating rounded credit pill (matches approved mockup); relaunch after panel so it maps on top
+# credit pill sits on the bar's top edge; relaunch after the panel so it maps on top
 pkill -f customos-credit-pill 2>/dev/null
 setsid /usr/local/bin/customos-credit-pill >/dev/null 2>&1 &
 LOG "credit pill launched"
