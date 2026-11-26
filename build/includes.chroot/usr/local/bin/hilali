@@ -9,7 +9,7 @@ try:
     gi.require_version("WebKit2", "4.1")
 except ValueError:
     gi.require_version("WebKit2", "4.0")
-from gi.repository import Gtk, Gdk, GLib, Gio, WebKit2, Pango
+from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Gio, WebKit2, Pango
 
 APP = "Hilali"
 NAME_AR = "هلالي"
@@ -133,6 +133,7 @@ class Tab:
         s.set_property("enable-site-specific-quirks", True)
         self.view.connect("notify::title", self.on_title)
         self.view.connect("notify::uri", self.on_uri)
+        self.view.connect("notify::favicon", self.on_favicon)
         self.view.connect("notify::estimated-load-progress", self.on_progress)
         self.view.connect("decide-policy", self.on_policy)
         self.view.connect("load-failed", self.on_load_failed)
@@ -147,7 +148,9 @@ class Tab:
         close = Gtk.Button.new_from_icon_name("window-close-symbolic", Gtk.IconSize.MENU)
         close.set_relief(Gtk.ReliefStyle.NONE)
         close.connect("clicked", lambda *_: win.close_tab(self))
+        self.icon = Gtk.Image()
         box = Gtk.Box(spacing=4)
+        box.pack_start(self.icon, False, False, 0)
         box.pack_start(self.label, True, True, 0)
         box.pack_start(close, False, False, 0)
         box.show_all()
@@ -173,6 +176,17 @@ class Tab:
         self.label.set_text(t)
         if self.win.current() is self:
             self.win.set_title(t + " - " + NAME_AR)
+
+    def on_favicon(self, *_):
+        try:
+            sf = self.view.get_favicon()
+            if sf is None:
+                self.icon.clear(); return
+            pb = Gdk.pixbuf_get_from_surface(sf, 0, 0, sf.get_width(), sf.get_height())
+            if pb is not None:
+                self.icon.set_from_pixbuf(pb.scale_simple(16, 16, GdkPixbuf.InterpType.BILINEAR))
+        except Exception as e:
+            print("favicon:", e, file=sys.stderr)
 
     def on_uri(self, *_):
         if self.win.current() is self:
@@ -303,6 +317,10 @@ class Window(Gtk.Window):
             os.makedirs(DATA, exist_ok=True)
             dm = WebKit2.WebsiteDataManager(base_data_directory=DATA, base_cache_directory=os.path.join(DATA, "cache"))
             self.ctx = WebKit2.WebContext.new_with_website_data_manager(dm)
+            try:
+                self.ctx.set_favicon_database_directory(os.path.join(DATA, "favicons"))
+            except Exception as e:
+                print("favicon db:", e, file=sys.stderr)
         self.ctx.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
         try:
             self.ctx.get_cookie_manager().set_accept_policy(WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY)
@@ -494,6 +512,8 @@ class Window(Gtk.Window):
             return
         h = _jload("history.json", [])
         import time
+        if h and h[-1].get("url") == u and int(time.time()) - h[-1].get("t", 0) < 10:
+            self.update_star(); return  # same page finished twice (redirect/reload event): one entry
         h.append({"url": u, "title": tab.view.get_title() or u, "t": int(time.time())})
         _jsave("history.json", h[-2000:])
         self.update_star()
@@ -651,7 +671,7 @@ class App(Gtk.Application):
         for a in args:  # hidden test hook: --show=settings|bookmarks|history opens that dialog after load
             if a.startswith("--show="):
                 what = a.split("=", 1)[1]
-                fn = {"settings": w.settings_dialog, "bookmarks": w.show_bookmarks, "history": w.show_history}.get(what)
+                fn = {"settings": w.settings_dialog, "bookmarks": w.show_bookmarks, "history": w.show_history, "clear": (lambda: (w.clear_data(), w.show_history()))}.get(what)
                 if fn: GLib.timeout_add(3000, lambda f=fn: (f(), False)[1])
         return 0
 
