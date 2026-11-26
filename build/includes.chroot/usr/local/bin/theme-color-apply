@@ -29,6 +29,10 @@ for v in 3.0 4.0; do
 @define-color accent_fg_color $FG;
 selection { background-color: rgba($R,$G,$B,.35); }
 *:selected { background-color: rgba($R,$G,$B,.35); }
+/* file-view content area: FIXED #7b92ab in every theme (user 3:28pm). Do not derive from the accent. */
+iconview, iconview.view { background-color: #7b92ab; color: #0b1a2a; }
+iconview:selected, iconview.view:selected { background-color: rgb($R,$G,$B); color: $FG; }
+iconview:hover { background-color: #8aa0b7; }
 CSS
     if [ "$v" = "3.0" ]; then
       # customos-cm-check (python-xlib selection owner) is reliable with picom v10+;
