@@ -46,7 +46,7 @@ def put(obj, m):
 
 # world: soft sky gradient
 w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True
-bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = hexc(P["sky"]); bg.inputs[1].default_value = 1.1
+bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = hexc(P["sky"]); bg.inputs[1].default_value = 0.7
 
 # floor
 bpy.ops.mesh.primitive_plane_add(size=80, location=(0, 0, 0))
@@ -91,10 +91,14 @@ else:  # waves
     sphere(-2.2, 1.6, 1.0, mat(P["b"], 0.3)); sphere(1.4, 2.4, 1.4, glass(P["a"])); sphere(3.6, 0.6, 0.7, mat(P["c"], 0.15, 0.9)); sphere(-0.6, -0.4, 0.45, glass(P["b"]))
 
 # lights + camera
-bpy.ops.object.light_add(type="AREA", location=(-5, -6, 9)); a = bpy.context.active_object; a.data.energy = 1800; a.data.size = 8
-bpy.ops.object.light_add(type="AREA", location=(6, -3, 5)); a2 = bpy.context.active_object; a2.data.energy = 500; a2.data.size = 6
+bpy.ops.object.light_add(type="AREA", location=(-5, -6, 9)); a = bpy.context.active_object; a.data.energy = 700; a.data.size = 8
+bpy.ops.object.light_add(type="AREA", location=(6, -3, 5)); a2 = bpy.context.active_object; a2.data.energy = 200; a2.data.size = 6
 bpy.ops.object.camera_add(location=(0, -9.5, 3.0), rotation=(math.radians(76), 0, 0)); cam = bpy.context.active_object
 cam.data.lens = 42; cam.data.dof.use_dof = True; cam.data.dof.focus_distance = 11; cam.data.dof.aperture_fstop = 8
 sc.camera = cam
-sc.view_settings.view_transform = "Standard"
+try:
+    sc.view_settings.view_transform = "AgX"
+except Exception:
+    sc.view_settings.view_transform = "Filmic"
+sc.view_settings.look = "None"; sc.view_settings.exposure = -0.3
 bpy.ops.render.render(write_still=True)
