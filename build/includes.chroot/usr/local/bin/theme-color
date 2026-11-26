@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Theme Color - single window: color wheel + presets together, like Windows
 personalization. Any color on the wheel applies too (Apply button)."""
-import subprocess
+import subprocess, math, colorsys
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
+import cairo
 
 PRESETS = [
     ("أكوا", "#08e8de"), ("سماوي", "#4fb2f7"), ("ملكي", "#2f6fd0"),
@@ -45,18 +46,14 @@ def apply(hexs):
     status.show()
 
 def on_preset(btn, hexs):
-    c = Gdk.RGBA()
-    c.parse(hexs)
-    chooser.set_rgba(c)
+    wheel.set_hex(hexs)
     apply(hexs)
 
 def on_apply(btn):
-    c = chooser.get_rgba()
-    hexs = "#%02x%02x%02x" % (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
-    apply(hexs)
+    apply(wheel.get_hex())
 
 win = Gtk.Window(title="Theme Color · لون السمة")
-win.set_default_size(560, 700)
+win.set_default_size(520, 800)
 win.set_position(Gtk.WindowPosition.CENTER)
 win.connect("destroy", Gtk.main_quit)
 
@@ -68,13 +65,134 @@ head = Gtk.Label()
 head.set_markup('<span size="large" weight="bold">لون السمة · Theme Color</span>')
 box.pack_start(head, False, False, 0)
 
-chooser = Gtk.ColorChooserWidget()
-chooser.set_use_alpha(False)
-chooser.set_property("show-editor", True)   # hex/RGB editor included
-_init = Gdk.RGBA()
-_init.parse("#08e8de")
-chooser.set_rgba(_init)
-box.pack_start(chooser, True, True, 0)
+
+class Wheel(Gtk.DrawingArea):
+    """Filled colour disc: hue = angle, saturation = distance from centre (white in the middle),
+    fine cell lines; brightness is a slider."""
+    SIZE = 340
+    def __init__(self, on_change):
+        super().__init__()
+        self.h, self.s, self.v = 0.5, 0.7, 1.0
+        self.on_change = on_change
+        self.drag = False
+        self.set_size_request(self.SIZE, self.SIZE)
+        self.set_halign(Gtk.Align.CENTER)
+        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
+        self.cx = self.cy = self.SIZE / 2
+        self.R = self.SIZE / 2 - 4
+        self.disc = self._make_disc()
+        self.connect("draw", self.on_draw)
+        self.connect("button-press-event", self.on_press)
+        self.connect("motion-notify-event", self.on_move)
+        self.connect("button-release-event", lambda w, e: setattr(self, "drag", False))
+    def _make_disc(self):
+        n = self.SIZE
+        surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, n, n)
+        buf = surf.get_data(); stride = surf.get_stride()
+        for y in range(n):
+            for x in range(n):
+                dx, dy = x + 0.5 - self.cx, y + 0.5 - self.cy
+                d = math.hypot(dx, dy)
+                if d <= self.R:
+                    a = 1.0 if d < self.R - 1 else max(0.0, min(1.0, self.R - d))
+                    hh = (math.atan2(dy, dx) / (2 * math.pi)) % 1.0
+                    r, g, b = colorsys.hsv_to_rgb(hh, min(1.0, d / self.R), 1)
+                    o = y * stride + x * 4
+                    buf[o] = int(b * 255 * a); buf[o + 1] = int(g * 255 * a)
+                    buf[o + 2] = int(r * 255 * a); buf[o + 3] = int(a * 255)
+        surf.mark_dirty()
+        return surf
+    def on_draw(self, w, cr):
+        cr.set_source_surface(self.disc, 0, 0); cr.paint()
+        if self.v < 1:   # brightness: darken towards black
+            cr.arc(self.cx, self.cy, self.R, 0, 2 * math.pi)
+            cr.set_source_rgba(0, 0, 0, 1 - self.v); cr.fill()
+        cr.set_source_rgba(1, 1, 1, 0.55); cr.set_line_width(0.7)
+        for i in range(24):
+            ang = i * 2 * math.pi / 24
+            cr.move_to(self.cx + 0.1 * self.R * math.cos(ang), self.cy + 0.1 * self.R * math.sin(ang))
+            cr.line_to(self.cx + self.R * math.cos(ang), self.cy + self.R * math.sin(ang)); cr.stroke()
+        for k in range(1, 9):
+            cr.arc(self.cx, self.cy, self.R * (0.1 + 0.9 * k / 8), 0, 2 * math.pi); cr.stroke()
+        ang = self.h * 2 * math.pi; rr = self.s * self.R
+        mx, my = self.cx + rr * math.cos(ang), self.cy + rr * math.sin(ang)
+        cr.arc(mx, my, 9, 0, 2 * math.pi); cr.set_source_rgb(1, 1, 1); cr.set_line_width(3); cr.stroke_preserve()
+        cr.set_source_rgb(0, 0, 0); cr.set_line_width(1); cr.stroke()
+    def _update(self, x, y):
+        dx, dy = x - self.cx, y - self.cy
+        d = math.hypot(dx, dy)
+        self.h = (math.atan2(dy, dx) / (2 * math.pi)) % 1.0
+        self.s = min(1.0, d / self.R)
+        self.queue_draw(); self.on_change(self.get_hex())
+    def on_press(self, w, e):
+        if math.hypot(e.x - self.cx, e.y - self.cy) <= self.R + 6:
+            self.drag = True; self._update(e.x, e.y)
+        return True
+    def on_move(self, w, e):
+        if self.drag and (e.state & Gdk.ModifierType.BUTTON1_MASK): self._update(e.x, e.y)
+        return True
+    def get_hex(self):
+        r, g, b = colorsys.hsv_to_rgb(self.h, self.s, self.v)
+        return "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
+    def set_v(self, v):
+        self.v = v; self.queue_draw(); self.on_change(self.get_hex())
+    def set_hex(self, hexs, notify=True):
+        try:
+            r, g, b = int(hexs[1:3], 16) / 255, int(hexs[3:5], 16) / 255, int(hexs[5:7], 16) / 255
+        except ValueError:
+            return
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        if s > 0.02 and v > 0.02: self.h = h
+        self.s, self.v = s, max(v, 0.0)
+        if "bright" in globals(): bright.set_value(self.v * 100)
+        self.queue_draw()
+        if notify: self.on_change(self.get_hex())
+
+def current_accent():
+    try:
+        h = open(CFG + "/accent").read().strip()
+        if len(h) == 7 and h[0] == "#": return h
+    except OSError:
+        pass
+    return "#08e8de"
+
+swatch = Gtk.DrawingArea()
+swatch.set_size_request(70, 34)
+entry = Gtk.Entry()
+entry.set_max_length(7); entry.set_width_chars(9)
+_busy = [False]
+def on_wheel_change(hexs):
+    _busy[0] = True
+    entry.set_text(hexs.upper())
+    _busy[0] = False
+    swatch.queue_draw()
+def draw_swatch(w, cr):
+    hexs = wheel.get_hex()
+    cr.set_source_rgb(int(hexs[1:3], 16) / 255, int(hexs[3:5], 16) / 255, int(hexs[5:7], 16) / 255)
+    cr.rectangle(0, 0, 70, 34); cr.fill()
+swatch.connect("draw", draw_swatch)
+def on_entry(e):
+    if _busy[0]: return
+    t = e.get_text().strip()
+    if not t.startswith("#"): t = "#" + t
+    if len(t) == 7: wheel.set_hex(t.lower(), notify=False); swatch.queue_draw()
+entry.connect("changed", on_entry)
+entry.connect("activate", lambda e: apply(wheel.get_hex()))
+
+wheel = Wheel(on_wheel_change)
+top = Gtk.Box(spacing=10); top.set_halign(Gtk.Align.CENTER)
+top.pack_start(swatch, False, False, 0); top.pack_start(entry, False, False, 0)
+box.pack_start(top, False, False, 0)
+box.pack_start(wheel, False, False, 0)
+bl = Gtk.Box(spacing=8); bl.set_halign(Gtk.Align.CENTER)
+bl.pack_start(Gtk.Label(label="السطوع · Brightness"), False, False, 0)
+bright = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
+bright.set_size_request(220, -1); bright.set_draw_value(False)
+bright.connect("value-changed", lambda sc: wheel.set_v(sc.get_value() / 100.0))
+bl.pack_start(bright, False, False, 0)
+box.pack_start(bl, False, False, 0)
+wheel.set_hex(current_accent(), notify=False)
+on_wheel_change(wheel.get_hex())
 
 apply_btn = Gtk.Button(label="تطبيق اللون المختار من العجلة · Apply wheel color")
 apply_btn.get_style_context().add_class("suggested-action")
