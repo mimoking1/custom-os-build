@@ -56,7 +56,19 @@ class Pill(Gtk.Window):
             top = int(wa[1]) + int(wa[3])
         except Exception:
             pass
-        self.move(mon.width - self.w - 4, top - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
+        right = mon.width - 4  # fallback
+        try:  # right end of the bar itself: pill must end exactly there
+            tree = subprocess.check_output(["xwininfo", "-root", "-tree"], text=True, timeout=5)
+            import re
+            for ln in tree.splitlines():
+                if '"xfce4-panel"' in ln:
+                    m = re.search(r"\s(\d+)x(\d+)\+(-?\d+)\+(-?\d+)\s+\+(-?\d+)\+(-?\d+)", ln)
+                    if m and int(m.group(1)) > mon.width // 2:
+                        right = int(m.group(5)) + int(m.group(1))
+                        break
+        except Exception:
+            pass
+        self.move(right - self.w, top - self.h)  # glass top is ~58px above the screen bottom: bottom edge kisses the glass top (approved old layout)
         win = self.get_window()
         if win is not None:
             win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through
