@@ -77,3 +77,9 @@ fi
 update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/hilal-browser 200 || true
 update-alternatives --set x-www-browser /usr/local/bin/hilal-browser || true
 update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/local/bin/hilal-browser 200 || true
+
+# no keyring password prompt on first Brave/Chromium start (live USB has no login keyring)
+for d in /usr/share/applications/brave-browser.desktop /usr/share/applications/chromium.desktop; do
+  [ -f "$d" ] && sed -i -E 's#^(Exec=[^ ]*(brave-browser-stable|brave-browser|chromium))( |$)#\1 --password-store=basic\3#' "$d" || true
+done
+true
