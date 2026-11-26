@@ -4,3 +4,7 @@
 @define-color accent_fg_color #ffffff;
 selection { background-color: rgba(47,191,169,.35); }
 *:selected { background-color: rgba(47,191,169,.35); }
+/* file-view content area behind icons: user-picked #7b92ab (3:22pm); sidebar and chrome stay dark */
+iconview, iconview.view { background-color: #7b92ab; color: #0b1a2a; }
+iconview:selected, iconview.view:selected { background-color: #4fb2f7; color: #08121c; }
+iconview:hover { background-color: #8aa0b7; }
