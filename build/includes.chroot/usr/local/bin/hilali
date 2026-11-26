@@ -43,6 +43,27 @@ notebook tab { padding: 4px 6px; }
 """
 
 
+def _jload(name, default):
+    try:
+        return json.load(open(os.path.join(CONF, name)))
+    except Exception:
+        return default
+
+
+def _jsave(name, data):
+    try:
+        os.makedirs(CONF, exist_ok=True)
+        tmp = os.path.join(CONF, name + ".tmp")
+        json.dump(data, open(tmp, "w"), ensure_ascii=False)
+        os.replace(tmp, os.path.join(CONF, name))
+    except Exception as e:
+        print("save:", name, e, file=sys.stderr)
+
+
+ENGINES = {"DuckDuckGo": "https://duckduckgo.com/?q=%s", "Google": "https://www.google.com/search?q=%s",
+           "Bing": "https://www.bing.com/search?q=%s", "Startpage": "https://www.startpage.com/do/search?q=%s"}
+
+
 def tahmeel_alive():
     """Bridge is alive if anything answers on the port (even an HTTP error)."""
     import urllib.request, urllib.error
@@ -74,7 +95,8 @@ def normalize(text):
         return t
     if " " not in t and ("." in t or t.startswith("localhost")) and not t.endswith("."):
         return "https://" + t
-    return SEARCH % urllib.parse.quote_plus(t)
+    eng = _jload("settings.json", {}).get("engine", "DuckDuckGo")
+    return ENGINES.get(eng, SEARCH) % urllib.parse.quote_plus(t)
 
 
 def is_local(host):
@@ -101,6 +123,7 @@ class Tab:
         self.view.connect("load-changed", self.on_load_changed)
         self.view.connect("resource-load-started", self.on_resource)
         self.view.connect("create", self.on_create)
+        self.view.connect("permission-request", self.on_perm)
         self.label = Gtk.Label(label=NAME_AR)
         self.label.set_ellipsize(Pango.EllipsizeMode.END)
         self.label.set_width_chars(16)
@@ -114,7 +137,16 @@ class Tab:
         box.show_all()
         self.tab_box = box
         self.view.show()
-        self.view.load_uri(normalize(uri) if uri else HOME)
+        self.view.load_uri(normalize(uri) if uri else (_jload("settings.json", {}).get("home") or HOME))
+
+    def on_perm(self, view, req):
+        if isinstance(req, (WebKit2.GeolocationPermissionRequest, WebKit2.NotificationPermissionRequest)):
+            req.deny(); return True
+        d = Gtk.MessageDialog(transient_for=self.win, message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.YES_NO,
+                              text="السماح للموقع باستخدام الكاميرا أو الميكروفون؟ / Allow this site to use the camera or microphone?")
+        r = d.run(); d.destroy()
+        req.allow() if r == Gtk.ResponseType.YES else req.deny()
+        return True
 
     def on_create(self, view, nav):
         t = self.win.new_tab()
@@ -139,6 +171,7 @@ class Tab:
             self.blocked = 0
             self.win.update_shield()
         if ev == WebKit2.LoadEvent.FINISHED:
+            self.win.record_history(self)
             self.win.progress.set_fraction(0)
             self.win.update_nav()
             self.count_blocked()
@@ -205,7 +238,7 @@ class Window(Gtk.Window):
         super().__init__(title=APP)
         self.app = app
         self.private = private
-        self.https_first = True
+        self.https_first = _jload("settings.json", {}).get("https", True)
         self.set_default_size(1100, 720)
         self.set_icon_name("hilal-browser")
         self.set_wmclass("hilali", "Hilali")
@@ -234,7 +267,7 @@ class Window(Gtk.Window):
         self.back = self._btn("go-previous-symbolic", lambda *_: self.current().view.go_back())
         self.fwd = self._btn("go-next-symbolic", lambda *_: self.current().view.go_forward())
         self.reload = self._btn("view-refresh-symbolic", lambda *_: self.current().view.reload())
-        home = self._btn("go-home-symbolic", lambda *_: self.current().view.load_uri(HOME))
+        home = self._btn("go-home-symbolic", lambda *_: self.current().view.load_uri(_jload("settings.json", {}).get("home") or HOME))
         for b in (self.back, self.fwd, self.reload, home):
             bar.pack_start(b, False, False, 0)
         self.entry = Gtk.Entry()
@@ -245,12 +278,21 @@ class Window(Gtk.Window):
         self.shield.get_style_context().add_class("hilali-shield")
         self.shield.set_tooltip_text("Blocked ads and trackers on this page")
         bar.pack_start(self.shield, False, False, 0)
+        self.star = self._btn("non-starred-symbolic", lambda *_: self.toggle_bookmark())
+        self.star.set_tooltip_text("Bookmark (Ctrl+D)")
+        bar.pack_start(self.star, False, False, 0)
         newtab = self._btn("tab-new-symbolic", lambda *_: self.new_tab())
         bar.pack_start(newtab, False, False, 0)
         menu = Gtk.MenuButton()
         menu.set_image(Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.MENU))
         m = Gtk.Menu()
-        for label, cb in (("نافذة خاصة / Private window", lambda *_: self.app.open_window(True)),
+        for label, cb in (("الإشارات المرجعية / Bookmarks", lambda *_: self.show_bookmarks()),
+                          ("السجل / History", lambda *_: self.show_history()),
+                          ("بحث في الصفحة / Find (Ctrl+F)", lambda *_: self.find_open()),
+                          ("طباعة / Print (Ctrl+P)", lambda *_: self.do_print()),
+                          ("مسح بيانات التصفح / Clear browsing data", lambda *_: self.clear_data()),
+                          ("الإعدادات / Settings", lambda *_: self.settings_dialog()),
+                          ("نافذة خاصة / Private window", lambda *_: self.app.open_window(True)),
                           ("نافذة جديدة / New window", lambda *_: self.app.open_window(False)),
                           ("حول هلالي / About", lambda *_: self.about())):
             it = Gtk.MenuItem(label=label); it.connect("activate", cb); m.append(it)
@@ -260,6 +302,18 @@ class Window(Gtk.Window):
         self.progress = Gtk.ProgressBar()
         self.progress.set_size_request(-1, 2)
         vb.pack_start(self.progress, False, False, 0)
+        self.findbar = Gtk.Box(spacing=6)
+        self.findbar.get_style_context().add_class("hilali-bar")
+        self.fentry = Gtk.SearchEntry()
+        self.fentry.connect("search-changed", lambda e: self.find_run(e.get_text()))
+        self.fentry.connect("activate", lambda e: self.find_next(True))
+        fprev = self._btn("go-up-symbolic", lambda *_: self.find_next(False))
+        fnext = self._btn("go-down-symbolic", lambda *_: self.find_next(True))
+        fclose = self._btn("window-close-symbolic", lambda *_: self.find_close())
+        for w_ in (self.fentry, fprev, fnext, fclose):
+            self.findbar.pack_start(w_, w_ is self.fentry, w_ is self.fentry, 0)
+        self.findbar.set_no_show_all(True)
+        vb.pack_start(self.findbar, False, False, 0)
         self.nb = Gtk.Notebook()
         self.nb.set_scrollable(True)
         self.nb.connect("switch-page", self.on_switch)
@@ -359,6 +413,7 @@ class Window(Gtk.Window):
             self.set_title((t.view.get_title() or APP) + " - " + NAME_AR)
             self.update_shield(t)
             self.update_nav()
+            self.update_star()
 
     def update_nav(self):
         t = self.current()
@@ -371,9 +426,144 @@ class Window(Gtk.Window):
         if t is not None and t is self.current():
             self.shield.set_label("\u0645\u062d\u0645\u064a %d" % t.blocked)
 
+    # ---- bookmarks / history / find / zoom / print / settings
+    def bookmarks(self):
+        return [] if self.private else _jload("bookmarks.json", [])
+
+    def toggle_bookmark(self):
+        t = self.current()
+        if not t or self.private:
+            return
+        u = t.view.get_uri() or ""
+        bm = self.bookmarks()
+        if any(b["url"] == u for b in bm):
+            bm = [b for b in bm if b["url"] != u]
+        else:
+            bm.append({"url": u, "title": t.view.get_title() or u})
+        _jsave("bookmarks.json", bm)
+        self.update_star()
+
+    def update_star(self):
+        t = self.current()
+        if t:
+            on = any(b["url"] == (t.view.get_uri() or "") for b in self.bookmarks())
+            self.star.set_image(Gtk.Image.new_from_icon_name("starred-symbolic" if on else "non-starred-symbolic", Gtk.IconSize.MENU))
+
+    def record_history(self, tab):
+        u = tab.view.get_uri() or ""
+        if self.private or not u.startswith("http"):
+            return
+        h = _jload("history.json", [])
+        import time
+        h.append({"url": u, "title": tab.view.get_title() or u, "t": int(time.time())})
+        _jsave("history.json", h[-2000:])
+        self.update_star()
+
+    def _list_dialog(self, title, items, removable=None):
+        d = Gtk.Dialog(title=title, transient_for=self)
+        d.set_default_size(560, 460)
+        sw = Gtk.ScrolledWindow(); sw.set_vexpand(True)
+        lb = Gtk.ListBox()
+        for it in items:
+            row = Gtk.ListBoxRow(); row.url = it["url"]
+            lab = Gtk.Label(label=(it.get("title") or it["url"])[:80] + "\n" + it["url"][:90], xalign=0)
+            lab.set_margin_top(4); lab.set_margin_bottom(4); lab.set_margin_start(8)
+            row.add(lab); lb.add(row)
+        def act(box, row):
+            d.destroy(); self.current().view.load_uri(row.url)
+        lb.connect("row-activated", act)
+        sw.add(lb); d.get_content_area().pack_start(sw, True, True, 0)
+        if not items:
+            lb.add(Gtk.Label(label="(فارغ / empty)"))
+        d.add_button("إغلاق / Close", Gtk.ResponseType.CLOSE)
+        d.show_all(); d.run(); d.destroy()
+
+    def show_bookmarks(self):
+        self._list_dialog("الإشارات المرجعية / Bookmarks", list(reversed(self.bookmarks())))
+
+    def show_history(self):
+        self._list_dialog("السجل / History", list(reversed(_jload("history.json", []) if not self.private else [])))
+
+    def clear_data(self):
+        _jsave("history.json", [])
+        try:
+            self.ctx.get_website_data_manager().clear(WebKit2.WebsiteDataTypes.ALL, 0, None, None, None)
+        except Exception as e:
+            print("clear:", e, file=sys.stderr)
+
+    def find_open(self):
+        self.findbar.set_no_show_all(False); self.findbar.show_all(); self.fentry.grab_focus()
+
+    def find_close(self):
+        c = self.current()
+        if c: c.view.get_find_controller().search_finish()
+        self.findbar.hide()
+
+    def find_run(self, text):
+        c = self.current()
+        if c and text:
+            c.view.get_find_controller().search(text, WebKit2.FindOptions.CASE_INSENSITIVE | WebKit2.FindOptions.WRAP_AROUND, 200)
+        elif c:
+            c.view.get_find_controller().search_finish()
+
+    def find_next(self, fwd):
+        c = self.current()
+        if c:
+            fc = c.view.get_find_controller()
+            fc.search_next() if fwd else fc.search_previous()
+
+    def zoom(self, d):
+        c = self.current()
+        if c:
+            c.view.set_zoom_level(1.0 if d == 0 else max(0.3, min(5.0, c.view.get_zoom_level() + d)))
+
+    def do_print(self):
+        c = self.current()
+        if c:
+            WebKit2.PrintOperation.new(c.view).run_dialog(self)
+
+    def settings_dialog(self):
+        st = _jload("settings.json", {})
+        d = Gtk.Dialog(title="الإعدادات / Settings", transient_for=self)
+        box = d.get_content_area(); box.set_spacing(8); box.set_border_width(12)
+        box.pack_start(Gtk.Label(label="محرك البحث / Search engine", xalign=0), False, False, 0)
+        cb = Gtk.ComboBoxText()
+        for i, n in enumerate(ENGINES):
+            cb.append_text(n)
+            if n == st.get("engine", "DuckDuckGo"): cb.set_active(i)
+        box.pack_start(cb, False, False, 0)
+        hs = Gtk.CheckButton(label="HTTPS أولاً / HTTPS-first"); hs.set_active(st.get("https", True))
+        box.pack_start(hs, False, False, 0)
+        box.pack_start(Gtk.Label(label="الصفحة الرئيسية / Home page URL", xalign=0), False, False, 0)
+        he = Gtk.Entry(); he.set_text(st.get("home", "")); he.set_placeholder_text(HOME)
+        box.pack_start(he, False, False, 0)
+        note = Gtk.Label(label="حظر الإعلانات والمتتبعات وملفات تعريف الارتباط لطرف ثالث دائماً مفعّل.\nAds, trackers and third-party cookies are always blocked.", xalign=0)
+        box.pack_start(note, False, False, 0)
+        d.add_button("حفظ / Save", Gtk.ResponseType.OK); d.add_button("إلغاء / Cancel", Gtk.ResponseType.CANCEL)
+        d.show_all()
+        if d.run() == Gtk.ResponseType.OK:
+            st.update({"engine": cb.get_active_text() or "DuckDuckGo", "https": hs.get_active(), "home": he.get_text().strip()})
+            _jsave("settings.json", st)
+            self.https_first = st["https"]
+        d.destroy()
+
     def on_key(self, w, ev):
         ctrl = ev.state & Gdk.ModifierType.CONTROL_MASK
         k = Gdk.keyval_name(ev.keyval)
+        if ctrl and k == "d": self.toggle_bookmark(); return True
+        if ctrl and k == "h": self.show_history(); return True
+        if ctrl and k == "f": self.find_open(); return True
+        if ctrl and k == "p": self.do_print(); return True
+        if ctrl and k in ("plus", "equal"): self.zoom(0.1); return True
+        if ctrl and k == "minus": self.zoom(-0.1); return True
+        if ctrl and k == "0": self.zoom(0); return True
+        if k == "Escape" and self.findbar.get_visible(): self.find_close(); return True
+        if k == "F5": self.current().view.reload(); return True
+        if k == "F11":
+            (self.unfullscreen if self.get_window().get_state() & Gdk.WindowState.FULLSCREEN else self.fullscreen)(); return True
+        if ctrl and k == "Tab": self.nb.set_current_page((self.nb.get_current_page() + 1) % max(1, len(self.tabs))); return True
+        if (ev.state & Gdk.ModifierType.MOD1_MASK) and k == "Left": self.current().view.go_back(); return True
+        if (ev.state & Gdk.ModifierType.MOD1_MASK) and k == "Right": self.current().view.go_forward(); return True
         if ctrl and k == "t": self.new_tab(); return True
         if ctrl and k == "w": self.close_tab(self.current()); return True
         if ctrl and k == "l": self.entry.grab_focus(); return True
