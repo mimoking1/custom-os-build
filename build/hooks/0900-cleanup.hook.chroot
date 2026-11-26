@@ -16,6 +16,7 @@ for d in /usr/share/locale/*; do
 done
 find /usr/share -name '*.pyc' -delete 2>/dev/null
 find /usr -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null
+rm -rf /var/lib/apt/lists/* /var/cache/apt/*.bin /var/cache/debconf/*-old /var/lib/dpkg/*-old 2>/dev/null
 rm -f /var/lib/systemd/random-seed
 exit 0
 # no automatic updates: disable every apt timer and the update notifier

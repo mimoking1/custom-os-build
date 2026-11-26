@@ -212,6 +212,9 @@ python3 -c "
 from PIL import Image;import glob,sys
 bad=[f for f in glob.glob('$G/wall-*.jpg') if Image.open(f).size[0]<3800]
 sys.exit(1 if bad else 0)" && R wallpapers-4k PASS || R wallpapers-4k FAIL
+for u in fwupd-refresh.timer avahi-daemon.service ModemManager.service cups-browsed.service; do [ "$(systemctl is-enabled $u 2>&1)" = masked ] && R mask-$u PASS || R mask-$u FAIL; done
+R idle-ram "$(free -m | awk '/Mem:/{print "used="$3"MB avail="$7"MB"}')"
+R failed-units "$(systemctl --failed --no-legend | wc -l)"
 systemctl is-enabled apt-daily.timer apt-daily-upgrade.timer 2>&1 | grep -q enabled && R apt-timers-masked FAIL || R apt-timers-masked PASS
 ls /usr/share/customos/sounds/{startup,shutdown,usb-plug,usb-unplug}.wav >/dev/null 2>&1 && R sound-files PASS || R sound-files FAIL
 P=none; for p in paplay pw-play aplay; do command -v $p >/dev/null 2>&1 && { P=$p; break; }; done; [ "$P" != none ] && R sound-player PASS\($P\) || R sound-player FAIL

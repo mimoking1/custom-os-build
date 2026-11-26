@@ -142,7 +142,8 @@ if [ "$VARIANT" = "live" ]; then
 fi
 # no automatic updates in ANY edition: mask the apt timers/services with /dev/null links
 mkdir -p config/includes.chroot/etc/systemd/system
-for u in apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; do
+# also mask phone-home / unneeded background items: LVFS firmware refresh, mDNS, modem, printer auto-discovery, kdeconnect autostart
+for u in apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service fwupd-refresh.timer fwupd-refresh.service avahi-daemon.service avahi-daemon.socket ModemManager.service cups-browsed.service; do
   ln -sf /dev/null "config/includes.chroot/etc/systemd/system/$u"
 done
 # our fonts: runner needs them for artwork rendering, the ISO ships them
