@@ -220,6 +220,12 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   BR=$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:48917/ 2>/dev/null); [ -n "$BR" ] && [ "$BR" != 000 ] && R tahmeel-bridge "PASS(http $BR)" || R tahmeel-bridge "FAIL(no answer on 127.0.0.1:48917)"
   [ -f /etc/brave/policies/managed/brave-policy-tahmeel.json ] && R tahmeel-brave-policy-file PASS || R tahmeel-brave-policy-file FAIL
   [ -f /opt/tahmeel/extension/tahmeel.crx ] && R tahmeel-crx PASS || R tahmeel-crx FAIL
+  if command -v brave-browser >/dev/null 2>&1; then
+    timeout 60 brave-browser --headless=new --no-sandbox --password-store=basic --user-data-dir=/tmp/brave-pol --virtual-time-budget=15000 --dump-dom brave://policy >/tmp/brave-policy.html 2>/dev/null
+    grep -aq hccklbcdobhmhkkcmpllgkfemhdlpchk /tmp/brave-policy.html && R brave-policy-page "PASS(extension id in brave://policy)" || R brave-policy-page "FAIL($(wc -c </tmp/brave-policy.html) bytes dom; grep ExtensionInstallForcelist: $(grep -ac ExtensionInstallForcelist /tmp/brave-policy.html))"
+    timeout 60 brave-browser --headless=new --no-sandbox --password-store=basic --user-data-dir=/tmp/brave-pol --virtual-time-budget=15000 --dump-dom brave://extensions >/tmp/brave-ext.html 2>/dev/null
+    R brave-extensions-page "dom $(wc -c </tmp/brave-ext.html) bytes, mentions-id=$(grep -ac hccklbcdobhmhkkcmpllgkfemhdlpchk /tmp/brave-ext.html)"
+  fi
   sleep 10; SHOT 14-tahmeel-native-later
   pkill -f tahmeel
 else R wine-cmd "FAIL(no wine)"; fi
