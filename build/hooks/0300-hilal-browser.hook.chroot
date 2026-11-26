@@ -22,6 +22,8 @@ if [ "$ARCH" = "amd64" ]; then
   "BraveVPNDisabled": true,
   "BraveAIChatEnabled": false,
   "BraveNewsDisabled": true,
+  "BraveP3AEnabled": false,
+  "BraveStatsPingEnabled": false,
   "BraveTalkDisabled": true,
   "TorDisabled": false,
   "HttpsUpgradesEnabled": true,
