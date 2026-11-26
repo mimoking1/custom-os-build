@@ -168,6 +168,9 @@ rsvg-convert -w 1920 -h 1080 /tmp/horizon3d/wallpaper-horizon3d.svg \
 echo "==> Default theme assets (icons, orb, glass panel, wallpaper) for $VARIANT"
 CHR="$(pwd)/config/includes.chroot"
 if [ "$VARIANT" = "live" ]; then ACC="#4fb2f7"; else ACC="#08e8de"; fi
+# default accent of this edition (full = aqua #08e8de, live = sky #4fb2f7): panel-fix, hilali and the theme picker read it
+mkdir -p config/includes.chroot/etc/skel/.config/customos
+printf "%s\n" "$ACC" > config/includes.chroot/etc/skel/.config/customos/accent
 export CUSTOMOS_SRC="$(pwd)/../build/includes.chroot/usr/share/customos/theme"
 export CUSTOMOS_BASE_WALL="$CHR/usr/share/backgrounds/customos/wallpaper-horizon3d.png"
 export CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png"
