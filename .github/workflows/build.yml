@@ -93,7 +93,7 @@ jobs:
           gh release view ci-evidence >/dev/null 2>&1 ||             gh release create ci-evidence --title "CI evidence (rolling)" --notes "Automated evidence upload. Assets prefixed by run id; only the latest run is kept." --latest=false
           # keep only this run's assets
           gh release view ci-evidence --json assets --jq '.assets[].name' | while read a; do
-            case "$a" in ${GITHUB_RUN_ID}-*) ;; *) gh release delete-asset ci-evidence "$a" -y </dev/null || true;; esac
+            case "$a" in ${GITHUB_RUN_ID}-*|barlab-*|wall3d-*) ;; *) gh release delete-asset ci-evidence "$a" -y </dev/null || true;; esac
           done
           mkdir -p /tmp/evidence
           for f in out/boot-test/*.png out/boot-test/serial.log out/boot-test/selftest-results.txt out/SHA256SUMS.txt; do
