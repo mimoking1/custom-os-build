@@ -80,7 +80,8 @@ cp -a ../build/includes.chroot config/
 chmod 755 config/includes.chroot/usr/local/bin/* 2>/dev/null || true
 # Arcanum icon theme (GPL-3.0, https://codeberg.org/StormRosenaa/Arcanum), pinned by sha256, fetched at build time
 echo "==> Arcanum icon theme"
-curl -fsSL -o /tmp/arcanum-blue.tar.xz "https://codeberg.org/StormRosenaa/Arcanum/raw/branch/main/Arcanum%20-%20Blue.tar.xz"
+curl -fsSL --retry 4 --retry-delay 15 --retry-all-errors -o /tmp/arcanum-blue.tar.xz "https://codeberg.org/StormRosenaa/Arcanum/raw/branch/main/Arcanum%20-%20Blue.tar.xz" \
+  || curl -fsSL --retry 3 -o /tmp/arcanum-blue.tar.xz "https://github.com/mimoking1/custom-os-build/releases/download/ci-evidence/arcanum-blue-mirror.tar.xz"
 echo "7bebebe179eb34c6c59e486ed940bda55b6e08bef61462c2ab1a36fc0f68dcbf  /tmp/arcanum-blue.tar.xz" | sha256sum -c -
 mkdir -p config/includes.chroot/usr/share/icons
 tar -xf /tmp/arcanum-blue.tar.xz -C config/includes.chroot/usr/share/icons
