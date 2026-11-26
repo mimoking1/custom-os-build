@@ -5,7 +5,7 @@ on:
       names:
         description: 'space separated scene names'
         required: true
-        default: 'rose violet emerald gold slate coral'
+        default: "dunes orbit terraces towers pillars bubbles"
 permissions:
   contents: write
 jobs:
@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir -p out
           for n in ${{ inputs.names }}; do
-            timeout 900 blender -b -P wall3d/scene.py -- $n out/$n.png > out/$n.log 2>&1 || { echo "FAILED $n"; tail -15 out/$n.log; }
+            timeout 900 blender -b -P wall3d/scene2.py -- $n out/$n.png > out/$n.log 2>&1 || { echo "FAILED $n"; tail -15 out/$n.log; }
             [ -f out/$n.png ] && convert out/$n.png -quality 90 out/wall3d-$n.jpg && ls -la out/wall3d-$n.jpg
           done
       - name: Publish
