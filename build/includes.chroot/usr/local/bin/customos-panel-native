@@ -20,7 +20,7 @@ fi
 set -- $RGB
 # PILL MODE (user reference 2:10pm): inset bar with fully rounded ends and a glossy gradient.
 # Needs a compositor for the transparent corners; without one keep the flat solid bar.
-if xprop -root _NET_WM_CM_S0 2>/dev/null | grep -q "window id"; then
+if true; then
   PILL=$(awk -v r=$1 -v g=$2 -v b=$3 'function c(x){x=int(x*255+0.5);if(x>255)x=255;return x}
     BEGIN{printf "rgba(%d,%d,%d,0.96) 0%%, rgba(%d,%d,%d,0.96) 48%%, rgba(%d,%d,%d,0.96) 100%%",
       c(r+(1-r)*0.55),c(g+(1-g)*0.55),c(b+(1-b)*0.55), c(r+(1-r)*0.12),c(g+(1-g)*0.12),c(b+(1-b)*0.12), c(r*0.82),c(g*0.82),c(b*0.82)}')
