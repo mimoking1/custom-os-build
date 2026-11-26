@@ -5,3 +5,4 @@ Comment=Turn automatic security updates on or off - تفعيل أو إيقاف �
 Exec=security-updates-toggle
 Icon=security-high
 Categories=Settings;
+NoDisplay=true

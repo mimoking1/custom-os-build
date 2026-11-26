@@ -139,11 +139,12 @@ if [ "$VARIANT" = "live" ]; then
     sed -i 's/#08e8de/#4fb2f7/g; s/#52eee7/#83c9f9/g; s/#06aea6/#3b85b9/g' {} +
   sed -i 's/#08e8de #52eee7 #06aea6/#4fb2f7 #83c9f9 #3b85b9/' \
     config/includes.chroot/etc/skel/.config/customos/theme-colors
-  # faster live boot: no apt index refreshes on a read-only USB session
-  mkdir -p config/includes.chroot/etc/systemd/system
-  ln -sf /dev/null config/includes.chroot/etc/systemd/system/apt-daily.timer
-  ln -sf /dev/null config/includes.chroot/etc/systemd/system/apt-daily-upgrade.timer
 fi
+# no automatic updates in ANY edition: mask the apt timers/services with /dev/null links
+mkdir -p config/includes.chroot/etc/systemd/system
+for u in apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; do
+  ln -sf /dev/null "config/includes.chroot/etc/systemd/system/$u"
+done
 # our fonts: runner needs them for artwork rendering, the ISO ships them
 mkdir -p "$HOME/.local/share/fonts"
 cp ../theme/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f > /dev/null 2>&1 || true
