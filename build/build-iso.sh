@@ -93,6 +93,9 @@ rm -f config/includes.chroot/usr/share/icons/Arcanum-Blue/places/scalable/user-h
 python3 ../build/tools/arcanum-extend.py config/includes.chroot/usr/share/icons/Arcanum-Blue | tee /tmp/arcanum-ext.log | tail -3
 cp /tmp/arcanum-ext.log config/includes.chroot/usr/share/customos-arcanum-ext.log
 rm -f /tmp/arcanum-blue.tar.xz
+# Pexels photo wallpapers (private payload, not in the public repo; licence: Pexels, see LICENSING-AUDIT.md)
+mkdir -p config/includes.chroot/usr/share/backgrounds/customos/gallery
+for f in ../build/private/wall-*.jpg; do [ -e "$f" ] && cp "$f" "config/includes.chroot/usr/share/backgrounds/customos/gallery/$(basename "$f" | sed 's/^wall-//')"; done
 # Tahmeel: native Linux build (Electron, no Wine) from the private payload, sha256-pinned
 echo "==> Tahmeel: native Linux build"
 PRIV=../build/private
