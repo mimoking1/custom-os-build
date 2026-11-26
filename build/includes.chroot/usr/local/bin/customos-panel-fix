@@ -88,27 +88,31 @@ fi
 # systray items: flat (transparent) buttons, not dark squares
 timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false --create -t bool 2>/dev/null \
   || timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false 2>/dev/null
-# recessed orb notch (approved look): the bar gets a semicircular dip the orb nests in.
-# The dip is filled with the exact wallpaper pixels behind it, so it works on RGB plug
-# windows too (no alpha needed). Glass mode only; the opaque fallback keeps the plain bar.
-if [ "$LOOK" = glass ]; then
-  SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}')
-  SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}')
-  SW=${SW:-1280}; SH=${SH:-800}
-  ORBX=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
-  case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 432) / 2 + 36 )) ;; esac
-  WALLP=$(timeout 10 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
-  [ -f "$WALLP" ] || WALLP=/usr/share/backgrounds/customos/wallpaper-default.png
-  if /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only notchbg --notch-x "$ORBX" --screen "${SW}x${SH}" --wall "$WALLP" 2>/dev/null      && [ -f "$HOME/.config/customos/panel-bg-notch.png" ] && [ -f "$HOME/.config/customos/panel-notch.css" ]; then
-    GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
-    sed -i '/customos panel glass: generated/,$d; /customos panel notch: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS" 2>/dev/null
-    cat "$HOME/.config/customos/panel-notch.css" >> "$GTKCSS"
-    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
-    timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-bg-notch.png" 2>/dev/null
-    LOG "recessed notch bar applied (orbx=$ORBX screen=${SW}x${SH})"
-  else
-    LOG "notch render failed; keeping plain glass bar"
-  fi
+# Opaque full-window bar bake (the robust form of the approved recess look):
+# one 74px-tall image = wallpaper pixels where the bar reads transparent + the
+# accent glass body + the orb dip. No alpha anywhere, so the bar renders
+# identically with or without a compositor (llvmpipe / old hardware / VMs),
+# and external plugs get the same image pushed natively (works on RGB plugs).
+# Re-rendered on accent/wallpaper change by theme-color-apply, so it never goes stale.
+SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}')
+SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}')
+SW=${SW:-1280}; SH=${SH:-800}
+ORBXY=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
+ORBX=$(echo "$ORBXY" | awk '{print $1}')
+ORBY=$(echo "$ORBXY" | awk '{print $2}')
+case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 548) / 2 + 36 )) ;; esac
+case "$ORBY" in ''|*[!0-9]*) ORBY=$(( SH - 30 )) ;; esac
+WALLP=$(timeout 10 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
+[ -f "$WALLP" ] || WALLP=/usr/share/backgrounds/customos/wallpaper-default.png
+if /usr/local/bin/customos-theme-render --hex "$ACCENT" --target user --only fullbake --notch-x "$ORBX" --orb-y "$ORBY" --screen "${SW}x${SH}" --wall "$WALLP" 2>/dev/null    && [ -f "$HOME/.config/customos/panel-full.png" ] && [ -f "$HOME/.config/customos/panel-full.css" ]; then
+  GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
+  sed -i '/customos panel glass: generated/,$d; /customos panel notch: generated/,$d; /customos panel fullbake: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS" 2>/dev/null
+  cat "$HOME/.config/customos/panel-full.css" >> "$GTKCSS"
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
+  timeout 10 xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$HOME/.config/customos/panel-full.png" 2>/dev/null
+  LOG "fullbake bar applied (orb=$ORBX,$ORBY screen=${SW}x${SH})"
+else
+  LOG "fullbake render failed; keeping interim bar"
 fi
 
 # floating rounded credit pill (matches approved mockup); relaunch after panel so it maps on top

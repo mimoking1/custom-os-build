@@ -34,11 +34,8 @@ CSS
       # customos-cm-check (python-xlib selection owner) is reliable with picom v10+;
       # the xprop root-property read is not. Glass stays the default; the opaque
       # square bar is only for machines where no compositor could start at all.
-      if /usr/local/bin/customos-cm-check 2>/dev/null; then
-        cat "$CFG/panel-notch.css" 2>/dev/null || cat "$CFG/panel.css"
-      else
-        cat "$CFG/panel-fallback.css" 2>/dev/null || cat "$CFG/panel.css"
-      fi
+      # the bar is an opaque full-window bake: no compositor dependency, one look everywhere
+      cat "$CFG/panel-full.css" 2>/dev/null || cat "$CFG/panel.css"
     fi
   } > "$HOME/.config/gtk-$v/gtk.css"
 done
@@ -67,20 +64,30 @@ if [ "$FORCE" = "--force-wallpaper" ] || { [ "$FOLLOW" = "on" ] && { case "$CUR"
   /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only wall --wall-out "$W" && /usr/local/bin/customos-set-wallpaper "$W"
 fi
 
-# recessed notch: render against the FINAL wallpaper (glass only)
-if /usr/local/bin/customos-cm-check 2>/dev/null; then
-  SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}'); SW=${SW:-1280}
-  SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}'); SH=${SH:-800}
-  ORBX=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
-  case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 432) / 2 + 36 )) ;; esac
-  WP=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
-  [ -f "$WP" ] || WP=/usr/share/backgrounds/customos/wallpaper-default.png
-  /usr/local/bin/customos-theme-render --hex "$HEX" --target user --only notchbg --notch-x "$ORBX" --screen "${SW}x${SH}" --wall "$WP" >/dev/null 2>&1 || true
+# full-window bar bake against the FINAL wallpaper + new accent (opaque: every
+# machine renders the approved bar, compositor or not)
+SW=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[1]}'); SW=${SW:-1280}
+SH=$(xdpyinfo 2>/dev/null | awk '/dimensions/{split($2,a,"x"); print a[2]}'); SH=${SH:-800}
+ORBXY=$(/usr/local/bin/customos-orb-pos 2>/dev/null)
+ORBX=$(echo "$ORBXY" | awk '{print $1}')
+ORBY=$(echo "$ORBXY" | awk '{print $2}')
+case "$ORBX" in ''|*[!0-9]*) ORBX=$(( (SW - 548) / 2 + 36 )) ;; esac
+case "$ORBY" in ''|*[!0-9]*) ORBY=$(( SH - 30 )) ;; esac
+WP=$(xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image 2>/dev/null)
+[ -f "$WP" ] || WP=/usr/share/backgrounds/customos/wallpaper-default.png
+/usr/local/bin/customos-theme-render --hex "$HEX" --target user --only fullbake --notch-x "$ORBX" --orb-y "$ORBY" --screen "${SW}x${SH}" --wall "$WP" >/dev/null 2>&1 || true
+# regenerate the panel css with the NEW accent (the gtk.css written above still
+# embeds the previous accent's panel block), then swap the panel block in place
+/usr/local/bin/customos-theme-render --hex "$HEX" --target user --only panel >/dev/null 2>&1 || true
+if [ -f "$CFG/panel-full.css" ]; then
+  GTKCSS="$HOME/.config/gtk-3.0/gtk.css"
+  sed -i '/customos panel glass: generated/,$d; /customos panel notch: generated/,$d; /customos panel fullbake: generated/,$d; /customos panel fallback (no compositor)/,$d' "$GTKCSS" 2>/dev/null
+  cat "$CFG/panel-full.css" >> "$GTKCSS"
 fi
 
 # panel + plugs: flip the background image off/on so every process re-reads it
 # (a same-path rewrite alone leaves plugs showing the previous accent)
-if [ -f "$CFG/panel-bg-notch.png" ] && /usr/local/bin/customos-cm-check 2>/dev/null; then PBG="$CFG/panel-bg-notch.png"; else PBG="$CFG/panel-bg.png"; fi
+if [ -f "$CFG/panel-full.png" ]; then PBG="$CFG/panel-full.png"; else PBG="$CFG/panel-bg.png"; fi
 if [ -f "$PBG" ]; then
   xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "" 2>/dev/null
   xfconf-query -c xfce4-panel -p /panels/panel-1/background-image -s "$PBG" 2>/dev/null

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Print the horizontal center (abs screen px) of the whiskermenu orb plug.
+"""Print "X Y" = abs screen px center of the whiskermenu orb plug.
 Heuristic over `xwininfo -root -tree`: panel-band windows sized like the orb
-button, closest to the layout-formula estimate. Prints nothing on failure
-(callers fall back to the formula)."""
+button, closest to the layout-formula estimate. Prints the formula fallback on
+failure (callers treat missing/odd output as fallback too)."""
 import re, subprocess, sys
 
 def screen():
@@ -16,16 +16,17 @@ except Exception:
     sys.exit(1)
 win_top = sh - 74
 guess = (sw - 548) // 2 + 36
+fallback = (guess, win_top + 44)
 try:
     tree = subprocess.check_output(["xwininfo", "-root", "-tree"], text=True, stderr=subprocess.DEVNULL)
 except Exception:
-    print(guess)
+    print("%d %d" % fallback)
     sys.exit(0)
 best = None
 for m in re.finditer(r'0x[0-9a-f]+\s+"[^"]*":\s+\("[^"]*"\s+"[^"]*"\)\s+(\d+)x(\d+)\+\d+\+\d+\s+\+(-?\d+)\+(-?\d+)', tree):
     w, h, x, y = (int(v) for v in m.groups())
-    if win_top - 8 <= y <= sh - 10 and 40 <= h <= 80 and 30 <= w <= 110:
-        c = x + w // 2
-        if best is None or abs(c - guess) < abs(best - guess):
+    if win_top - 8 <= y <= sh - 4 and 40 <= h <= 80 and 30 <= w <= 110:
+        c = (x + w // 2, y + h // 2)
+        if best is None or abs(c[0] - guess) < abs(best[0] - guess):
             best = c
-print(best if best is not None else guess)
+print("%d %d" % best if best else "%d %d" % fallback)
