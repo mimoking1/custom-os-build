@@ -638,7 +638,12 @@ class App(Gtk.Application):
         args = cl.get_arguments()[1:]
         private = "--private" in args
         uris = [a for a in args if not a.startswith("--")]
-        self.open_window(private, uris or None)
+        w = self.open_window(private, uris or None)
+        for a in args:  # hidden test hook: --show=settings|bookmarks|history opens that dialog after load
+            if a.startswith("--show="):
+                what = a.split("=", 1)[1]
+                fn = {"settings": w.settings_dialog, "bookmarks": w.show_bookmarks, "history": w.show_history}.get(what)
+                if fn: GLib.timeout_add(3000, lambda f=fn: (f(), False)[1])
         return 0
 
     def do_activate(self):
