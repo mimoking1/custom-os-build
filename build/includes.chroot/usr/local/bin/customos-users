@@ -19,7 +19,7 @@ case "$1" in
 esac
 while true; do
   C=$(zenity --list --title="Users" --text="Users and passwords" --column=Action --column=Description \
-      add "Add a new user" passwd "Change a password" list "Show users" --hide-header --width=420 --height=300 2>/dev/null) || exit 0
+      add "Add a new user" passwd "Change a password" list "Show users" --width=460 --height=380 2>/dev/null) || exit 0
   case "$C" in
     add) N=$(zenity --entry --title="New user" --text="Username (lowercase, no spaces):") || continue
          F=$(zenity --entry --title="New user" --text="Full name:" --entry-text="$N") || continue

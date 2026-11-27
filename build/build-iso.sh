@@ -113,6 +113,20 @@ chmod 0644 "$TAH"/extension/*; chmod 0755 "$TAH/extension"
 cp /tmp/tah-int/pkg/tahmeel-autostart.desktop config/includes.chroot/etc/xdg/autostart/
 cp /tmp/tah-int/pkg/tahmeel.desktop config/includes.chroot/usr/share/applications/customos-tahmeel.desktop
 chmod 755 "$TAH/tahmeel-launch"
+# PRIVACY: hardened launcher. Chromium/Electron background networking, component updates, CDM downloads, safe-browsing, sync, pings and crash upload are all off; Google update/CDM hosts are also mapped to nothing.
+cat > "$TAH/tahmeel-launch" <<'LEOF'
+#!/bin/sh
+# Tahmeel launcher. --no-sandbox because chrome-sandbox is not setuid in /opt; the app only loads its own local UI.
+D="$(dirname "$(readlink -f "$0")")"
+exec "$D/tahmeel" --no-sandbox --disable-gpu \
+  --disable-component-update --disable-background-networking --disable-sync --disable-breakpad \
+  --disable-domain-reliability --no-pings --no-default-browser-check --disable-client-side-phishing-detection \
+  --disable-field-trial-config --disable-component-extensions-with-background-pages \
+  --disable-features=OptimizationHints,MediaRouter,Translate,AutofillServerCommunication,NetworkTimeServiceQuerying,CertificateTransparencyComponentUpdater,WidevineCdm \
+  --host-resolver-rules="MAP *.gvt1.com ~NOTFOUND, MAP *.gvt2.com ~NOTFOUND, MAP update.googleapis.com ~NOTFOUND, MAP clients2.google.com ~NOTFOUND, MAP clients1.google.com ~NOTFOUND, MAP safebrowsing.googleapis.com ~NOTFOUND, MAP optimizationguide-pa.googleapis.com ~NOTFOUND" \
+  "$@"
+LEOF
+chmod 755 "$TAH/tahmeel-launch"
 . ../build/browser-name.conf
 mkdir -p config/includes.chroot/usr/share/customos
 cp ../build/browser-name.conf config/includes.chroot/usr/share/customos/browser.conf
