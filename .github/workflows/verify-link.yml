@@ -1,0 +1,39 @@
+name: verify-gofile
+on:
+  workflow_dispatch:
+    inputs:
+      folder:
+        description: 'Gofile folder id'
+        required: true
+      sha256:
+        description: 'expected sha256'
+        required: true
+      size:
+        description: 'expected size'
+        required: true
+permissions:
+  contents: write
+jobs:
+  v:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download via Gofile API and verify
+        env:
+          F: ${{ inputs.folder }}
+          S: ${{ inputs.sha256 }}
+          Z: ${{ inputs.size }}
+        run: |
+          set -e
+          TK=$(curl -fsS -m 30 -X POST https://api.gofile.io/accounts | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['token'])")
+          curl -fsS -m 30 -H "Authorization: Bearer $TK" "https://api.gofile.io/contents/$F?wt=4fd6sg89d7s6" > /tmp/c.json
+          python3 -c "
+          import json;d=json.load(open('/tmp/c.json'));print(d['status'])
+          for k,v in d['data'].get('children',{}).items(): print('FILE',v['name'],v['size'],v.get('md5'))
+          open('/tmp/link','w').write(list(d['data']['children'].values())[0]['link'])"
+          L=$(cat /tmp/link)
+          curl -sSI -m 30 -H "Cookie: accountToken=$TK" "$L" | grep -iE "^HTTP|content-length" || true
+          curl -fsSL -H "Cookie: accountToken=$TK" "$L" -o /tmp/f.iso
+          echo "SIZE $(stat -c%s /tmp/f.iso) EXPECTED $Z"
+          echo "SHA  $(sha256sum /tmp/f.iso | cut -d' ' -f1)"
+          echo "EXP  $S"
+          [ "$(stat -c%s /tmp/f.iso)" = "$Z" ] && [ "$(sha256sum /tmp/f.iso | cut -d' ' -f1)" = "$S" ] && echo VERIFY-OK || { echo VERIFY-FAIL; exit 1; }
