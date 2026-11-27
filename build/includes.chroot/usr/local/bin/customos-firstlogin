@@ -3,7 +3,13 @@ M="$HOME/.config/customos/.firstlogin-done"
 [ -f "$M" ] && exit 0
 mkdir -p "$HOME/.config/customos"
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>a" -n -t string -s "ai-chat" 2>/dev/null || true
-( env -u DISPLAY wineboot --init >/dev/null 2>&1; wineserver -w 2>/dev/null ) &
+if [ -d /run/live/medium ] || [ -d /run/live/rootfs ]; then
+  : # live session: the Wine prefix is created on first use (it is ~1.4 GB of RAM here)
+else
+  ( env -u DISPLAY wineboot --init >/dev/null 2>&1; wineserver -w 2>/dev/null ) &
+  # installed system: the install launcher makes no sense any more
+  rm -f "$HOME/Desktop/60-install.desktop" 2>/dev/null || true
+fi
 # us+ara layouts with Alt+Shift toggle (xkb; panel xkb plugin shows the current layout)
 setxkbmap -layout us,ara -option grp:alt_shift_toggle 2>/dev/null || true
 touch "$M"
