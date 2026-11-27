@@ -1,0 +1,30 @@
+name: render-crescent
+on:
+  workflow_dispatch:
+    inputs:
+      n: {description: size, required: true, default: '1000'}
+      samples: {description: samples, required: true, default: '96'}
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        v: [aqua, sky]
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq blender
+      - name: Render
+        run: |
+          mkdir -p out
+          blender -b -P build/wallpaper3d/render_crescent.py -- ${{ matrix.v }} "$PWD/out/c.png" ${{ inputs.n }} ${{ inputs.samples }} 2>&1 | tail -15
+          ls -la out
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp out/c.png "cr-${GITHUB_RUN_ID}-${{ matrix.v }}.png"
+          gh release upload ci-evidence "cr-${GITHUB_RUN_ID}-${{ matrix.v }}.png" --clobber
