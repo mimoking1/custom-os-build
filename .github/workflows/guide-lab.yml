@@ -42,11 +42,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: iso
       - name: Make test ISO
+        env:
+          PLAN1: ${{ inputs.plan1 }}
+          PLAN2: ${{ inputs.plan2 }}
         run: |
           ls -la iso; cat iso/SHA256SUMS.txt || true
           ./tools/make-test-iso.sh "$(ls iso/*.iso | head -1)" /tmp/test.iso
-          printf '%s\n' '${{ inputs.plan1 }}' > /tmp/plan1.txt
-          printf '%s\n' '${{ inputs.plan2 }}' > /tmp/plan2.txt
+          printf '%s\n' "$PLAN1" > /tmp/plan1.txt
+          printf '%s\n' "$PLAN2" > /tmp/plan2.txt
       - name: Run lab
         timeout-minutes: 75
         run: |
