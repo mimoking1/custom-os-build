@@ -20,11 +20,11 @@ jobs:
       - name: Render
         run: |
           mkdir -p out
-          blender -b -P build/wallpaper3d/render_crescent.py -- ${{ matrix.v }} "$PWD/out/c.png" ${{ inputs.n }} ${{ inputs.samples }} 2>&1 | tail -15
+          blender -b -P build/wallpaper3d/render_moon.py -- ${{ matrix.v }} "$PWD/out/c.png" ${{ inputs.n }} ${{ inputs.samples }} 2>&1 | tail -15
           ls -la out
       - name: Publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp out/c.png "cr-${GITHUB_RUN_ID}-${{ matrix.v }}.png"
-          gh release upload ci-evidence "cr-${GITHUB_RUN_ID}-${{ matrix.v }}.png" --clobber
+          cp out/c.png "mn-${GITHUB_RUN_ID}-${{ matrix.v }}.png"
+          gh release upload ci-evidence "mn-${GITHUB_RUN_ID}-${{ matrix.v }}.png" --clobber
