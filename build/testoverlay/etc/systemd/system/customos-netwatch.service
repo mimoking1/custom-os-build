@@ -1,0 +1,7 @@
+[Unit]
+Description=test netwatch
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/customos-netwatch
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+#!/bin/bash
+# TEST ONLY: log every non-loopback socket with its owning process, every 0.15 s for 120 s from boot.
+exec >> /var/log/netwatch.log 2>&1
+for i in $(seq 1 800); do
+  ss -H -tunap 2>/dev/null | awk -v t="$(date +%T.%N | cut -c1-12)" '$6 !~ /^(127\.|\[::1\]|10\.0\.2\.2:67)/ && $5 !~ /^(127\.|\[::1\])/ {print t, $0}' 
+  sleep 0.15
+done
