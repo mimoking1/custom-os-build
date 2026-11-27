@@ -40,12 +40,12 @@ c.data.lens=50
 bpy.ops.object.empty_add(location=tgt); t=bpy.context.object
 k=c.constraints.new('TRACK_TO'); k.target=t; k.track_axis='TRACK_NEGATIVE_Z'; k.up_axis='UP_Y'; sc.camera=c
 w=bpy.data.worlds.new('w'); sc.world=w; w.use_nodes=True
-bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.9,0.95,1,1); bg.inputs[1].default_value=0.9
+bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.9,0.95,1,1); bg.inputs[1].default_value=0.45
 def area(loc,size,e,cl=(1,1,1)):
     bpy.ops.object.light_add(type='AREA',location=loc); l=bpy.context.object
     l.data.size=size; l.data.energy=e; l.data.color=cl
     l.rotation_euler=(Vector(tgt)-Vector(loc)).to_track_quat('-Z','Y').to_euler()
-area((-5,-6,6),4,900); area((5,-5,2),3,400,(0.9,0.97,1)); area((0,-4,-5),5,200)
+area((-5,-6,6),4,380); area((5,-5,2),3,160,(0.9,0.97,1)); area((0,-4,-5),5,90)
 sc.render.engine='CYCLES'; sc.cycles.device='CPU'; sc.cycles.samples=SAMP; sc.cycles.use_denoising=True
 sc.cycles.max_bounces=10
 sc.render.film_transparent=True
