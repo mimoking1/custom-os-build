@@ -67,6 +67,6 @@ jobs:
             gh release upload ci-evidence "/tmp/$n" --clobber </dev/null || true
           done
           sudo apt-get install -y -qq tcpdump >/dev/null 2>&1 || true
-          [ -f out/bar-lab/net.pcap ] && { tcpdump -nn -r out/bar-lab/net.pcap 2>/dev/null | head -400 > /tmp/net.txt; cp /tmp/net.txt "/tmp/barlab-${GITHUB_RUN_ID}-net.txt"; gh release upload ci-evidence "/tmp/barlab-${GITHUB_RUN_ID}-net.txt" --clobber </dev/null || true; }
+          [ -f out/bar-lab/net.pcap ] && { { echo "== DNS names"; tcpdump -nn -r out/bar-lab/net.pcap 2>/dev/null | grep -aoE " (A|AAAA|HTTPS|PTR)\? [^ ]+" | sort | uniq -c | sort -rn; echo "== remote endpoints (first packet time, ip.port, packets)"; tcpdump -nn -tt -r out/bar-lab/net.pcap 2>/dev/null | grep -a " IP " | awk '{ if ($3 ~ /^10\.0\.2\.15\./) {d=$5; sub(":$","",d); c[d]++; if(!(d in f)) f[d]=$1} } END{for(k in c) print f[k], k, c[k]}' | sort -n; } > /tmp/net.txt; cp /tmp/net.txt "/tmp/barlab-${GITHUB_RUN_ID}-net.txt"; gh release upload ci-evidence "/tmp/barlab-${GITHUB_RUN_ID}-net.txt" --clobber </dev/null || true; }
           cp out/bar-lab/ser.log "/tmp/barlab-${GITHUB_RUN_ID}-ser.log" 2>/dev/null || true
           gh release upload ci-evidence "/tmp/barlab-${GITHUB_RUN_ID}-ser.log" --clobber </dev/null || true
