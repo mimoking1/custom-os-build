@@ -25,8 +25,8 @@ def mat(col, rough, trans=0.0, metal=0.0, spec=0.6):
     t = sock(b,'Transmission Weight','Transmission')
     if t: t.default_value = trans
     return m
-glass  = mat(lin(TINT), 0.16, 0.8)
-glassE = mat(lin(EDGE), 0.10, 0.7)
+glass  = mat(lin(TINT,0.8), 0.28, 0.35)
+glassE = mat(lin(EDGE,0.9), 0.15, 0.3)
 podium = mat(lin(DEEP), 0.12, 0.0, 0.0)
 white  = mat((0.93,0.95,0.96,1), 0.2)
 def fin(o, m, bev=0.035, seg=5):
@@ -64,10 +64,11 @@ def podiums(R=13.0, top=0.0):
     for p in o.data.polygons: p.use_smooth=True
     return o
 def stage(r=2.7):
-    disc(0,0.07,r,0.14,glass,0.05)   # glass plinth on the podium
+    bpy.ops.mesh.primitive_cylinder_add(radius=r, depth=0.14, location=(0,0,0.07), vertices=128)
+    o=bpy.context.object; fin(o, glass, 0.04)
 # ---- scenes: objects stand on z=0.14.. in the XZ plane
 Z0=0.14
-cam=(0,-12.5,3.2); tgt=(0,0,2.1); lens=34
+cam=(0,-9.0,2.9); tgt=(0,0,1.9); lens=38
 if name=='aqua-crescent':
     podiums(); stage(3.0)
     # crescent: big disc minus offset disc (boolean)
@@ -107,10 +108,10 @@ else:  # sky-search
     bpy.ops.mesh.primitive_cylinder_add(radius=0.2,depth=1.9,location=(1.0,0,Z0+0.95),rotation=(math.pi/2,0.0,math.radians(0)),vertices=64)
     h=bpy.context.object; h.rotation_euler=(math.pi/2,math.radians(-45)*0,0)
     h.rotation_euler=(math.pi/2,0,0); h.rotation_mode='XYZ'
-    h.rotation_euler=(0,math.radians(45),0)
-    h.location=(1.15,0,Z0+1.0); h.data.materials.append(glassE)
+    h.rotation_euler=(0,math.radians(-45),0)
+    h.location=(0.98,0,Z0+0.72); h.data.materials.append(glassE)
     for p in h.data.polygons: p.use_smooth=True
-    slab(-2.4,Z0+0.85,1.5,1.7,0.25,white,0.07)
+    slab(-2.4,Z0+0.85,1.5,1.7,0.25,glass,0.07)
     star(2.6,Z0+2.9,0.5,0.22,0.3,glass)
     disc(2.5,Z0+0.45,0.45,0.4,glass,0.05)
 # camera
@@ -118,19 +119,16 @@ bpy.ops.object.empty_add(location=tgt); t=bpy.context.object
 bpy.ops.object.camera_add(location=cam); c=bpy.context.object
 c.data.lens=lens; c.data.dof.use_dof=True; c.data.dof.focus_object=t; c.data.dof.aperture_fstop=16
 k=c.constraints.new('TRACK_TO'); k.target=t; k.track_axis='TRACK_NEGATIVE_Z'; k.up_axis='UP_Y'; sc.camera=c
-# backdrop wall (pale, soft)
-bpy.ops.mesh.primitive_plane_add(size=80, location=(0,9,0), rotation=(math.pi/2,0,0))
-bw=bpy.context.object; bw.data.materials.append(mat((0.93,0.95,0.97,1),0.6))
 w=bpy.data.worlds.new('w'); sc.world=w; w.use_nodes=True
-bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.9,0.94,0.97,1); bg.inputs[1].default_value=1.0
+bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.78,0.84,0.9,1); bg.inputs[1].default_value=0.9
 def area(loc,size,e,col=(1,1,1)):
     bpy.ops.object.light_add(type='AREA',location=loc); l=bpy.context.object
     l.data.size=size; l.data.energy=e; l.data.color=col
     l.rotation_euler=(Vector(tgt)-Vector(loc)).to_track_quat('-Z','Y').to_euler()
-area((-6,-8,9),8,1500); area((7,-6,5),6,700,(0.95,0.98,1)); area((0,-3,12),9,900); area((0,4,3),6,500)
+area((-6,-8,9),8,700); area((7,-6,5),6,300,(0.95,0.98,1)); area((0,-3,12),9,400)
 sc.render.engine='CYCLES'; sc.cycles.device='CPU'; sc.cycles.samples=SAMP; sc.cycles.use_denoising=True
 sc.cycles.max_bounces=12; sc.cycles.transmission_bounces=12; sc.cycles.transparent_max_bounces=12
 sc.render.resolution_x=W; sc.render.resolution_y=H; sc.render.resolution_percentage=100
-sc.view_settings.view_transform='Standard'
+sc.view_settings.view_transform='Standard'; sc.view_settings.exposure=-0.3
 sc.render.image_settings.file_format='PNG'; sc.render.filepath=OUT
 bpy.ops.render.render(write_still=True); print('RENDERED',OUT)
