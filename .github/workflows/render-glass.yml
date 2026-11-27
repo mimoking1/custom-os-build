@@ -1,0 +1,31 @@
+name: render-glass
+on:
+  workflow_dispatch:
+    inputs:
+      w: {description: width, required: true, default: '960'}
+      h: {description: height, required: true, default: '540'}
+      samples: {description: samples, required: true, default: '32'}
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [aqua-crescent, aqua-cloud, sky-padlock, sky-search]
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq blender
+      - name: Render
+        run: |
+          mkdir -p out
+          blender -b -P build/wallpaper3d/render_glass.py -- ${{ matrix.scene }} "$PWD/out/${{ matrix.scene }}.png" ${{ inputs.w }} ${{ inputs.h }} ${{ inputs.samples }} 2>&1 | tail -20
+          ls -la out
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp out/${{ matrix.scene }}.png "gl-${GITHUB_RUN_ID}-${{ matrix.scene }}.png"
+          gh release upload ci-evidence "gl-${GITHUB_RUN_ID}-${{ matrix.scene }}.png" --clobber
