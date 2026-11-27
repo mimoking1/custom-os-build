@@ -179,6 +179,16 @@ for WP in ../theme/wallpaper/*.svg; do
   rsvg-convert -w 1920 -h 1080 "$WP" \
     -o "config/includes.chroot/usr/share/backgrounds/customos/$(basename "$WP" .svg).png"
 done
+# Login-screen background (user choice): variant image + signature, replaces the gold-arch login image
+python3 - "../theme/login/login-$VARIANT.png" "$VARIANT" /tmp/login-bg.svg <<'PYEOF'
+import sys,base64
+src,var,out=sys.argv[1:4]
+b=base64.b64encode(open(src,'rb').read()).decode()
+col='#0a5f5b' if var=='full' else '#1b4f86'
+open(out,'w').write('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080"><image width="1920" height="1080" xlink:href="data:image/png;base64,%s"/><text x="960" y="1050" text-anchor="middle" font-family="Noto Sans, Noto Sans Arabic, sans-serif" font-size="22" fill="%s">Directed by Mohamed Sayed &#183; &#1605;&#1581;&#1605;&#1583; &#1587;&#1610;&#1583;</text></svg>'%(b,col))
+PYEOF
+rsvg-convert -w 1920 -h 1080 /tmp/login-bg.svg -o config/includes.chroot/usr/share/backgrounds/customos/login-bg.png
+sed -i 's#^background = .*#background = /usr/share/backgrounds/customos/login-bg.png#' config/includes.chroot/etc/lightdm/lightdm-gtk-greeter.conf
 # 3D perspective wallpaper (generated, not hand-drawn SVG)
 python3 ../build/wallpaper3d/gen.py /tmp/horizon3d ../theme/crescent-moon.png
 rsvg-convert -w 1920 -h 1080 /tmp/horizon3d/wallpaper-horizon3d.svg \
