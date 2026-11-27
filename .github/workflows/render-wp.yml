@@ -1,0 +1,28 @@
+name: render-wp
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [aqua-halo, aqua-cascade, sky-arches, sky-spiral]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq blender
+      - name: Render
+        run: |
+          mkdir -p out
+          blender -b -P build/wallpaper3d/render_new.py -- ${{ matrix.scene }} "$PWD/out/${{ matrix.scene }}.png" 2>&1 | tail -15
+          ls -la out
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp out/${{ matrix.scene }}.png "wp-${GITHUB_RUN_ID}-${{ matrix.scene }}.png"
+          gh release upload ci-evidence "wp-${GITHUB_RUN_ID}-${{ matrix.scene }}.png" --clobber
