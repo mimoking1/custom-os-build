@@ -64,6 +64,7 @@ jobs:
             sudo mkfs.ext4 -q -L persistence "$PN"
             sudo mkdir -p /mnt/p && sudo mount "$PN" /mnt/p
             echo '/ union' | sudo tee /mnt/p/persistence.conf
+            { echo IMAGE-CHECK; ls -la /mnt/p; echo CONF; cat -A /mnt/p/persistence.conf; sudo dumpe2fs -h "$PN" 2>&1 | head -25; } > out/lab1/persist-image.txt 2>&1
             sudo umount /mnt/p; sudo losetup -d "$LD"
             BOOTARGS="-drive file=/tmp/usb.img,format=raw -boot c" ./tools/guide-lab.sh /tmp/test.iso out/lab1 /tmp/plan1.txt || true
             BOOTARGS="-drive file=/tmp/usb.img,format=raw -boot c" ./tools/guide-lab.sh /tmp/test.iso out/lab2 /tmp/plan2.txt || true
@@ -80,7 +81,7 @@ jobs:
           gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --notes "x" --latest=false
           for d in lab1 lab2; do
             for f in out/$d/*.ppm; do [ -e "$f" ] && convert "$f" "${f%.ppm}.png" || true; done
-            for f in out/$d/*.png out/$d/ser.log; do
+            for f in out/$d/*.png out/$d/ser.log out/$d/persist-image.txt; do
               [ -e "$f" ] || continue
               n="guide-${GITHUB_RUN_ID}-$d-$(basename "$f")"
               cp "$f" "/tmp/$n"; gh release upload ci-evidence "/tmp/$n" --clobber </dev/null || true
