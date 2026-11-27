@@ -56,7 +56,7 @@ bpy.ops.mesh.primitive_plane_add(size=400, location=(0,0,0))
 put(bpy.context.object, M(hexc(FLOOR), 0.28), smooth=False)
 # world
 w = bpy.data.worlds.new('w'); sc.world = w; w.use_nodes = True
-bg = w.node_tree.nodes['Background']; bg.inputs[0].default_value = hexc(FLOOR, 1.0); bg.inputs[1].default_value = 0.55
+bg = w.node_tree.nodes['Background']; bg.inputs[0].default_value = hexc('#eafffd' if name.startswith('aqua') else '#e9f4ff', 1.0); bg.inputs[1].default_value = 1.0
 random.seed(7)
 def scatter(n, xr, yr, rmin, rmax, mats):
     for i in range(n):
@@ -91,15 +91,16 @@ elif name == 'sky-arches':
     sphere((1.2,5.4,1.0), 0.5, acc)
     scatter(14,(-4.5,4.5),(-4,9),0.12,0.3,[glass,white,acc])
 else:
-    cam_loc, cam_tgt, lens = (0,-13,3.6),(0,0,3.2),30
-    cyl((0,0,3.2), 0.22, 6.4, glass, 0.05)
-    cyl((0,0,0.08), 3.3, 0.16, white, 0.05)
-    for i in range(26):
-        t = i*0.5
-        sphere((math.cos(t)*2.3, math.sin(t)*2.3, 0.4+i*0.22), 0.36-0.005*i, (glass,pearl,acc)[i%3])
+    cam_loc, cam_tgt, lens = (0,-12,3.4),(0,0,3.3),30
+    cyl((0,0,0.08), 3.0, 0.16, white, 0.05)
+    for i in range(30):
+        t = i*0.45
+        for k,mt in ((0,(glass,glass,acc)[i%3]),(1,pearl)):
+            ang = t + k*math.pi
+            sphere((math.cos(ang)*1.9, math.sin(ang)*1.9, 0.45+i*0.2), 0.3, mt)
     sphere((3.6,-1.8,0.5), 0.5, chrome)
     sphere((-3.9,-2.0,0.6), 0.6, glass)
-    scatter(12,(-6,6),(-5,-3.2),0.12,0.25,[glass,white,acc])
+    scatter(10,(-6,6),(-5,-3.4),0.12,0.25,[glass,white,acc])
 # camera
 bpy.ops.object.empty_add(location=cam_tgt); tgt = bpy.context.object
 bpy.ops.object.camera_add(location=cam_loc); cam = bpy.context.object
