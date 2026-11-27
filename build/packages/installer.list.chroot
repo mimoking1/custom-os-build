@@ -2,3 +2,9 @@
 calamares
 qml-module-qtquick2
 timeshift
+grub-pc-bin
+grub-efi-amd64-bin
+grub-efi-amd64-signed
+shim-signed
+efibootmgr
+os-prober

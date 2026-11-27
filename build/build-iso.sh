@@ -253,6 +253,7 @@ if [ "$INCLUDE_INSTALLER" = "yes" ]; then
   echo "==> Calamares installer files (full variant)"
   mkdir -p config/includes.chroot/etc/calamares config/includes.chroot/usr/share/calamares/branding config/includes.chroot/etc/skel/Desktop
   cp ../installer/calamares/settings.conf config/includes.chroot/etc/calamares/
+  mkdir -p config/includes.chroot/etc/calamares/modules && cp ../installer/calamares/modules/*.conf config/includes.chroot/etc/calamares/modules/
   cp -a ../installer/calamares/branding/customos config/includes.chroot/usr/share/calamares/branding/
   cp ../installer/install-on-desktop.desktop config/includes.chroot/etc/skel/Desktop/60-install.desktop
   sed -i "s/@OS_NAME@/$OS_NAME/g; s/@OS_NAME_AR@/$OS_NAME_AR/g" config/includes.chroot/etc/skel/Desktop/60-install.desktop
