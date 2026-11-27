@@ -41,6 +41,13 @@ jobs:
           run-id: ${{ inputs.build_run }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: iso
+      - name: Overlay current installer config (fast iteration)
+        if: ${{ inputs.mode == 'install' }}
+        run: |
+          mkdir -p build/testoverlay/etc/calamares/modules
+          cp installer/calamares/settings.conf build/testoverlay/etc/calamares/
+          cp installer/calamares/modules/*.conf build/testoverlay/etc/calamares/modules/
+          sed -i "s/@OS_NAME@/Siraj/g; s/@OS_NAME_AR@/سراج/g" build/testoverlay/etc/calamares/settings.conf
       - name: Make test ISO
         env:
           PLAN1: ${{ inputs.plan1 }}
