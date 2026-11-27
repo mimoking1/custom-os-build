@@ -1,0 +1,85 @@
+name: guide-lab
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'persist (live) or install (full)'
+        required: true
+      build_run:
+        description: 'build run id holding the <variant>-iso artifact'
+        required: true
+      plan1:
+        description: 'plan for first boot'
+        required: true
+      plan2:
+        description: 'plan for second boot (persist only)'
+        required: false
+        default: ''
+permissions:
+  contents: write
+  actions: read
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+          df -h /
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-utils socat netcat-openbsd python3-pil python3-numpy imagemagick squashfs-tools xorriso e2fsprogs
+          sudo modprobe kvm-intel || sudo modprobe kvm-amd || true
+          sudo chmod 666 /dev/kvm || true
+      - name: Get ISO from build run
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.mode == 'persist' && 'live-iso' || 'full-iso' }}
+          run-id: ${{ inputs.build_run }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: iso
+      - name: Make test ISO
+        run: |
+          ls -la iso; cat iso/SHA256SUMS.txt || true
+          ./tools/make-test-iso.sh "$(ls iso/*.iso | head -1)" /tmp/test.iso
+          printf '%s\n' '${{ inputs.plan1 }}' > /tmp/plan1.txt
+          printf '%s\n' '${{ inputs.plan2 }}' > /tmp/plan2.txt
+      - name: Run lab
+        timeout-minutes: 75
+        run: |
+          mkdir -p out/lab1 out/lab2
+          if [ "${{ inputs.mode }}" = persist ]; then
+            cp /tmp/test.iso /tmp/usb.img
+            truncate -s +2G /tmp/usb.img
+            echo ',,L' | sudo sfdisk --append /tmp/usb.img || true
+            sudo sfdisk -l /tmp/usb.img
+            LD=$(sudo losetup -P -f --show /tmp/usb.img); echo $LD
+            PN=$(ls ${LD}p* | sort -V | tail -1); echo "persistence partition $PN"
+            sudo mkfs.ext4 -q -L persistence "$PN"
+            sudo mkdir -p /mnt/p && sudo mount "$PN" /mnt/p
+            echo '/ union' | sudo tee /mnt/p/persistence.conf
+            sudo umount /mnt/p; sudo losetup -d "$LD"
+            BOOTARGS="-drive file=/tmp/usb.img,format=raw -boot c" ./tools/guide-lab.sh /tmp/test.iso out/lab1 /tmp/plan1.txt || true
+            BOOTARGS="-drive file=/tmp/usb.img,format=raw -boot c" ./tools/guide-lab.sh /tmp/test.iso out/lab2 /tmp/plan2.txt || true
+          else
+            qemu-img create -f qcow2 /tmp/target.qcow2 20G
+            BOOTARGS="-cdrom /tmp/test.iso -boot d -drive file=/tmp/target.qcow2,if=virtio" ./tools/guide-lab.sh /tmp/test.iso out/lab1 /tmp/plan1.txt || true
+            ./tools/guide-boot2.sh /tmp/target.qcow2 out/lab2 tester Tester-pass1 || true
+          fi
+      - name: Publish evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view ci-evidence >/dev/null 2>&1 || gh release create ci-evidence --title "CI evidence (rolling)" --notes "x" --latest=false
+          for d in lab1 lab2; do
+            for f in out/$d/*.ppm; do [ -e "$f" ] && convert "$f" "${f%.ppm}.png" || true; done
+            for f in out/$d/*.png out/$d/ser.log; do
+              [ -e "$f" ] || continue
+              n="guide-${GITHUB_RUN_ID}-$d-$(basename "$f")"
+              cp "$f" "/tmp/$n"; gh release upload ci-evidence "/tmp/$n" --clobber </dev/null || true
+            done
+          done
