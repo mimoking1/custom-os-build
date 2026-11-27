@@ -43,8 +43,25 @@ class Pill(Gtk.Window):
         self.connect("draw", self.on_draw)
         self.connect("realize", self.on_realize)
 
+    def apply_shape(self):
+        # cut the rounded ends out of the window itself (X Shape): corners are never black, with or without a compositor
+        win = self.get_window()
+        if win is None:
+            return
+        surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.w, self.h)
+        c = cairo.Context(surf)
+        r = self.h / 2.0
+        c.new_sub_path()
+        c.arc(self.w - r, r, r, -math.pi / 2, math.pi / 2)
+        c.arc(r, r, r, math.pi / 2, 3 * math.pi / 2)
+        c.close_path()
+        c.set_source_rgba(0, 0, 0, 1)
+        c.fill()
+        win.shape_combine_region(Gdk.cairo_region_create_from_surface(surf), 0, 0)
+
     def on_realize(self, *_):
         self.reposition()
+        self.apply_shape()
         win = self.get_window()
         if win is not None:
             win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through
