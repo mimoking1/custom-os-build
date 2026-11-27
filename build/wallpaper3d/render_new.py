@@ -10,7 +10,7 @@ def hexc(h, k=1.0):
     return (f(r),f(g),f(b),1)
 FULL = '#08e8de'; LIVE = '#4fb2f7'
 ACC = FULL if name.startswith('aqua') else LIVE
-FLOOR = '#d9fbf8' if name.startswith('aqua') else '#dcecfb'
+FLOOR = '#b8f3ee' if name.startswith('aqua') else '#bcd9f5'
 def inp(n, *names):
     for k in names:
         if k in n.inputs: return n.inputs[k]
@@ -56,13 +56,13 @@ bpy.ops.mesh.primitive_plane_add(size=400, location=(0,0,0))
 put(bpy.context.object, M(hexc(FLOOR), 0.28), smooth=False)
 # world
 w = bpy.data.worlds.new('w'); sc.world = w; w.use_nodes = True
-bg = w.node_tree.nodes['Background']; bg.inputs[0].default_value = hexc(FLOOR, 1.0); bg.inputs[1].default_value = 1.1
+bg = w.node_tree.nodes['Background']; bg.inputs[0].default_value = hexc(FLOOR, 1.0); bg.inputs[1].default_value = 0.55
 random.seed(7)
 def scatter(n, xr, yr, rmin, rmax, mats):
     for i in range(n):
         r = random.uniform(rmin, rmax)
         sphere((random.uniform(*xr), random.uniform(*yr), r), r, random.choice(mats))
-cam_loc, cam_tgt, lens = (0,-9,2.4),(0,0,1.1),50
+cam_loc, cam_tgt, lens = (0,-10,2.6),(0,0,1.5),28
 if name == 'aqua-halo':
     torus((0,0.4,2.05), 1.7, 0.38, (math.pi/2,0,0), glass)
     sphere((0.1,-0.9,0.9), 0.9, pearl)
@@ -73,7 +73,7 @@ if name == 'aqua-halo':
         cyl((x,3.5,h/2), r, h, acc if x<0 else white)
     scatter(14,(-5,5),(-3.5,-0.6),0.12,0.25,[glass,white,acc,chrome])
 elif name == 'aqua-cascade':
-    cam_loc, cam_tgt = (2.5,-11,4.2),(0.3,1.8,1.6)
+    cam_loc, cam_tgt, lens = (3.0,-12,4.4),(0.3,2.2,1.8),30
     for i in range(7):
         h = 0.5+i*0.5
         rbox((-5.1+i*1.75, i*1.05, h/2), (1.65,1.65,h), (white,glass,acc)[i%3])
@@ -83,7 +83,7 @@ elif name == 'aqua-cascade':
     sphere((1.4,-2.6,0.45), 0.45, acc)
     scatter(12,(-6,6),(-4.5,-1.2),0.12,0.25,[glass,white,acc])
 elif name == 'sky-arches':
-    cam_loc, cam_tgt, lens = (0,-7.5,1.5),(0,6,1.4),35
+    cam_loc, cam_tgt, lens = (0,-7.5,1.6),(0,6,1.4),26
     for i in range(6):
         torus((0,i*3.2,0), 2.1, 0.3, (math.pi/2,0,0), glass if i%2==0 else white)
     sphere((0,0.0,0.7), 0.7, pearl)
@@ -91,7 +91,7 @@ elif name == 'sky-arches':
     sphere((1.2,5.4,1.0), 0.5, acc)
     scatter(14,(-4.5,4.5),(-4,9),0.12,0.3,[glass,white,acc])
 else:
-    cam_loc, cam_tgt = (0,-12,3.4),(0,0,3.0)
+    cam_loc, cam_tgt, lens = (0,-13,3.6),(0,0,3.2),30
     cyl((0,0,3.2), 0.22, 6.4, glass, 0.05)
     cyl((0,0,0.08), 3.3, 0.16, white, 0.05)
     for i in range(26):
@@ -111,9 +111,9 @@ def area(loc, size, energy, col):
     bpy.ops.object.light_add(type='AREA', location=loc); l = bpy.context.object
     l.data.size = size; l.data.energy = energy; l.data.color = col
     d = (Vector(cam_tgt)-Vector(loc)); l.rotation_euler = d.to_track_quat('-Z','Y').to_euler()
-area((-6,-7,9), 7, 1800, (1,0.98,0.95))
-area((8,-5,5), 6, 500, (0.85,0.95,1))
-area((0,6,8), 8, 600, (1,1,1))
+area((-6,-7,9), 7, 800, (1,0.98,0.95))
+area((8,-5,5), 6, 250, (0.85,0.95,1))
+area((0,6,8), 8, 250, (1,1,1))
 # render
 sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = 96
 sc.cycles.use_denoising = True
@@ -121,7 +121,7 @@ try: sc.cycles.denoiser = 'OPENIMAGEDENOISE'
 except Exception: pass
 sc.cycles.max_bounces = 10; sc.cycles.transmission_bounces = 10; sc.cycles.glossy_bounces = 6
 sc.render.resolution_x = 1920; sc.render.resolution_y = 1080; sc.render.resolution_percentage = 100
-sc.view_settings.view_transform = 'Standard'
+sc.view_settings.view_transform = 'Standard'; sc.view_settings.exposure = -0.2
 sc.render.image_settings.file_format = 'PNG'; sc.render.filepath = OUT
 bpy.ops.render.render(write_still=True)
 print('RENDERED', OUT)
