@@ -19,8 +19,11 @@ s=sock(b,'Coat Weight','Clearcoat'); s.default_value=1.0
 s=sock(b,'Coat Roughness','Clearcoat Roughness'); s.default_value=0.03
 bpy.ops.mesh.primitive_cylinder_add(radius=1.0,depth=0.42,location=(0,0,0),rotation=(math.pi/2,0,0),vertices=192)
 big=bpy.context.object
+bpy.ops.object.transform_apply(rotation=True)
 bpy.ops.mesh.primitive_cylinder_add(radius=0.82,depth=0.8,location=(0.42,0,0),rotation=(math.pi/2,0,0),vertices=192)
 cut=bpy.context.object
+bpy.ops.object.transform_apply(rotation=True,location=False)
+bpy.context.view_layer.objects.active=big
 bm=big.modifiers.new('bool','BOOLEAN'); bm.operation='DIFFERENCE'; bm.object=cut; bm.solver='EXACT'
 bpy.context.view_layer.objects.active=big
 bpy.ops.object.modifier_apply(modifier='bool')
