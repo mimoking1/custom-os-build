@@ -25,9 +25,18 @@ def mat(col, rough, trans=0.0, metal=0.0, spec=0.6):
     t = sock(b,'Transmission Weight','Transmission')
     if t: t.default_value = trans
     return m
-glass  = mat(lin(TINT,0.8), 0.28, 0.35)
-glassE = mat(lin(EDGE,0.9), 0.15, 0.3)
-podium = mat(lin(DEEP), 0.12, 0.0, 0.0)
+def edgemat(rough, trans, pale, edge):
+    m = bpy.data.materials.new('e'); m.use_nodes = True; nt=m.node_tree
+    b = nt.nodes['Principled BSDF']
+    lw = nt.nodes.new('ShaderNodeLayerWeight'); lw.inputs['Blend'].default_value = 0.35
+    mx = nt.nodes.new('ShaderNodeMixRGB'); mx.inputs['Color1'].default_value = lin(pale); mx.inputs['Color2'].default_value = lin(edge)
+    nt.links.new(lw.outputs['Facing'], mx.inputs['Fac']); nt.links.new(mx.outputs['Color'], sock(b,'Base Color'))
+    sock(b,'Roughness').default_value = rough; sock(b,'IOR').default_value = 1.5
+    t = sock(b,'Transmission Weight','Transmission'); t.default_value = trans
+    return m
+glass  = edgemat(0.22, 0.55, TINT, EDGE)
+glassE = edgemat(0.14, 0.45, EDGE, DEEP)
+podium = mat(lin(DEEP), 0.08, 0.0, 0.0)
 white  = mat((0.93,0.95,0.96,1), 0.2)
 def fin(o, m, bev=0.035, seg=5):
     o.data.materials.append(m)
@@ -87,10 +96,22 @@ if name=='aqua-crescent':
     slab(-2.3,Z0+0.38,0.8,0.76,0.5,glass,0.08)
 elif name=='aqua-cloud':
     podiums(); stage(3.0)
-    # cloud from discs + base slab, with an up arrow
-    disc(-0.9,Z0+1.9,0.95,0.55,glass,0.06); disc(0.3,Z0+2.5,1.35,0.55,glass,0.06); disc(1.55,Z0+1.95,0.95,0.55,glass,0.06)
-    slab(0.3,Z0+1.55,3.2,1.0,0.55,glass,0.08)
-    poly([(0.3,Z0+3.0),(0.95,Z0+2.15),(0.55,Z0+2.15),(0.55,Z0+1.1),(0.05,Z0+1.1),(0.05,Z0+2.15),(-0.35,Z0+2.15)],0.4,glassE,0.05,y=-0.55)
+    import math as _m
+    circ=[(-0.9,1.9,0.95),(0.3,2.5,1.35),(1.55,1.95,0.95)]
+    cx,cz=0.3,1.9
+    def inside(x,z):
+        if abs(x-0.3)<=1.6 and 1.05<=z<=2.05: return True
+        return any((x-a)**2+(z-b)**2<=r*r for a,b,r in circ)
+    pts=[]
+    for i in range(180):
+        th=2*_m.pi*i/180; rr=0
+        for k in range(1,400):
+            r=k*0.01; x=cx+r*_m.cos(th); z=cz+r*_m.sin(th)
+            if z<1.05: break
+            if inside(x,z): rr=r
+        pts.append((cx+rr*_m.cos(th), Z0+max(cz+rr*_m.sin(th),1.05)))
+    poly(pts,0.6,glass,0.12)
+    poly([(0.3,Z0+3.0),(0.95,Z0+2.15),(0.55,Z0+2.15),(0.55,Z0+1.1),(0.05,Z0+1.1),(0.05,Z0+2.15),(-0.35,Z0+2.15)],0.35,glassE,0.05,y=-0.5)
     disc(-2.4,Z0+0.45,0.45,0.4,glass,0.05); disc(2.5,Z0+0.7,0.7,0.4,glassE,0.05)
 elif name=='sky-padlock':
     podiums(); stage(3.0)
@@ -120,15 +141,15 @@ bpy.ops.object.camera_add(location=cam); c=bpy.context.object
 c.data.lens=lens; c.data.dof.use_dof=True; c.data.dof.focus_object=t; c.data.dof.aperture_fstop=16
 k=c.constraints.new('TRACK_TO'); k.target=t; k.track_axis='TRACK_NEGATIVE_Z'; k.up_axis='UP_Y'; sc.camera=c
 w=bpy.data.worlds.new('w'); sc.world=w; w.use_nodes=True
-bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.78,0.84,0.9,1); bg.inputs[1].default_value=0.9
+bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.97,0.98,1.0,1); bg.inputs[1].default_value=1.6
 def area(loc,size,e,col=(1,1,1)):
     bpy.ops.object.light_add(type='AREA',location=loc); l=bpy.context.object
     l.data.size=size; l.data.energy=e; l.data.color=col
     l.rotation_euler=(Vector(tgt)-Vector(loc)).to_track_quat('-Z','Y').to_euler()
-area((-6,-8,9),8,700); area((7,-6,5),6,300,(0.95,0.98,1)); area((0,-3,12),9,400)
+area((-6,-8,9),8,1100); area((7,-6,5),6,500,(0.95,0.98,1)); area((0,-3,12),9,700)
 sc.render.engine='CYCLES'; sc.cycles.device='CPU'; sc.cycles.samples=SAMP; sc.cycles.use_denoising=True
 sc.cycles.max_bounces=12; sc.cycles.transmission_bounces=12; sc.cycles.transparent_max_bounces=12
 sc.render.resolution_x=W; sc.render.resolution_y=H; sc.render.resolution_percentage=100
-sc.view_settings.view_transform='Standard'; sc.view_settings.exposure=-0.3
+sc.view_settings.view_transform='Standard'; sc.view_settings.exposure=-0.1
 sc.render.image_settings.file_format='PNG'; sc.render.filepath=OUT
 bpy.ops.render.render(write_still=True); print('RENDERED',OUT)
