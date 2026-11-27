@@ -81,5 +81,5 @@ fi
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
 xfdesktop --reload >/dev/null 2>&1 || true
 xfwm4 --replace >/dev/null 2>&1 &
-( pkill -x xfce4-panel; sleep 2; setsid xfce4-panel </dev/null >/dev/null 2>&1 ) &
+( pkill -u "$(id -u)" -x xfce4-panel; sleep 2; setsid xfce4-panel </dev/null >/dev/null 2>&1 ) &
 exit 0

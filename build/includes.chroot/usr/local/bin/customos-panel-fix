@@ -2,17 +2,21 @@
 # Stock xfce4-panel with a native solid accent color (no baking, no plug hacks).
 LOG() { echo "panel-fix: $*" | sudo tee /dev/ttyS0 >/dev/null 2>&1 || true; }
 xfce4-panel -q 2>/dev/null
-k=0; while pgrep -x xfce4-panel >/dev/null 2>&1 && [ $k -lt 10 ]; do k=$((k+1)); sleep 1; done
+k=0; while pgrep -u "$(id -u)" -x xfce4-panel >/dev/null 2>&1 && [ $k -lt 10 ]; do k=$((k+1)); sleep 1; done
 ACCENT=$(cat "$HOME/.config/customos/accent" 2>/dev/null || echo "#4fb2f7")
 /usr/local/bin/customos-panel-native "$ACCENT"
 LOG "native panel color applied ($ACCENT)"
+# wait (up to 40 s) for this session's compositor before the panel starts: on a slow or busy machine the
+# panel used to come up first and render as a flat strip with loose pieces
+c=0; while ! /usr/local/bin/customos-cm-check && [ $c -lt 40 ]; do c=$((c+1)); sleep 1; done
+LOG "compositor wait ${c}s"
 setsid xfce4-panel >/dev/null 2>&1 &
 LOG "panel started"
 sleep 5
 timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false --create -t bool 2>/dev/null \
   || timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s false 2>/dev/null
 # credit pill sits on the bar's top edge; relaunch after the panel so it maps on top
-pkill -f customos-credit-pill 2>/dev/null
+pkill -u "$(id -u)" -f customos-credit-pill 2>/dev/null
 setsid /usr/local/bin/customos-credit-pill >/dev/null 2>&1 &
 LOG "credit pill launched"
-touch /tmp/customos-panel-fix-done
+touch /tmp/customos-panel-fix-done "${XDG_RUNTIME_DIR:-/tmp}/customos-panel-fix-done" 2>/dev/null

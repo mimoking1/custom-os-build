@@ -6,7 +6,7 @@ do_add() { # name pass full
   [[ "$n" =~ ^[a-z][a-z0-9_-]{0,30}$ ]] || { echo "bad username (lowercase letters, digits, - _)"; return 2; }
   id "$n" >/dev/null 2>&1 && { echo "user exists"; return 3; }
   [ -n "$p" ] || { echo "empty password"; return 4; }
-  sudo adduser --disabled-password --gecos "$f" "$n" >/dev/null || return 5
+  local t=0; until sudo adduser --disabled-password --gecos "$f" "$n" >/dev/null 2>&1; do t=$((t+1)); getent passwd "$n" >/dev/null && break; sudo groupdel "$n" 2>/dev/null; [ $t -ge 6 ] && { echo "could not create user (system busy), try again"; return 5; }; sleep 3; done
   sudo usermod -aG audio,video,plugdev,netdev,cdrom,sudo "$n" 2>/dev/null
   echo "$n:$p" | sudo chpasswd || return 6
   echo "created $n"
