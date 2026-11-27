@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Users and Passwords
+Name[ar]=المستخدمون وكلمات المرور
+Comment=Add users and set passwords
+Exec=/usr/local/bin/customos-users
+Icon=system-users
+Categories=Settings;System;

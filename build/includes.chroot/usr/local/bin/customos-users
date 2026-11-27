@@ -1,0 +1,33 @@
+#!/bin/bash
+# Users and passwords: GUI (zenity) + CLI backend. Uses sudo; asks for the admin password in a dialog.
+# CLI: customos-users --add NAME PASS [FULLNAME] | --passwd NAME PASS | --list
+do_add() { # name pass full
+  local n="$1" p="$2" f="${3:-$1}"
+  [[ "$n" =~ ^[a-z][a-z0-9_-]{0,30}$ ]] || { echo "bad username (lowercase letters, digits, - _)"; return 2; }
+  id "$n" >/dev/null 2>&1 && { echo "user exists"; return 3; }
+  [ -n "$p" ] || { echo "empty password"; return 4; }
+  sudo adduser --disabled-password --gecos "$f" "$n" >/dev/null || return 5
+  sudo usermod -aG audio,video,plugdev,netdev,cdrom,sudo "$n" 2>/dev/null
+  echo "$n:$p" | sudo chpasswd || return 6
+  echo "created $n"
+}
+do_pw() { echo "$1:$2" | sudo chpasswd && echo "password set for $1"; }
+case "$1" in
+  --add) do_add "$2" "$3" "$4"; exit $? ;;
+  --passwd) do_pw "$2" "$3"; exit $? ;;
+  --list) getent passwd | awk -F: '$3>=1000 && $3<60000{print $1}'; exit 0 ;;
+esac
+while true; do
+  C=$(zenity --list --title="Users" --text="Users and passwords" --column=Action --column=Description \
+      add "Add a new user" passwd "Change a password" list "Show users" --hide-header --width=420 --height=300 2>/dev/null) || exit 0
+  case "$C" in
+    add) N=$(zenity --entry --title="New user" --text="Username (lowercase, no spaces):") || continue
+         F=$(zenity --entry --title="New user" --text="Full name:" --entry-text="$N") || continue
+         P=$(zenity --password --title="Password for $N") || continue
+         zenity --info --text="$(do_add "$N" "$P" "$F" 2>&1)" ;;
+    passwd) N=$(zenity --entry --title="Change password" --text="Username:" --entry-text="$(id -un)") || continue
+         P=$(zenity --password --title="New password for $N") || continue
+         zenity --info --text="$(do_pw "$N" "$P" 2>&1)" ;;
+    list) zenity --info --title="Users" --text="$(do_list=$(getent passwd | awk -F: '$3>=1000 && $3<60000{print $1}'); echo "$do_list")" ;;
+  esac
+done

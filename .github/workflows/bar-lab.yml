@@ -31,8 +31,8 @@ jobs:
       - name: Build MSI self-test package
         run: |
           sudo apt-get install -y -qq wixl || true
-          mkdir -p build/includes.chroot/usr/share/customos/tests
-          wixl -v -a x64 build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi || true
+          mkdir -p build/testoverlay/usr/share/customos/tests
+          wixl -v -a x64 build/test-msi/test.wxs -o build/testoverlay/usr/share/customos/tests/customos-test.msi || true
       - name: Fetch private payload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,7 +50,9 @@ jobs:
           ls -la out/bar-lab/hostshare
       - name: Run bar lab
         timeout-minutes: 35
-        run: ./tools/bar-lab.sh "$(ls out/*.iso | head -1)" out/bar-lab /tmp/plan.txt
+        run: |
+          ./tools/make-test-iso.sh "$(ls out/*.iso | head -1)" /tmp/test.iso
+          ./tools/bar-lab.sh /tmp/test.iso out/bar-lab /tmp/plan.txt
       - name: Publish evidence
         if: always()
         env:
@@ -64,5 +66,7 @@ jobs:
             cp "$f" "/tmp/$n"
             gh release upload ci-evidence "/tmp/$n" --clobber </dev/null || true
           done
+          sudo apt-get install -y -qq tcpdump >/dev/null 2>&1 || true
+          [ -f out/bar-lab/net.pcap ] && { tcpdump -nn -r out/bar-lab/net.pcap 2>/dev/null | head -400 > /tmp/net.txt; cp /tmp/net.txt "/tmp/barlab-${GITHUB_RUN_ID}-net.txt"; gh release upload ci-evidence "/tmp/barlab-${GITHUB_RUN_ID}-net.txt" --clobber </dev/null || true; }
           cp out/bar-lab/ser.log "/tmp/barlab-${GITHUB_RUN_ID}-ser.log" 2>/dev/null || true
           gh release upload ci-evidence "/tmp/barlab-${GITHUB_RUN_ID}-ser.log" --clobber </dev/null || true

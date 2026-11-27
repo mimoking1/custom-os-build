@@ -61,10 +61,10 @@ jobs:
       - name: Build MSI self-test package
         run: |
           sudo apt-get install -y -qq msitools wixl || sudo apt-get install -y -qq wixl
-          mkdir -p build/includes.chroot/usr/share/customos/tests
-          wixl -v -a x64 build/test-msi/test.wxs -o build/includes.chroot/usr/share/customos/tests/customos-test.msi
-          msiinfo extract build/includes.chroot/usr/share/customos/tests/customos-test.msi SummaryInformation | head -5; msiinfo tables build/includes.chroot/usr/share/customos/tests/customos-test.msi | tr "\n" " "; msiinfo export build/includes.chroot/usr/share/customos/tests/customos-test.msi File 2>/dev/null | grep -i test.txt | head -3 || true
-          ls -la build/includes.chroot/usr/share/customos/tests/
+          mkdir -p build/testoverlay/usr/share/customos/tests
+          wixl -v -a x64 build/test-msi/test.wxs -o build/testoverlay/usr/share/customos/tests/customos-test.msi
+          msiinfo extract build/testoverlay/usr/share/customos/tests/customos-test.msi SummaryInformation | head -5; msiinfo tables build/testoverlay/usr/share/customos/tests/customos-test.msi | tr "\n" " "; msiinfo export build/testoverlay/usr/share/customos/tests/customos-test.msi File 2>/dev/null | grep -i test.txt | head -3 || true
+          ls -la build/testoverlay/usr/share/customos/tests/
 
       - name: Fetch private payload
         env:
@@ -76,7 +76,8 @@ jobs:
       - name: Boot test in QEMU
         run: |
           if [[ "${{ matrix.variant }}" == *32 ]]; then export QEMU_BIN=qemu-system-i386 QEMU_CPU=qemu32,+pae; fi
-          ./build/boot-test/boot-test.sh "$(ls out/*.iso | head -1)" out/boot-test
+          ./tools/make-test-iso.sh "$(ls out/*.iso | head -1)" /tmp/test.iso
+          ./build/boot-test/boot-test.sh /tmp/test.iso out/boot-test
 
       - name: Verify selftest completed
         run: |

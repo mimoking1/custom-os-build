@@ -4,6 +4,8 @@
 # fresh boot fetches synchronously (10s cap) so the readout appears at once.
 CACHE="$HOME/.cache/customos/weather"
 mkdir -p "$HOME/.cache/customos" 2>/dev/null
+# PRIVACY: no network call at all unless the user opted in by creating ~/.config/customos/weather-location ("LAT LON")
+[ -f "$HOME/.config/customos/weather-location" ] || { printf '%s\n' '<txt> </txt>'; exit 0; }
 now=$(date +%s)
 mtime=$(stat -c %Y "$CACHE" 2>/dev/null || echo 0)
 if [ ! -s "$CACHE" ]; then

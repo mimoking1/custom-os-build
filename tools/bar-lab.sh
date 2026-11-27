@@ -19,7 +19,8 @@ ${QEMU_BIN:-qemu-system-x86_64} ${QEMU_CPU:+-cpu $QEMU_CPU} \
   -fw_cfg name=opt/customos/selftest,string=1 \
   -fw_cfg name=opt/customos/lab,string=1 \
   -virtfs local,path="$OUT/hostshare",mount_tag=hostshare,security_model=none \
-  -netdev user,id=n0 -device virtio-net-pci,netdev=n0 &
+  -netdev user,id=n0 -device virtio-net-pci,netdev=n0 \
+  -object filter-dump,id=f0,netdev=n0,file="$OUT/net.pcap" &
 QPID=$!
 
 # boot menu proof + boot the default entry (same rhythm as boot-test)

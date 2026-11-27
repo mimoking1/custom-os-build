@@ -3,8 +3,8 @@
 # genmon cache atomically. Offline/error: keep the old cache, exit quietly.
 OUT="$HOME/.cache/customos/weather"
 mkdir -p "$HOME/.cache/customos" 2>/dev/null
-LAT=30.04; LON=31.24   # default: Giza/Cairo; override file: "LAT LON"
-[ -f "$HOME/.config/customos/weather-location" ] && read -r LAT LON < "$HOME/.config/customos/weather-location"
+[ -f "$HOME/.config/customos/weather-location" ] || exit 0   # opt-in only: no location file, no network call
+read -r LAT LON < "$HOME/.config/customos/weather-location"
 J=$(python3 - "$LAT" "$LON" <<'PY'
 import json, sys, urllib.request
 lat, lon = sys.argv[1], sys.argv[2]
