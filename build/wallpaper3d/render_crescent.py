@@ -12,15 +12,15 @@ def sock(b,*n):
         if k in b.inputs: return b.inputs[k]
 m=bpy.data.materials.new('c'); m.use_nodes=True
 b=m.node_tree.nodes['Principled BSDF']
-sock(b,'Base Color').default_value=lin(col)
+c0=lin(col); sock(b,'Base Color').default_value=tuple(0.55*x+0.45*1.0 if i<3 else 1 for i,x in enumerate(c0)) if False else tuple(min(1,0.6*x+0.4*0.85) if i<3 else 1 for i,x in enumerate(c0))
 sock(b,'Roughness').default_value=0.12
 sock(b,'Metallic').default_value=0.0
 s=sock(b,'Coat Weight','Clearcoat'); s.default_value=1.0
 s=sock(b,'Coat Roughness','Clearcoat Roughness'); s.default_value=0.03
-bpy.ops.mesh.primitive_cylinder_add(radius=1.0,depth=0.42,location=(0,0,0),rotation=(math.pi/2,0,0),vertices=192)
+bpy.ops.mesh.primitive_cylinder_add(radius=1.0,depth=0.62,location=(0,0,0),rotation=(math.pi/2,0,0),vertices=192)
 big=bpy.context.object
 bpy.ops.object.transform_apply(rotation=True)
-bpy.ops.mesh.primitive_cylinder_add(radius=0.82,depth=0.8,location=(0.42,0,0),rotation=(math.pi/2,0,0),vertices=192)
+bpy.ops.mesh.primitive_cylinder_add(radius=0.82,depth=1.0,location=(0.42,0,0),rotation=(math.pi/2,0,0),vertices=192)
 cut=bpy.context.object
 bpy.ops.object.transform_apply(rotation=True,location=False)
 bpy.context.view_layer.objects.active=big
@@ -29,7 +29,7 @@ bpy.context.view_layer.objects.active=big
 bpy.ops.object.modifier_apply(modifier='bool')
 bpy.data.objects.remove(cut)
 big.data.materials.append(m)
-bv=big.modifiers.new('b','BEVEL'); bv.width=0.09; bv.segments=8; bv.limit_method='ANGLE'; bv.angle_limit=math.radians(25)
+bv=big.modifiers.new('b','BEVEL'); bv.width=0.13; bv.segments=8; bv.limit_method='ANGLE'; bv.angle_limit=math.radians(25)
 for p in big.data.polygons: p.use_smooth=True
 bpy.ops.object.modifier_apply(modifier='b')
 for p in big.data.polygons: p.use_smooth=True
@@ -40,12 +40,12 @@ c.data.lens=50
 bpy.ops.object.empty_add(location=tgt); t=bpy.context.object
 k=c.constraints.new('TRACK_TO'); k.target=t; k.track_axis='TRACK_NEGATIVE_Z'; k.up_axis='UP_Y'; sc.camera=c
 w=bpy.data.worlds.new('w'); sc.world=w; w.use_nodes=True
-bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.9,0.95,1,1); bg.inputs[1].default_value=0.45
+bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.9,0.95,1,1); bg.inputs[1].default_value=0.7
 def area(loc,size,e,cl=(1,1,1)):
     bpy.ops.object.light_add(type='AREA',location=loc); l=bpy.context.object
     l.data.size=size; l.data.energy=e; l.data.color=cl
     l.rotation_euler=(Vector(tgt)-Vector(loc)).to_track_quat('-Z','Y').to_euler()
-area((-5,-6,6),4,380); area((5,-5,2),3,160,(0.9,0.97,1)); area((0,-4,-5),5,90)
+area((-5,-6,6),4,520); area((5,-5,2),3,260,(0.9,0.97,1)); area((0,-4,-5),5,120); area((-3,-7,1),1.2,700); area((4,-6,5),0.8,500)
 sc.render.engine='CYCLES'; sc.cycles.device='CPU'; sc.cycles.samples=SAMP; sc.cycles.use_denoising=True
 sc.cycles.max_bounces=10
 sc.render.film_transparent=True
