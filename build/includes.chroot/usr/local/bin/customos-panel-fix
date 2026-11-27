@@ -14,7 +14,5 @@ timeout 10 xfconf-query -c xfce4-panel -p /plugins/plugin-6/square-icons -s fals
 # credit pill sits on the bar's top edge; relaunch after the panel so it maps on top
 pkill -f customos-credit-pill 2>/dev/null
 setsid /usr/local/bin/customos-credit-pill >/dev/null 2>&1 &
-pkill -f customos-bar-shape 2>/dev/null
-setsid /usr/local/bin/customos-bar-shape >/tmp/customos-bar-shape.log 2>&1 &
-LOG "credit pill + bar shape launched"
+LOG "credit pill launched"
 touch /tmp/customos-panel-fix-done

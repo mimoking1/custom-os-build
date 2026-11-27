@@ -61,7 +61,6 @@ class Pill(Gtk.Window):
 
     def on_realize(self, *_):
         self.reposition()
-        self.apply_shape()
         win = self.get_window()
         if win is not None:
             win.input_shape_combine_region(cairo.Region(), 0, 0)  # clicks pass through
