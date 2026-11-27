@@ -100,6 +100,7 @@ class Pill(Gtk.Window):
                     m = re.search(r"\s(\d+)x(\d+)\+(-?\d+)\+(-?\d+)\s+\+(-?\d+)\+(-?\d+)", ln)
                     if m and int(m.group(1)) > mon.width // 2:
                         right = int(m.group(5)) + int(m.group(1))
+                        top = int(m.group(6))  # the panel window's own top edge wins over the (stale after xrandr) work area
                         break
         except Exception:
             pass
