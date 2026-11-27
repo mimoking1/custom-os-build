@@ -1,4 +1,6 @@
 #!/bin/bash
+# Test only: run for the first live user only. Other users logging in during a lab must see the plain product, not this harness.
+[ "$(id -u)" = 1000 ] || exit 0
 # Runs only when QEMU passes opt/customos/selftest through fw_cfg (CI boot test). Does nothing on real machines.
 sudo modprobe qemu_fw_cfg 2>/dev/null
 F=/sys/firmware/qemu_fw_cfg/by_name/opt/customos/selftest/raw
