@@ -10,6 +10,9 @@ permissions:
 jobs:
   up:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
@@ -24,5 +27,5 @@ jobs:
         env:
           MF_PW: ${{ secrets.MF_PW }}
         run: |
-          ISO=$(ls iso/*.iso | head -1); sha256sum "$ISO"; ls -l "$ISO"
+          set -o pipefail; ISO=$(ls iso/*.iso | head -1); sha256sum "$ISO"; ls -l "$ISO"
           python3 build/mf_upload.py "$ISO" 2>&1 | sed "s/${MF_PW}/***/g"

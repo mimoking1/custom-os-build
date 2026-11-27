@@ -1,5 +1,5 @@
 import os, sys, hashlib
-from mediafire import MediaFireClient
+from mediafire.client import MediaFireClient
 iso = sys.argv[1]
 email = 'qusa48@mail.instinct.com'
 pw = os.environ['MF_PW']
