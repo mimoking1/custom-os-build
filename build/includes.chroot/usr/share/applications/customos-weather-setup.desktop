@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Weather location
+Name[ar]=موقع الطقس
+Exec=/usr/local/bin/customos-weather-setup
+Icon=weather-few-clouds
+Categories=Settings;

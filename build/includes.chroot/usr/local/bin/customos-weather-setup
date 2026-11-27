@@ -1,0 +1,62 @@
+#!/bin/bash
+# One-time weather location picker. No network until the user acts.
+# "Locate me" is the ONLY option that queries the network (IP geolocation), and only when chosen.
+F="$HOME/.config/customos/weather-location"; mkdir -p "$HOME/.config/customos"
+LIST='Cairo|30.04 31.24
+Giza|30.01 31.21
+Alexandria|31.20 29.92
+Port Said|31.27 32.30
+Suez|29.97 32.55
+Luxor|25.69 32.64
+Aswan|24.09 32.90
+Mansoura|31.04 31.38
+Tanta|30.79 31.00
+Hurghada|27.26 33.81
+Sharm El Sheikh|27.91 34.33
+Ismailia|30.59 32.27
+Fayoum|29.31 30.84
+Assiut|27.18 31.19
+Minya|28.11 30.75
+Zagazig|30.59 31.50
+Damietta|31.42 31.81
+Sohag|26.56 31.69
+Qena|26.16 32.72
+Beni Suef|29.07 31.10
+Marsa Matruh|31.35 27.24
+Riyadh|24.71 46.68
+Jeddah|21.54 39.17
+Mecca|21.42 39.83
+Medina|24.47 39.61
+Dubai|25.20 55.27
+Abu Dhabi|24.45 54.38
+Doha|25.29 51.53
+Kuwait City|29.38 47.99
+Amman|31.95 35.93
+Beirut|33.89 35.50
+Baghdad|33.31 44.37
+Istanbul|41.01 28.98
+London|51.51 -0.13
+Paris|48.86 2.35
+Berlin|52.52 13.40
+New York|40.71 -74.01
+Toronto|43.65 -79.38
+Los Angeles|34.05 -118.24'
+if [ "$1" = "--set" ]; then echo "$2 $3" > "$F"; rm -f "$HOME/.cache/customos/weather"; exit 0; fi
+ARGS=("Locate me (asks the internet once)" ""); 
+C=$( { echo "Locate me (asks the internet once)"; echo "$LIST" | cut -d'|' -f1; } | zenity --list --title="Weather location" --text="Pick your city. Nothing is sent over the network until you choose." --column=City --width=380 --height=520 2>/dev/null) || exit 0
+if [ "${C%%(*}" = "Locate me " ]; then
+  R=$(python3 - <<'PY'
+import json, urllib.request
+try:
+    d = json.load(urllib.request.urlopen("https://ipwho.is/", timeout=8))
+    print(d["latitude"], d["longitude"]) if d.get("success") else None
+except Exception:
+    pass
+PY
+)
+  [ -n "$R" ] || { zenity --error --text="Could not locate. Pick a city instead." 2>/dev/null; exit 1; }
+  echo "$R" > "$F"
+else
+  L=$(echo "$LIST" | awk -F'|' -v c="$C" '$1==c{print $2}'); [ -n "$L" ] && echo "$L" > "$F"
+fi
+rm -f "$HOME/.cache/customos/weather"; /usr/local/bin/customos-weather-fetch >/dev/null 2>&1 &
