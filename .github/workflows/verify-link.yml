@@ -25,7 +25,9 @@ jobs:
         run: |
           set -e
           TK=$(curl -fsS -m 30 -X POST https://api.gofile.io/accounts | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['token'])")
-          curl -fsS -m 30 -H "Authorization: Bearer $TK" "https://api.gofile.io/contents/$F?wt=4fd6sg89d7s6" > /tmp/c.json
+          WT=$(curl -fsS -m 30 https://gofile.io/dist/js/config.js https://gofile.io/dist/js/global.js 2>/dev/null | grep -oE 'wt[ ]*[:=][ ]*"[A-Za-z0-9]+"' | head -1 | grep -oE '"[A-Za-z0-9]+"' | tr -d '"' || true)
+          echo "WT=$WT"
+          curl -sS -m 30 -H "Authorization: Bearer $TK" -H "X-Website-Token: $WT" "https://api.gofile.io/contents/$F?wt=$WT" > /tmp/c.json; head -c 300 /tmp/c.json; echo
           python3 -c "
           import json;d=json.load(open('/tmp/c.json'));print(d['status'])
           for k,v in d['data'].get('children',{}).items(): print('FILE',v['name'],v['size'],v.get('md5'))
