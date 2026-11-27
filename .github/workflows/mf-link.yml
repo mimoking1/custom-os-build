@@ -1,0 +1,13 @@
+name: mf-link
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  l:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install mediafire
+      - env:
+          MF_PW: ${{ secrets.MF_PW }}
+        run: python3 build/mf_link.py 2>&1 | grep -E 'FILE|Error|error|Trace' | sed "s/${MF_PW}/***/g"
