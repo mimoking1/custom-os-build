@@ -9,7 +9,7 @@ def lin(h, k=1.0):
     return ((r**2.2)*k,(g**2.2)*k,(b**2.2)*k,1)
 AQUA = name.startswith('aqua')
 ACC  = '#08e8de' if AQUA else '#4fb2f7'
-DEEP = '#0a9d96' if AQUA else '#2a74c4'     # podium (saturated, glossy)
+DEEP = '#06b3ab' if AQUA else '#2f7fd0'     # podium (saturated, glossy)
 TINT = '#a8fff9' if AQUA else '#b5dcff'     # frosted glass body
 EDGE = '#08e8de' if AQUA else '#4fb2f7'
 def sock(b, *n):
@@ -77,7 +77,7 @@ def stage(r=2.7):
     o=bpy.context.object; fin(o, glass, 0.04)
 # ---- scenes: objects stand on z=0.14.. in the XZ plane
 Z0=0.14
-cam=(0,-9.0,2.9); tgt=(0,0,1.9); lens=38
+cam=(0,-10.5,3.3); tgt=(0,0,1.75); lens=32
 if name=='aqua-crescent':
     podiums(); stage(3.0)
     # crescent: big disc minus offset disc (boolean)
@@ -141,7 +141,7 @@ bpy.ops.object.camera_add(location=cam); c=bpy.context.object
 c.data.lens=lens; c.data.dof.use_dof=True; c.data.dof.focus_object=t; c.data.dof.aperture_fstop=16
 k=c.constraints.new('TRACK_TO'); k.target=t; k.track_axis='TRACK_NEGATIVE_Z'; k.up_axis='UP_Y'; sc.camera=c
 w=bpy.data.worlds.new('w'); sc.world=w; w.use_nodes=True
-bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.97,0.98,1.0,1); bg.inputs[1].default_value=1.6
+bg=w.node_tree.nodes['Background']; bg.inputs[0].default_value=(0.97,0.98,1.0,1); bg.inputs[1].default_value=1.25
 def area(loc,size,e,col=(1,1,1)):
     bpy.ops.object.light_add(type='AREA',location=loc); l=bpy.context.object
     l.data.size=size; l.data.energy=e; l.data.color=col
