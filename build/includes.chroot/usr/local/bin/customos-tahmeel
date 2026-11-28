@@ -1,3 +1,0 @@
-#!/bin/sh
-# Tahmeel (native Linux build, no Wine)
-exec /opt/tahmeel/tahmeel-launch "$@"

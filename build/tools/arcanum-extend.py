@@ -86,7 +86,7 @@ G = {
 # our name -> (glyph, kind) kind: tile or bare (action icons draw a bare glyph, no tile)
 TILE = {
  "picom":"window","xfce4-clipman-plugin":"clip","org.xfce.notes":"note","org.xfce.notification":"bell","org.xfce.powermanager":"battery",
- "help-about":"info","face-smile":"smile","clock-language":"globe","display-im7.q16":"image","hilal-browser":"moon",
+ "help-about":"info","face-smile":"smile","clock-language":"globe","display-im7.q16":"image",
  "preferences-system-power-management":"battery","security-high":"shield","preferences-color":"palette","preferences-desktop-wallpaper":"image",
  "org.xfce.volman":"usb","timeshift":"clock","stock_xfburn":"disc","org.xfce.settings.display":"monitor","org.xfce.settings.keyboard":"keyboard",
  "org.xfce.settings.mouse":"mouse","xfsm-logout":"power","org.xfce.session":"power","org.xfce.xfwm4":"window","org.xfce.workspaces":"grid",

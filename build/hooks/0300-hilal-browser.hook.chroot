@@ -1,9 +1,0 @@
-#!/bin/sh
-# The browser is our own WebKitGTK shell (/usr/local/bin/hilali). No Brave, Chromium or Firefox is installed.
-set -e
-update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/hilal-browser 200 || true
-update-alternatives --set x-www-browser /usr/local/bin/hilal-browser || true
-update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/local/bin/hilal-browser 200 || true
-# belt and braces: no other browser may remain
-apt-get purge -y 'firefox*' 2>/dev/null || true
-rm -f /usr/bin/firefox /usr/bin/firefox-esr

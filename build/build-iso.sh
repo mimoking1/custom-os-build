@@ -67,7 +67,7 @@ if [ "${LITE:-no}" = "yes" ]; then
   sed -i -E '/^(kdenlive|krita|inkscape|gimp|flatpak|gnome-software|gnome-software-plugin-flatpak|xdg-desktop-portal-gtk|libreoffice-impress|simplescreenrecorder|xfce4-notes-plugin)$/d' config/package-lists/base.list.chroot
 fi
 if [ "${LITE:-no}" = "yes" ]; then
-  # no supported 32-bit Firefox; Chromium is installed by the hilal-browser hook
+  # no supported 32-bit Firefox; no browser is installed
   sed -i -E '/^firefox-esr/d' config/package-lists/base.list.chroot
 fi
 if [ "$INCLUDE_INSTALLER" = "yes" ]; then
@@ -96,43 +96,6 @@ rm -f /tmp/arcanum-blue.tar.xz
 # Pexels photo wallpapers (private payload, not in the public repo; licence: Pexels, see LICENSING-AUDIT.md)
 mkdir -p config/includes.chroot/usr/share/backgrounds/customos/gallery
 for f in ../build/private/wall-*.jpg; do [ -e "$f" ] && cp "$f" "config/includes.chroot/usr/share/backgrounds/customos/gallery/$(basename "$f" | sed 's/^wall-//')"; done
-# Tahmeel: native Linux build (Electron, no Wine) from the private payload, sha256-pinned
-echo "==> Tahmeel: native Linux build"
-PRIV=../build/private
-[ -s "$PRIV/tahmeel-linux-x64.tar.xz" ] || { echo "Tahmeel native payload missing"; exit 1; }
-echo "2a2206fd9efb02ca06a1dd89cf844db12b7c76ebafa6bceab17b1d76003ccbb0  $PRIV/tahmeel-linux-x64.tar.xz" | sha256sum -c -
-echo "d4f02bb37a643b4a1dfbeff3371ea005340b94f29dd57c843f4432aee0e0ccb8  $PRIV/hilal-integration.tar.gz" | sha256sum -c -
-TAH=config/includes.chroot/opt/tahmeel
-mkdir -p "$TAH" /tmp/tah-int
-tar -xJf "$PRIV/tahmeel-linux-x64.tar.xz" -C "$TAH" --strip-components=1
-tar -xzf "$PRIV/hilal-integration.tar.gz" -C /tmp/tah-int
-[ -x "$TAH/tahmeel-launch" ] || { echo "tahmeel-launch missing after extraction"; exit 1; }
-mkdir -p "$TAH/extension" config/includes.chroot/etc/xdg/autostart config/includes.chroot/usr/share/applications
-cp /tmp/tah-int/pkg/tahmeel.crx /tmp/tah-int/pkg/update.xml /tmp/tah-int/pkg/tahmeel.xpi "$TAH/extension/"
-chmod 0644 "$TAH"/extension/*; chmod 0755 "$TAH/extension"
-cp /tmp/tah-int/pkg/tahmeel-autostart.desktop config/includes.chroot/etc/xdg/autostart/
-cp /tmp/tah-int/pkg/tahmeel.desktop config/includes.chroot/usr/share/applications/customos-tahmeel.desktop
-chmod 755 "$TAH/tahmeel-launch"
-# PRIVACY: hardened launcher. Chromium/Electron background networking, component updates, CDM downloads, safe-browsing, sync, pings and crash upload are all off; Google update/CDM hosts are also mapped to nothing.
-cat > "$TAH/tahmeel-launch" <<'LEOF'
-#!/bin/sh
-# Tahmeel launcher. --no-sandbox because chrome-sandbox is not setuid in /opt; the app only loads its own local UI.
-D="$(dirname "$(readlink -f "$0")")"
-exec "$D/tahmeel" --no-sandbox --disable-gpu \
-  --disable-component-update --disable-background-networking --disable-sync --disable-breakpad \
-  --disable-domain-reliability --no-pings --no-default-browser-check --disable-client-side-phishing-detection \
-  --disable-field-trial-config --disable-component-extensions-with-background-pages \
-  --disable-features=OptimizationHints,MediaRouter,Translate,AutofillServerCommunication,NetworkTimeServiceQuerying,CertificateTransparencyComponentUpdater,WidevineCdm \
-  --host-resolver-rules="MAP *.gvt1.com ~NOTFOUND, MAP *.gvt2.com ~NOTFOUND, MAP update.googleapis.com ~NOTFOUND, MAP clients2.google.com ~NOTFOUND, MAP clients1.google.com ~NOTFOUND, MAP safebrowsing.googleapis.com ~NOTFOUND, MAP optimizationguide-pa.googleapis.com ~NOTFOUND" \
-  "$@"
-LEOF
-chmod 755 "$TAH/tahmeel-launch"
-. ../build/browser-name.conf
-mkdir -p config/includes.chroot/usr/share/customos
-cp ../build/browser-name.conf config/includes.chroot/usr/share/customos/browser.conf
-mkdir -p config/includes.chroot/usr/share/customos/home
-sed -e "s/@BROWSER_NAME@/$BROWSER_NAME/g" -e "s/@BROWSER_NAME_AR@/$BROWSER_NAME_AR/g" ../build/browser-home.html > config/includes.chroot/usr/share/customos/home/browser-home.html
-grep -rl "@BROWSER_NAME" config/includes.chroot | xargs sed -i -e "s/@BROWSER_NAME_AR@/$BROWSER_NAME_AR/g" -e "s/@BROWSER_NAME@/$BROWSER_NAME/g"
 if [ "${LITE:-no}" = "yes" ]; then
   # 32-bit editions: smaller gallery (1920x1080) to keep the ISO light
   python3 - config/includes.chroot/usr/share/backgrounds/customos/gallery <<'PY'
@@ -197,17 +160,13 @@ rsvg-convert -w 1920 -h 1080 /tmp/horizon3d/wallpaper-horizon3d.svg \
 echo "==> Default theme assets (icons, orb, glass panel, wallpaper) for $VARIANT"
 CHR="$(pwd)/config/includes.chroot"
 if [ "$VARIANT" = "live" ]; then ACC="#4fb2f7"; else ACC="#08e8de"; fi
-# default accent of this edition (full = aqua #08e8de, live = sky #4fb2f7): panel-fix, hilali and the theme picker read it
+# default accent of this edition (full = aqua #08e8de, live = sky #4fb2f7): panel-fix and the theme picker read it
 mkdir -p config/includes.chroot/etc/skel/.config/customos
 printf "%s\n" "$ACC" > config/includes.chroot/etc/skel/.config/customos/accent
 export CUSTOMOS_SRC="$(pwd)/../build/includes.chroot/usr/share/customos/theme"
 export CUSTOMOS_BASE_WALL="$CHR/usr/share/backgrounds/customos/wallpaper-horizon3d.png"
 export CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png"
 python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --hex "$ACC" --target system --root "$CHR" --only all
-CUSTOMOS_CRESCENT="$(pwd)/../theme/crescent-moon.png" python3 ../build/includes.chroot/usr/local/bin/customos-browser-icon --hex "$ACC" --root "$CHR"
-FAV=$(find "$CHR/usr/share/icons/hicolor" -name hilal-browser.png | sort -V | tail -1); [ -n "$FAV" ] && python3 -c "import base64,sys;print(\"data:image/png;base64,\"+base64.b64encode(open(sys.argv[1],\"rb\").read()).decode())" "$FAV" > /tmp/favicon.txt && python3 - "$CHR/usr/share/customos/home/browser-home.html" <<'PY'
-import sys;p=sys.argv[1];s=open(p).read().replace("@FAVICON@",open("/tmp/favicon.txt").read().strip());open(p,"w").write(s)
-PY
 cat "$CHR/etc/skel/.config/customos/panel.css" >> "$CHR/etc/skel/.config/gtk-3.0/gtk.css"
 if [ "$VARIANT" = "live" ]; then
   python3 ../build/includes.chroot/usr/local/bin/customos-theme-render --default-live-wallpaper "$CHR/usr/share/backgrounds/customos/wallpaper-default.png"

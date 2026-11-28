@@ -14,7 +14,7 @@ ChatGPT|https://chatgpt.com/
 Google Gemini|https://gemini.google.com/
 HuggingChat|https://huggingface.co/chat/'
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Firefox/128"
-open_url() { setsid hilal-browser --new-window "$1" >/dev/null 2>&1 & }
+open_url() { setsid xdg-open "$1" >/dev/null 2>&1 & }
 if [ "${1:-}" = "--choose" ]; then
   PICK=$(printf '%s\n' "$SERVICES" | cut -d'|' -f1 | zenity --list --width=420 --height=300 \
     --title="AI Assistant · المساعد الذكي" --text="Choose a service · اختر الخدمة" --column="Service")

@@ -115,8 +115,6 @@ python3-xlib
 mesa-utils
 xfce4-appfinder
 wmctrl
-gir1.2-webkit2-4.1
-libwebkit2gtk-4.1-0
 kdeconnect
 adb
 xdotool

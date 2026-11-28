@@ -142,17 +142,9 @@ sleep 6; SHOT 11-theme-color-window
 pkill -f "/usr/local/bin/theme-color$"; pkill -f "python3 /usr/local/bin/theme-color"; sleep 1
 timeout 150 /usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/null 2>&1
 sleep 8
-# @BROWSER_NAME@ + lid playback
-[ -f /usr/share/icons/hicolor/48x48/apps/hilal-browser.png ] && R browser-icon PASS || R browser-icon FAIL
-command -v hilali >/dev/null && R browser-installed "PASS(hilali)" || R browser-installed FAIL
+# lid playback
 for B in brave-browser chromium firefox-esr; do command -v $B >/dev/null && R "browser-extra-$B" "FAIL(should not be installed)"; done
-python3 -c "import gi;gi.require_version('WebKit2','4.1')" 2>/dev/null && R webkit-typelib PASS || R webkit-typelib FAIL
 [ -f /etc/systemd/logind.conf.d/50-customos-lid.conf ] && R lid-conf PASS || R lid-conf FAIL
-grep -q "hilal-browser" /etc/skel/.config/mimeapps.list && R default-browser PASS || R default-browser FAIL
-rm -f "$HOME/.config/customos/browser32-warned"
-( setsid hilal-browser >/tmp/browser.log 2>&1 & ); sleep 14; SHOT 13a-hilali-start
-pgrep -f "/usr/local/bin/hilali" >/dev/null && R browser-running PASS || { R browser-running FAIL; tail -6 /tmp/browser.log | while read l; do R "browser-log" "$(echo "$l" | cut -c1-140)"; done; }
-pkill -f "/usr/local/bin/hilali"; sleep 2
 # Wine
 if command -v wine >/dev/null; then
   R wine-version "$(wine --version 2>/dev/null); dpkg: $(dpkg -l wine wine64 2>/dev/null | awk '/^ii/{print $3}' | paste -sd,)"
@@ -225,22 +217,6 @@ aplay -l 2>&1 | grep -q "^card" && R sound-card PASS || R sound-card NONE-in-QEM
   wine notepad >/dev/null 2>&1 &
   sleep 12; SHOT 12-wine-notepad
   pkill -f notepad
-  ( /opt/tahmeel/tahmeel-launch >/tmp/tahmeel.log 2>&1 & )
-  for i in 1 2 3 4 5 6; do sleep 10; R "tahmeel-poll$((i*10))s" "$(pgrep -cfi tahmeel 2>/dev/null || echo 0) procs bridge=$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:48917/ 2>/dev/null)"; done
-  SHOT 13-tahmeel-native
-  [ -x /opt/tahmeel/tahmeel-launch ] && R tahmeel-installed PASS || R tahmeel-installed FAIL
-  pgrep -fi tahmeel >/dev/null && R tahmeel-running PASS || { R tahmeel-running FAIL; tail -8 /tmp/tahmeel.log | while read l; do S "tahmeel-log $l"; done; }
-  BR=$(curl -s -m 3 -o /dev/null -w '%{http_code}' http://127.0.0.1:48917/ 2>/dev/null); [ -n "$BR" ] && [ "$BR" != 000 ] && R tahmeel-bridge "PASS(http $BR)" || R tahmeel-bridge "FAIL(no answer on 127.0.0.1:48917)"
-  [ -f /opt/tahmeel/extension/tahmeel.crx ] && R tahmeel-crx PASS || R tahmeel-crx FAIL
-  # hilali -> Tahmeel hand-off: a download link opened in hilali must reach the bridge
-  mkdir -p /tmp/ht/files; head -c 2000000 /dev/urandom > /tmp/ht/files/handoff.bin
-  ( cd /tmp/ht && setsid python3 -m http.server 8099 --bind 127.0.0.1 >/tmp/ht/srv.log 2>&1 & ); sleep 1
-  ( setsid hilali http://127.0.0.1:8099/files/handoff.bin >/tmp/hilali-dl.log 2>&1 & ); sleep 15
-  SHOT 13e-tahmeel-after-hilali-download
-  grep -q "handoff.bin" /tmp/ht/srv.log && R hilali-download-requested PASS || R hilali-download-requested FAIL
-  pkill -f "/usr/local/bin/hilali"; pkill -f "http.server 8099"; sleep 2
-  sleep 10; SHOT 14-tahmeel-native-later
-  pkill -f tahmeel
 else R wine-cmd "FAIL(no wine)"; fi
 S "SELFTEST-DONE"
 

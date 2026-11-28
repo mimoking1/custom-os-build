@@ -1,3 +1,0 @@
-#!/bin/sh
-# Browser launcher: our own light browser (WebKitGTK engine).
-exec hilali "$@"
