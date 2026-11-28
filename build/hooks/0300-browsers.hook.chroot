@@ -13,7 +13,12 @@ curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" \
   > /etc/apt/sources.list.d/brave-browser-release.list
 apt-get update
-apt-get install -y brave-browser chromium chromium-l10n
+apt-get install -y brave-browser chromium chromium-l10n python3 unzip
+# newest Chromium: official Chromium-project build matching the current STABLE release. The Debian package is only
+# installed to pull in the libraries, then its (older) browser files are removed.
+/usr/local/lib/customos/install-chromium-latest
+dpkg -r --force-depends chromium chromium-l10n chromium-common chromium-sandbox 2>/dev/null || true
+rm -f /usr/bin/chromium
 mkdir -p /etc/brave/policies/managed /etc/chromium/policies/managed
 cat > /etc/brave/policies/managed/customos.json <<'JSON'
 {
@@ -44,13 +49,27 @@ exec /opt/brave.com/brave/brave-browser --password-store=basic "$@"
 W
 cat > /usr/local/bin/chromium <<'W'
 #!/bin/sh
-exec /usr/bin/chromium --password-store=basic "$@"
+export CHROME_DEVEL_SANDBOX=/opt/chromium-latest/chrome_sandbox
+exec /opt/chromium-latest/chrome --password-store=basic "$@"
 W
+cat > /usr/share/applications/chromium.desktop <<'D'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Chromium
+Name[ar]=كروميوم
+GenericName=Web Browser
+Exec=/usr/local/bin/chromium %U
+Icon=/opt/chromium-latest/product_logo_48.png
+Terminal=false
+Categories=Network;WebBrowser;
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+StartupWMClass=chromium
+D
 chmod 755 /usr/local/bin/brave-browser /usr/local/bin/chromium
 for d in /usr/share/applications/brave-browser.desktop; do
   [ -f "$d" ] && sed -i -E 's#^Exec=[^ ]*brave-browser[^ ]*#Exec=/usr/local/bin/brave-browser#' "$d" || true
 done
-[ -f /usr/share/applications/chromium.desktop ] && sed -i -E 's#^Exec=[^ ]*chromium#Exec=/usr/local/bin/chromium#' /usr/share/applications/chromium.desktop || true
 # Brave is the default web browser for links
 update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/brave-browser 200 || true
 update-alternatives --set x-www-browser /usr/local/bin/brave-browser || true

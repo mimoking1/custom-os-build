@@ -150,12 +150,17 @@ ls /etc/apt/sources.list.d/ 2>/dev/null | grep -q brave && R brave-repo-kept PAS
 [ -x /usr/local/bin/update-browsers ] && R update-browsers-script PASS || R update-browsers-script FAIL
 SUDOX=""; [ "$(id -u)" -ne 0 ] && SUDOX="sudo -n"
 if timeout 180 $SUDOX apt-get update >/tmp/aptup.log 2>&1; then R apt-update-works PASS; else R apt-update-works "FAIL($(tail -2 /tmp/aptup.log | tr '\n' ' '))"; fi
-for pk in brave-browser chromium; do
-  inst=$(dpkg-query -W -f='${Version}' $pk 2>/dev/null); cand=$(apt-cache policy $pk 2>/dev/null | awk '/Candidate:/{print $2}')
-  R "version-$pk" "installed=$inst latest-in-repo=$cand"
-  [ -n "$inst" ] && [ "$inst" = "$cand" ] && R "latest-$pk" PASS || R "latest-$pk" "FAIL(installed=$inst candidate=$cand)"
-done
-timeout 120 $SUDOX apt-get -s install --only-upgrade brave-browser chromium >/tmp/aptsim.log 2>&1 && R apt-upgrade-path-works PASS || R apt-upgrade-path-works FAIL
+pk=brave-browser
+inst=$(dpkg-query -W -f='${Version}' $pk 2>/dev/null); cand=$(apt-cache policy $pk 2>/dev/null | awk '/Candidate:/{print $2}')
+R "version-$pk" "installed=$inst latest-in-repo=$cand"
+[ -n "$inst" ] && [ "$inst" = "$cand" ] && R "latest-$pk" PASS || R "latest-$pk" "FAIL(installed=$inst candidate=$cand)"
+CHV=$(chromium --version 2>/dev/null | head -1); CHST=$(cat /opt/chromium-latest/.stable 2>/dev/null)
+LIVEST=$(python3 -c "import json,urllib.request;print(json.loads(urllib.request.urlopen('https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Linux&num=1',timeout=30).read())[0]['version'])" 2>/dev/null)
+R "version-chromium" "installed=[$CHV] built-for-stable=$CHST live-stable-now=$LIVEST"
+CHMAJ=$(echo "$CHV" | grep -oE '[0-9]+' | head -1); LVMAJ=$(echo "$LIVEST" | cut -d. -f1)
+[ -n "$CHMAJ" ] && [ "$CHMAJ" = "$LVMAJ" ] && R latest-chromium PASS || R latest-chromium "FAIL(installed=$CHMAJ stable=$LVMAJ)"
+timeout 200 /usr/local/lib/customos/install-chromium-latest >/tmp/chup.log 2>&1 && R chromium-update-path-works "PASS($(tail -1 /tmp/chup.log))" || R chromium-update-path-works "FAIL($(tail -1 /tmp/chup.log))"
+timeout 120 $SUDOX apt-get -s install --only-upgrade brave-browser >/tmp/aptsim.log 2>&1 && R apt-upgrade-path-works PASS || R apt-upgrade-path-works FAIL
 for B in firefox-esr firefox hilali hilal-browser; do command -v $B >/dev/null && R "browser-extra-$B" "FAIL(should not be installed)"; done
 [ ! -e /opt/tahmeel ] && R no-tahmeel PASS || R no-tahmeel FAIL
 update-alternatives --query x-www-browser 2>/dev/null | grep -q "^Value: /usr/local/bin/brave-browser" && R x-www-browser-brave PASS || R x-www-browser-brave FAIL

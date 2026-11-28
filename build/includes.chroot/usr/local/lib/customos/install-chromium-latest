@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+# Installs the official Chromium build (Chromium project snapshot bucket) that matches the current STABLE release
+# (chromiumdash.appspot.com). Used at image build time and by update-browsers. Installs to /opt/chromium-latest.
+import json, os, re, shutil, subprocess, sys, tempfile, urllib.request, zipfile
+UA = {'User-Agent': 'customos-chromium-updater'}
+def get(u, binary=False):
+    r = urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=60)
+    d = r.read(); return d if binary else d.decode()
+rel = json.loads(get('https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Linux&num=1'))[0]
+pos, ver = int(rel['chromium_main_branch_position']), rel['version']
+BASE = 'https://storage.googleapis.com/chromium-browser-snapshots/'
+API = 'https://www.googleapis.com/storage/v1/b/chromium-browser-snapshots/o?delimiter=/&maxResults=1000&prefix=Linux_x64/'
+cands = set()
+for p in (str(pos)[:-1], str(pos)[:-2], str(pos)[:-3]):
+    try:
+        for pre in json.loads(get(API + p)).get('prefixes', []):
+            n = int(pre.rstrip('/').split('/')[-1]); cands.add(n)
+    except Exception as e: print('list failed', p, e)
+below = sorted([c for c in cands if c <= pos], reverse=True)
+chosen = None
+for c in below[:15]:
+    try:
+        urllib.request.urlopen(urllib.request.Request(BASE + 'Linux_x64/%d/chrome-linux.zip' % c, headers=UA, method='HEAD'), timeout=30); chosen = c; break
+    except Exception: pass
+if not chosen: sys.exit('no snapshot found at or below stable position %d' % pos)
+stamp = '/opt/chromium-latest/.snapshot'
+if os.path.exists(stamp) and open(stamp).read().strip() == str(chosen):
+    print('Chromium already current (snapshot %d, stable %s)' % (chosen, ver)); sys.exit(0)
+print('Stable %s at position %d, installing snapshot %d' % (ver, pos, chosen))
+tmp = tempfile.mkdtemp(dir='/opt')
+z = os.path.join(tmp, 'c.zip')
+with urllib.request.urlopen(urllib.request.Request(BASE + 'Linux_x64/%d/chrome-linux.zip' % chosen, headers=UA), timeout=120) as r, open(z, 'wb') as f: shutil.copyfileobj(r, f, 1 << 20)
+subprocess.check_call(['unzip', '-q', z, '-d', tmp]); os.unlink(z)
+new = os.path.join(tmp, 'chrome-linux'); os.chmod(os.path.join(new, 'chrome'), 0o755)
+sb = os.path.join(new, 'chrome_sandbox')
+if os.path.exists(sb): os.chmod(sb, 0o4755)
+open(os.path.join(new, '.snapshot'), 'w').write(str(chosen))
+open(os.path.join(new, '.stable'), 'w').write(ver)
+shutil.rmtree('/opt/chromium-latest', ignore_errors=True); os.rename(new, '/opt/chromium-latest'); shutil.rmtree(tmp, ignore_errors=True)
+print('Installed Chromium snapshot', chosen)
