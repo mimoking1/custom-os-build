@@ -3,6 +3,9 @@
 # Google Chrome is not bundled: its licence does not allow redistributing it inside an image.
 set -e
 export DEBIAN_FRONTEND=noninteractive
+# the base system pulls in Firefox: remove it, only Brave and Chromium are shipped
+apt-get purge -y 'firefox*' 2>/dev/null || true
+rm -f /usr/bin/firefox /usr/bin/firefox-esr
 apt-get update
 apt-get install -y curl ca-certificates gnupg
 curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
@@ -34,13 +37,23 @@ cat > /etc/chromium/policies/managed/customos.json <<'JSON'
   "DefaultBrowserSettingEnabled": false
 }
 JSON
-# Brave is the default web browser for links
-update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/brave-browser 200 || true
-update-alternatives --set x-www-browser /usr/bin/brave-browser || true
-update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/brave-browser 200 || true
-update-alternatives --set gnome-www-browser /usr/bin/brave-browser || true
-# no keyring password prompt on first start (a live USB has no login keyring)
-for d in /usr/share/applications/brave-browser.desktop /usr/share/applications/chromium.desktop; do
-  [ -f "$d" ] && sed -i -E 's#^(Exec=[^ ]*(brave-browser-stable|brave-browser|chromium))( |$)#\1 --password-store=basic\3#' "$d" || true
+# no keyring password prompt: a live USB has no login keyring. Wrappers always add the flag, whoever starts the browser.
+cat > /usr/local/bin/brave-browser <<'W'
+#!/bin/sh
+exec /opt/brave.com/brave/brave-browser --password-store=basic "$@"
+W
+cat > /usr/local/bin/chromium <<'W'
+#!/bin/sh
+exec /usr/bin/chromium --password-store=basic "$@"
+W
+chmod 755 /usr/local/bin/brave-browser /usr/local/bin/chromium
+for d in /usr/share/applications/brave-browser.desktop; do
+  [ -f "$d" ] && sed -i -E 's#^Exec=[^ ]*brave-browser[^ ]*#Exec=/usr/local/bin/brave-browser#' "$d" || true
 done
+[ -f /usr/share/applications/chromium.desktop ] && sed -i -E 's#^Exec=[^ ]*chromium#Exec=/usr/local/bin/chromium#' /usr/share/applications/chromium.desktop || true
+# Brave is the default web browser for links
+update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/local/bin/brave-browser 200 || true
+update-alternatives --set x-www-browser /usr/local/bin/brave-browser || true
+update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/local/bin/brave-browser 200 || true
+update-alternatives --set gnome-www-browser /usr/local/bin/brave-browser || true
 true
