@@ -1,0 +1,46 @@
+#!/bin/sh
+# Brave (default) from Brave's official apt repo + Chromium (Debian package). Firefox is not installed.
+# Google Chrome is not bundled: its licence does not allow redistributing it inside an image.
+set -e
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y curl ca-certificates gnupg
+curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
+  https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+  > /etc/apt/sources.list.d/brave-browser-release.list
+apt-get update
+apt-get install -y brave-browser chromium chromium-l10n
+mkdir -p /etc/brave/policies/managed /etc/chromium/policies/managed
+cat > /etc/brave/policies/managed/customos.json <<'JSON'
+{
+  "BraveRewardsDisabled": true,
+  "BraveWalletDisabled": true,
+  "BraveVPNDisabled": true,
+  "BraveAIChatEnabled": false,
+  "BraveNewsDisabled": true,
+  "BraveP3AEnabled": false,
+  "BraveStatsPingEnabled": false,
+  "BraveTalkDisabled": true,
+  "HttpsUpgradesEnabled": true,
+  "MetricsReportingEnabled": false,
+  "DefaultBrowserSettingEnabled": false
+}
+JSON
+cat > /etc/chromium/policies/managed/customos.json <<'JSON'
+{
+  "HttpsOnlyMode": "force_enabled",
+  "MetricsReportingEnabled": false,
+  "DefaultBrowserSettingEnabled": false
+}
+JSON
+# Brave is the default web browser for links
+update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/brave-browser 200 || true
+update-alternatives --set x-www-browser /usr/bin/brave-browser || true
+update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/brave-browser 200 || true
+update-alternatives --set gnome-www-browser /usr/bin/brave-browser || true
+# no keyring password prompt on first start (a live USB has no login keyring)
+for d in /usr/share/applications/brave-browser.desktop /usr/share/applications/chromium.desktop; do
+  [ -f "$d" ] && sed -i -E 's#^(Exec=[^ ]*(brave-browser-stable|brave-browser|chromium))( |$)#\1 --password-store=basic\3#' "$d" || true
+done
+true

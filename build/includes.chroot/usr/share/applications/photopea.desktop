@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Photopea (محرر صور مجاني)
+Name[ar]=فوتوبيا (بديل فوتوشوب مجاني)
+Comment=Free Photoshop-compatible editor in the browser, opens PSD files
+Exec=exo-open --launch WebBrowser https://www.photopea.com/
+Icon=applications-graphics
+Categories=Graphics;
+StartupNotify=true

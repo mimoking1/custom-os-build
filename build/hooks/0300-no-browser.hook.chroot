@@ -1,5 +1,0 @@
-#!/bin/sh
-# No browser is shipped in this edition. Firefox is removed so the system stays as agreed.
-set -e
-apt-get purge -y 'firefox*' 2>/dev/null || true
-rm -f /usr/bin/firefox /usr/bin/firefox-esr

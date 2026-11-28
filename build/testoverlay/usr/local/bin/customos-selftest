@@ -142,8 +142,25 @@ sleep 6; SHOT 11-theme-color-window
 pkill -f "/usr/local/bin/theme-color$"; pkill -f "python3 /usr/local/bin/theme-color"; sleep 1
 timeout 150 /usr/local/bin/theme-color-apply "#4fb2f7" --force-wallpaper >/dev/null 2>&1
 sleep 8
+# browsers: Brave default, Chromium second, no Hilali, no Firefox
+command -v brave-browser >/dev/null && R brave-installed "PASS($(brave-browser --version 2>/dev/null | head -1))" || R brave-installed FAIL
+command -v chromium >/dev/null && R chromium-installed "PASS($(chromium --version 2>/dev/null | head -1))" || R chromium-installed FAIL
+for B in firefox-esr firefox hilali hilal-browser; do command -v $B >/dev/null && R "browser-extra-$B" "FAIL(should not be installed)"; done
+[ ! -e /opt/tahmeel ] && R no-tahmeel PASS || R no-tahmeel FAIL
+update-alternatives --query x-www-browser 2>/dev/null | grep -q "^Value: /usr/bin/brave-browser" && R x-www-browser-brave PASS || R x-www-browser-brave FAIL
+[ "$(xdg-mime query default x-scheme-handler/https 2>/dev/null)" = "brave-browser.desktop" ] && R default-browser-https-brave PASS || R default-browser-https-brave "FAIL($(xdg-mime query default x-scheme-handler/https 2>/dev/null))"
+[ "$(xdg-mime query default text/html 2>/dev/null)" = "brave-browser.desktop" ] && R default-browser-html-brave PASS || R default-browser-html-brave FAIL
+[ -f /usr/share/applications/photopea.desktop ] && R photopea-launcher PASS || R photopea-launcher FAIL
+mkdir -p /tmp/ht; echo '<html><body><h1>link test</h1></body></html>' > /tmp/ht/linktest.html
+( cd /tmp/ht && setsid python3 -m http.server 8099 --bind 127.0.0.1 >/tmp/ht/srv.log 2>&1 & ); sleep 1
+( setsid xdg-open http://127.0.0.1:8099/linktest.html >/tmp/brave.log 2>&1 & ); sleep 25; SHOT 13a-brave-opened-link
+grep -q "linktest.html" /tmp/ht/srv.log && R link-opens-in-browser PASS || R link-opens-in-browser FAIL
+pgrep -f "/opt/brave.com/brave/brave" >/dev/null && R link-opened-in-brave PASS || R link-opened-in-brave FAIL
+pkill -f "/opt/brave.com/brave/brave"; sleep 3
+( setsid chromium --password-store=basic about:blank >/tmp/chromium.log 2>&1 & ); sleep 15; SHOT 13b-chromium-start
+pgrep -f "chromium" >/dev/null && R chromium-running PASS || R chromium-running FAIL
+pkill -f chromium; pkill -f "http.server 8099"; sleep 2
 # lid playback
-for B in brave-browser chromium firefox-esr; do command -v $B >/dev/null && R "browser-extra-$B" "FAIL(should not be installed)"; done
 [ -f /etc/systemd/logind.conf.d/50-customos-lid.conf ] && R lid-conf PASS || R lid-conf FAIL
 # Wine
 if command -v wine >/dev/null; then
