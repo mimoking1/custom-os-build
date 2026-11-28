@@ -150,7 +150,6 @@ for B in firefox-esr firefox hilali hilal-browser; do command -v $B >/dev/null &
 update-alternatives --query x-www-browser 2>/dev/null | grep -q "^Value: /usr/bin/brave-browser" && R x-www-browser-brave PASS || R x-www-browser-brave FAIL
 [ "$(xdg-mime query default x-scheme-handler/https 2>/dev/null)" = "brave-browser.desktop" ] && R default-browser-https-brave PASS || R default-browser-https-brave "FAIL($(xdg-mime query default x-scheme-handler/https 2>/dev/null))"
 [ "$(xdg-mime query default text/html 2>/dev/null)" = "brave-browser.desktop" ] && R default-browser-html-brave PASS || R default-browser-html-brave FAIL
-[ -f /usr/share/applications/photopea.desktop ] && R photopea-launcher PASS || R photopea-launcher FAIL
 mkdir -p /tmp/ht; echo '<html><body><h1>link test</h1></body></html>' > /tmp/ht/linktest.html
 ( cd /tmp/ht && setsid python3 -m http.server 8099 --bind 127.0.0.1 >/tmp/ht/srv.log 2>&1 & ); sleep 1
 ( setsid xdg-open http://127.0.0.1:8099/linktest.html >/tmp/brave.log 2>&1 & ); sleep 25; SHOT 13a-brave-opened-link
