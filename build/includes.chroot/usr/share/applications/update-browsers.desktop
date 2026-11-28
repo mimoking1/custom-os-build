@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Update browsers
+Name[ar]=تحديث المتصفحات
+Comment=Update Brave and Chromium to the latest version
+Exec=/usr/local/bin/update-browsers
+Icon=system-software-update
+Terminal=true
+Categories=Network;System;

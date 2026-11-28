@@ -1,0 +1,5 @@
+#!/bin/sh
+# Updates Brave (Brave's own apt repo) and Chromium (Debian security repo). Needs internet.
+SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
+$SUDO apt-get update && $SUDO apt-get install -y --only-upgrade brave-browser chromium chromium-l10n
+echo; echo "Brave:    $(brave-browser --version 2>/dev/null | head -1)"; echo "Chromium: $(chromium --version 2>/dev/null | head -1)"
